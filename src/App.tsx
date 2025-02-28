@@ -1,20 +1,21 @@
-import {  Refine, Authenticated,  type AuthProvider } from "@refinedev/core";
+import { Refine, Authenticated, type AuthProvider } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
-import  authProvider from "./authProvider"
-
+import authProvider from "./authProvider";
 
 import {
   useNotificationProvider,
   ThemedLayoutV2,
-ErrorComponent,
+  ErrorComponent,
   AuthPage,
   RefineThemes,
-  ThemedSiderV2
+  ThemedSiderV2,
 } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
-import nestjsxCrudDataProvider, {axiosInstance} from "@refinedev/nestjsx-crud";
+import nestjsxCrudDataProvider, {
+  axiosInstance,
+} from "@refinedev/nestjsx-crud";
 import routerBindings, {
   CatchAllNavigate,
   DocumentTitleHandler,
@@ -22,387 +23,434 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 
-import { App as AntdApp } from "antd";
+import { App as AntdApp, Flex } from "antd";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
-import {GoodsCreate, GoodsShow, GoogsProcessingList} from "./pages/goods-processing";
-import {BranchCreate, BranchEdit, BranchList, BranchShow} from "./pages/branch";
-import {UserCreate, UserEdit, UserList, UserShow} from "./pages/user";
-import { List, Create, Show, Edit} from "./pages/shipments";
-import {CategoryList} from "./pages/categories";
-import {CounterpartyCreate, CounterpartyEdit, CounterpartyList, CounterpartyShow} from "./pages/counterparties";
+import {
+  GoodsCreate,
+  GoodsShow,
+  GoogsProcessingList,
+} from "./pages/goods-processing";
+import {
+  BranchCreate,
+  BranchEdit,
+  BranchList,
+  BranchShow,
+} from "./pages/branch";
+import { UserCreate, UserEdit, UserList, UserShow } from "./pages/user";
+import { List, Create, Show, Edit } from "./pages/shipments";
+import { CategoryList } from "./pages/categories";
+import {
+  CounterpartyCreate,
+  CounterpartyEdit,
+  CounterpartyList,
+  CounterpartyShow,
+} from "./pages/counterparties";
 import ReceivingList from "./pages/receiving/ReceivingList";
 import ReceivingCreate from "./pages/receiving/ReceivingCreate";
 import ReceivingShow from "./pages/receiving/ReceivingShow";
 import ReceivingEdit from "./pages/receiving/ReceivingEdit";
-import {MyCreateModal} from "./pages/counterparties/modal/create-modal";
-import {ContactsOutlined, SelectOutlined, ShoppingCartOutlined, UserOutlined ,WalletOutlined} from "@ant-design/icons";
-import {i18nProvider_ru} from "./i18n/ru";
-import {IssueProcessingList} from "./pages/Issue";
-import {CashBackList} from "./pages/cash-back";
-import {BankCreate, BankList, BankShow} from "./pages/bank";
-import {CashDeskList} from "./pages/cash-desk";
-import {CashDeskOutcomeList} from "./pages/cash-desk/outcome";
-import {RemainingStockProcessingList} from "./pages/remaining-stock";
-import {ExeptionCodeCreate, ExeptionCodeList} from "./pages/exception-code";
+import { MyCreateModal } from "./pages/counterparties/modal/create-modal";
+import {
+  ContactsOutlined,
+  SelectOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  WalletOutlined,
+} from "@ant-design/icons";
+import { i18nProvider_ru } from "./i18n/ru";
+import { IssueProcessingList } from "./pages/Issue";
+import { CashBackList } from "./pages/cash-back";
+import { BankCreate, BankList, BankShow } from "./pages/bank";
+import { CashDeskList } from "./pages/cash-desk";
+import { CashDeskOutcomeList } from "./pages/cash-desk/outcome";
+import { RemainingStockProcessingList } from "./pages/remaining-stock";
+import { ExeptionCodeCreate, ExeptionCodeList } from "./pages/exception-code";
+import {
+  UnderBranchCreate,
+  UnderBranchEdit,
+  UnderBranchList,
+  UnderBranchShow,
+} from "./pages/under-branch";
 
-export const API_URL = "http://localhost:5001/api";
+export const API_URL = "http://192.168.1.124:5001/api";
 function App() {
-
-
-  axiosInstance.interceptors.request.use((config) => {
-    const token = localStorage.getItem("access_token"); // Получаем токен из localStorage
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  axiosInstance.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem("access_token"); // Получаем токен из localStorage
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
     }
-    return config;
-  }, (error) => {
-    return Promise.reject(error);
-  });
+  );
 
   const dataProvider = nestjsxCrudDataProvider(API_URL, axiosInstance);
 
   // @ts-ignore
   return (
     <BrowserRouter>
-
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <AntdApp>
+            <Refine
+              dataProvider={dataProvider}
+              notificationProvider={useNotificationProvider}
+              routerProvider={routerBindings}
+              authProvider={authProvider}
+              i18nProvider={i18nProvider_ru}
+              accessControlProvider={{
+                can: async ({ resource, action }) => {
+                  // Получаем роль текущего пользователя, например, из authProvider
+                  const role = localStorage.getItem("role"); // Здесь можно получить реальную роль текущего пользователя
 
-              <Refine
-                dataProvider={dataProvider}
-                notificationProvider={useNotificationProvider}
-                routerProvider={routerBindings}
-                authProvider={authProvider}
-                i18nProvider={i18nProvider_ru}
-                accessControlProvider={{
-                  can: async ({ resource, action }) => {
-                    // Получаем роль текущего пользователя, например, из authProvider
-                    const role = localStorage.getItem("role"); // Здесь можно получить реальную роль текущего пользователя
-
-                    // Если роль "user" и запрашивается доступ к ресурсу "пользователи", то запрещаем доступ
-                    if (role === "user" && resource === "users") {
-                      return { can: false };
-                    }
-
-                    // В остальных случаях используем enforcer для проверки прав
-
-
-                    return { can:true };
-                  },
-                }}
-                resources={[
-                  {
-                    name: "Продукты",
-                    icon: <ShoppingCartOutlined />,
-                    meta: {
-                      label: "Продукты",
-                    },
-                  },
-                  {
-                    name: "Контрагенты",
-                    icon: <ContactsOutlined />,
-                    meta: {
-                      label: "Контрагенты",
-                    },
-                  },
-                  {
-                    name: "Касса",
-                    icon: <WalletOutlined />,
-                    meta: {
-                      label: "Касса",
-                    },
-                  },
-                  {
-                    name: "goods-processing",
-                    list: "/goods-processing",
-                    create: "/goods-processing/create",
-                    edit: "/goods-processing/edit/:id",
-                    show: "/goods-processing/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label:"Спецификация",
-                      parent: "Продукты"
-                    },
-                  },
-                  {
-                    name: "shipments",
-                    list: "/shipments",
-                    create: "/shipments/create",
-                    edit: "/shipments/edit/:id",
-                    show: "/shipments/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Отправка ",
-                      parent: "Продукты"
-                    },
-                  },
-                  {
-                    name: "receiving",
-                    list: "/receiving",
-                    create: "/receiving/create",
-                    edit: "/receiving/edit/:id",
-                    show: "/receiving/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Получение",
-                      parent: "Продукты"
-                    },
-                  },
-                  {
-                    name: "issue",
-                    list: "/issue",
-                    show: "/issue/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label:"Выдача",
-                      parent: "Продукты"
-                    },
-                  },
-                  {
-                    name: "remaining-stock",
-                    list: "/remaining-stock",
-                    show: "/remaining-stock/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label:"Остатки на скаде",
-                      parent: "Продукты"
-                    },
-                  },
-                  {
-                    name: "branch",
-                    list: "/branch",
-                    create: "/branch/create",
-                    edit: "/branch/edit/:id",
-                    show: "/branch/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label:"Филиал",
-                    },
-                  },
-                  {
-                    name: "users",
-                    list: "/users",
-                    create: "/users/create",
-                    edit: "/users/edit/:id",
-                    show: "/users/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label:"Пользователи"
-
-                    },
-                  },
-                  {
-                    name: "counterparty",
-                    list: "/counterparty",
-                    create: "/counterparty/create",
-                    edit: "/counterparty/edit/:id",
-                    show: "/counterparty/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Контрагент",
-                      parent: "Контрагенты"
-                    },
-                  },
-                  {
-                    name: "cash-back",
-                    list: "/cash-back",
-                    create: "/cash-back/create",
-                    edit: "/cash-back/edit/:id",
-                    show: "/cash-back/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Кешбек",
-                      parent: "Контрагенты"
-                    },
-                  },
-
-                  {
-                    name: "bank",
-                    list: "/bank",
-                    create: "/bank/create",
-                    edit: "/bank/edit/:id",
-                    show: "/bank/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Банк",
-                      parent: "Касса"
-                    },
-                  },
-
-                  {
-                    name: "income",
-                    list: "/income",
-                    create: "/income/create",
-                    edit: "/income/edit/:id",
-                    show: "/income/show/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Приход",
-                      parent: "Касса"
-                    },
-                  },
-
-                  {
-                    name: "outcome",
-                    list: "/outcome",
-                    create: "/bank/outcome",
-                    edit: "/bank/outcome/:id",
-                    show: "/bank/outcome/:id",
-                    meta: {
-                      canDelete: true,
-                      label: "Расход",
-                      parent: "Касса"
-                    },
-                  },
-
-                  {
-                    name: "exception-code",
-                    list: "/exception-code",
-                    create: "/exception-code/create",
-                    meta: {
-                      canDelete: true,
-                      label: "Исключение",
-                    },
+                  // Если роль "user" и запрашивается доступ к ресурсу "пользователи", то запрещаем доступ
+                  if (role === "user" && resource === "users") {
+                    return { can: false };
                   }
 
-                ]}
-                options={{
-                  syncWithLocation: true,
-                  warnWhenUnsavedChanges: true,
-                  useNewQueryKeys: true,
-                }}
-              >
-                <Routes>
+                  // В остальных случаях используем enforcer для проверки прав
+
+                  return { can: true };
+                },
+              }}
+              resources={[
+                {
+                  name: "Продукты",
+                  icon: <ShoppingCartOutlined />,
+                  meta: {
+                    label: "Продукты",
+                  },
+                },
+                {
+                  name: "Контрагенты",
+                  icon: <ContactsOutlined />,
+                  meta: {
+                    label: "Контрагенты",
+                  },
+                },
+                {
+                  name: "Касса",
+                  icon: <WalletOutlined />,
+                  meta: {
+                    label: "Касса",
+                  },
+                },
+                {
+                  name: "goods-processing",
+                  list: "/goods-processing",
+                  create: "/goods-processing/create",
+                  edit: "/goods-processing/edit/:id",
+                  show: "/goods-processing/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Спецификация",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "shipments",
+                  list: "/shipments",
+                  create: "/shipments/create",
+                  edit: "/shipments/edit/:id",
+                  show: "/shipments/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Отправка ",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "receiving",
+                  list: "/receiving",
+                  create: "/receiving/create",
+                  edit: "/receiving/edit/:id",
+                  show: "/receiving/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Получение",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "issue",
+                  list: "/issue",
+                  show: "/issue/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Выдача",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "remaining-stock",
+                  list: "/remaining-stock",
+                  show: "/remaining-stock/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Остатки на скаде",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "branch",
+                  list: "/branch",
+                  create: "/branch/create",
+                  edit: "/branch/edit/:id",
+                  show: "/branch/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Филиал",
+                  },
+                },
+                {
+                  name: "under-branch",
+                  list: "/under-branch",
+                  create: "/under-branch/create",
+                  edit: "/under-branch/edit/:id",
+                  show: "/under-branch/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Подфилиал",
+                  },
+                },
+                {
+                  name: "users",
+                  list: "/users",
+                  create: "/users/create",
+                  edit: "/users/edit/:id",
+                  show: "/users/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Пользователи",
+                  },
+                },
+                {
+                  name: "counterparty",
+                  list: "/counterparty",
+                  create: "/counterparty/create",
+                  edit: "/counterparty/edit/:id",
+                  show: "/counterparty/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Контрагент",
+                    parent: "Контрагенты",
+                  },
+                },
+                {
+                  name: "cash-back",
+                  list: "/cash-back",
+                  create: "/cash-back/create",
+                  edit: "/cash-back/edit/:id",
+                  show: "/cash-back/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Кешбек",
+                    parent: "Контрагенты",
+                  },
+                },
+
+                {
+                  name: "bank",
+                  list: "/bank",
+                  create: "/bank/create",
+                  edit: "/bank/edit/:id",
+                  show: "/bank/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Банк",
+                    parent: "Касса",
+                  },
+                },
+
+                {
+                  name: "income",
+                  list: "/income",
+                  create: "/income/create",
+                  edit: "/income/edit/:id",
+                  show: "/income/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Приход",
+                    parent: "Касса",
+                  },
+                },
+
+                {
+                  name: "outcome",
+                  list: "/outcome",
+                  create: "/bank/outcome",
+                  edit: "/bank/outcome/:id",
+                  show: "/bank/outcome/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Расход",
+                    parent: "Касса",
+                  },
+                },
+
+                {
+                  name: "exception-code",
+                  list: "/exception-code",
+                  create: "/exception-code/create",
+                  meta: {
+                    canDelete: true,
+                    label: "Исключение",
+                  },
+                },
+              ]}
+              options={{
+                syncWithLocation: true,
+                warnWhenUnsavedChanges: true,
+                useNewQueryKeys: true,
+              }}
+            >
+              <Routes>
+                <Route
+                  element={
+                    <Authenticated
+                      key="authenticated-routes"
+                      fallback={<CatchAllNavigate to="/login" />}
+                    >
+                      <ThemedLayoutV2
+                        Header={() => <Header sticky />}
+                        Sider={(props) => (
+                          <ThemedSiderV2
+                            {...props}
+                            fixed
+                            Title={(collapsed) => (
+                              <Flex
+                                align="center"
+                                justify="center"
+                                style={{
+                                  width: "100%",
+                                  paddingTop: 10,
+                                }}
+                              >
+                                <img
+                                  src="/logo-alfa-crm.png" // Замени на свой путь
+                                  alt="AC CRM"
+                                  style={{
+                                    width: collapsed ? 100 : 100,
+                                    transition: "width 0.3s",
+                                  }}
+                                />
+                              </Flex>
+                            )}
+                          />
+                        )}
+                      >
+                        <Outlet />
+                      </ThemedLayoutV2>
+                    </Authenticated>
+                  }
+                >
                   <Route
-                      element={
-                        <Authenticated
-                            key="authenticated-routes"
-                            fallback={<CatchAllNavigate to="/login" />}
-                        >
-                        <ThemedLayoutV2
-                            Header={() => <Header sticky />}
-                            Sider={(props) => <ThemedSiderV2
-                                {...props}
-                                fixed
-                                Title={(collapsed) => (
-                                    <div style={{ textAlign: "center", padding: "16px" }}>
-                                      <img
-                                          src="/logo.svg"  // Замени на свой путь
-                                          alt="AC CRM"
-                                          style={{ width: collapsed ? 120 : 120, transition: "width 0.3s" }}
-                                      />
-                                    </div>
-                                )}
-                            />}
+                    index
+                    element={<NavigateToResource resource="goods-processing" />}
+                  />
 
-                        >
-                          <Outlet />
-                        </ThemedLayoutV2>
-                        </Authenticated>
-
-                      }
-                  >
-                    <Route
-                      index
-                      element={<NavigateToResource resource="goods-processing" />}
-                    />
-
-                    <Route path="/goods-processing">
-                      <Route index element={<GoogsProcessingList />} />
-                      <Route path="create" element={<GoodsCreate />} />
-                      <Route path="show/:id" element={<GoodsShow />} />
-                    </Route>
-
-                    <Route path="/issue">
-                      <Route index element={<IssueProcessingList />} />
-                      {/*<Route path="create" element={<GoodsCreate />} />*/}
-                      {/*<Route path="edit/:id" element={<BlogPostEdit />} />*/}
-                      <Route path="show/:id" element={<GoodsShow />} />
-                    </Route>
-
-                    <Route path="/branch">
-                      <Route index element={<BranchList />} />
-                      <Route path="create" element={<BranchCreate />} />
-                      <Route path="edit/:id" element={<BranchEdit />} />
-                      <Route path="show/:id" element={<BranchShow />} />
-                    </Route>
-
-                    <Route path="/users">
-                      <Route index element={<UserList />} />
-                      <Route path="create" element={<UserCreate />} />
-                      <Route path="edit/:id" element={<UserEdit />} />
-                      <Route path="show/:id" element={<UserShow />} />
-                    </Route>
-
-                    <Route path="/shipments">
-                      <Route index element={<List />} />
-                      <Route path="create" element={<Create />} />
-                      <Route path="show/:id" element={<Show />} />
-                      <Route path="edit/:id" element={<Edit />} />
-                    </Route>
-
-                    <Route path="/counterparty">
-                      <Route index element={<CounterpartyList />} />
-                      <Route path="create" element={<CounterpartyCreate />} />
-                      <Route path="show/:id" element={<CounterpartyShow />} />
-                      <Route path="edit/:id" element={<CounterpartyEdit />} />
-                    </Route>
-
-                    <Route path="/receiving">
-                      <Route index element={<ReceivingList/>} />
-                      <Route path="create" element={<ReceivingCreate />} />
-                      <Route path="show/:id" element={<ReceivingShow />} />
-                      <Route path="edit/:id" element={<ReceivingEdit />} />
-                    </Route>
-
-                    <Route path="/cash-back">
-                      <Route index element={<CashBackList/>} />
-                      <Route path="create" element={<ReceivingCreate />} />
-                      <Route path="show/:id" element={<ReceivingShow />} />
-                      <Route path="edit/:id" element={<ReceivingEdit />} />
-                    </Route>
-
-                    <Route path="/bank">
-                      <Route index element={<BankList/>} />
-                      <Route path="create" element={<BankCreate />} />
-                      <Route path="show/:id" element={<BankShow />} />
-                      <Route path="edit/:id" element={<ReceivingEdit />} />
-                    </Route>
-
-
-                    <Route path="/income">
-                      <Route index element={<CashDeskList/>} />
-                      {/*<Route path="create" element={<BankCreate />} />*/}
-                      {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
-                      {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
-                    </Route>
-
-                    <Route path="/outcome">
-                      <Route index element={<CashDeskOutcomeList/>} />
-                      {/*<Route path="create" element={<BankCreate />} />*/}
-                      {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
-                      {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
-                    </Route>
-
-                    <Route path="/remaining-stock">
-                      <Route index element={<RemainingStockProcessingList/>} />
-                      {/*<Route path="create" element={<BankCreate />} />*/}
-                      {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
-                      {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
-                    </Route>
-
-                    <Route path="/exception-code">
-                      <Route index element={<ExeptionCodeList/>} />
-                      <Route path="create" element={<ExeptionCodeCreate />} />
-
-                    </Route>
-
-
-                    <Route path="*" element={<ErrorComponent />} />
+                  <Route path="/goods-processing">
+                    <Route index element={<GoogsProcessingList />} />
+                    <Route path="create" element={<GoodsCreate />} />
+                    <Route path="show/:id" element={<GoodsShow />} />
                   </Route>
+
+                  <Route path="/issue">
+                    <Route index element={<IssueProcessingList />} />
+                    {/*<Route path="create" element={<GoodsCreate />} />*/}
+                    {/*<Route path="edit/:id" element={<BlogPostEdit />} />*/}
+                    <Route path="show/:id" element={<GoodsShow />} />
+                  </Route>
+
+                  <Route path="/branch">
+                    <Route index element={<BranchList />} />
+                    <Route path="create" element={<BranchCreate />} />
+                    <Route path="edit/:id" element={<BranchEdit />} />
+                    <Route path="show/:id" element={<BranchShow />} />
+                  </Route>
+
+                  <Route path="/under-branch">
+                    <Route index element={<UnderBranchList />} />
+                    <Route path="create" element={<UnderBranchCreate />} />
+                    <Route path="edit/:id" element={<UnderBranchEdit />} />
+                    <Route path="show/:id" element={<UnderBranchShow />} />
+                  </Route>
+
+                  <Route path="/users">
+                    <Route index element={<UserList />} />
+                    <Route path="create" element={<UserCreate />} />
+                    <Route path="edit/:id" element={<UserEdit />} />
+                    <Route path="show/:id" element={<UserShow />} />
+                  </Route>
+
+                  <Route path="/shipments">
+                    <Route index element={<List />} />
+                    <Route path="create" element={<Create />} />
+                    <Route path="show/:id" element={<Show />} />
+                    <Route path="edit/:id" element={<Edit />} />
+                  </Route>
+
+                  <Route path="/counterparty">
+                    <Route index element={<CounterpartyList />} />
+                    <Route path="create" element={<CounterpartyCreate />} />
+                    <Route path="show/:id" element={<CounterpartyShow />} />
+                    <Route path="edit/:id" element={<CounterpartyEdit />} />
+                  </Route>
+
+                  <Route path="/receiving">
+                    <Route index element={<ReceivingList />} />
+                    <Route path="create" element={<ReceivingCreate />} />
+                    <Route path="show/:id" element={<ReceivingShow />} />
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
+                  </Route>
+
+                  <Route path="/cash-back">
+                    <Route index element={<CashBackList />} />
+                    <Route path="create" element={<ReceivingCreate />} />
+                    <Route path="show/:id" element={<ReceivingShow />} />
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
+                  </Route>
+
+                  <Route path="/bank">
+                    <Route index element={<BankList />} />
+                    <Route path="create" element={<BankCreate />} />
+                    <Route path="show/:id" element={<BankShow />} />
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
+                  </Route>
+
+                  <Route path="/income">
+                    <Route index element={<CashDeskList />} />
+                    {/*<Route path="create" element={<BankCreate />} />*/}
+                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
+                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                  </Route>
+
+                  <Route path="/outcome">
+                    <Route index element={<CashDeskOutcomeList />} />
+                    {/*<Route path="create" element={<BankCreate />} />*/}
+                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
+                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                  </Route>
+
+                  <Route path="/remaining-stock">
+                    <Route index element={<RemainingStockProcessingList />} />
+                    {/*<Route path="create" element={<BankCreate />} />*/}
+                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
+                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                  </Route>
+
+                  <Route path="/exception-code">
+                    <Route index element={<ExeptionCodeList />} />
+                    <Route path="create" element={<ExeptionCodeCreate />} />
+                  </Route>
+
+                  <Route path="*" element={<ErrorComponent />} />
+                </Route>
 
                 <Route
                   path="/login"
@@ -413,22 +461,20 @@ function App() {
                       forgotPasswordLink={false}
                       title={
                         <img
-                            src="/logo.svg"  // Путь к логотипу в public
-                            alt="Logo"
-                            style={{ width: 150, marginBottom: 16 }}
+                          src="/logo.svg" // Путь к логотипу в public
+                          alt="Logo"
+                          style={{ width: 150, marginBottom: 16 }}
                         />
                       }
                     />
                   }
                 />
+              </Routes>
 
-                </Routes>
-
-                <RefineKbar />
-                <UnsavedChangesNotifier />
-                <DocumentTitleHandler />
-              </Refine>
-
+              <RefineKbar />
+              <UnsavedChangesNotifier />
+              <DocumentTitleHandler />
+            </Refine>
           </AntdApp>
         </ColorModeContextProvider>
       </RefineKbarProvider>

@@ -44,8 +44,9 @@ const ShipmentList = () => {
     return (
         <List>
             <Table {...tableProps} rowKey="id" >
-                <Table.Column dataIndex="id" title={"ID"} />
+                {/* <Table.Column dataIndex="id" title={"ID"} /> */}
 
+                <Table.Column dataIndex="created_at" title={"Дата"}  render={({created_at})=> dayjs(created_at).format('DD.MM.YYYY HH:mm')}/>
                 <Table.Column dataIndex="flightNumber" title={"Номер рейса"} />
 
                 <Table.Column
@@ -60,7 +61,6 @@ const ShipmentList = () => {
                     }
                 />
 
-                <Table.Column dataIndex="created_at" title={"Дата"}  render={({created_at})=> dayjs(created_at).format('DD.MM.YYYY HH:mm')}/>
 
                 <Table.Column
                     dataIndex="Dimensions"
