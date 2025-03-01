@@ -1,7 +1,7 @@
 import { AuthProvider } from "@refinedev/core";
 import { axiosInstance } from "@refinedev/nestjsx-crud";
 
-const API_URL = "http://192.168.1.124:5001/api/auth";
+const API_URL = "https://alfacrm.kg//api/auth";
 
 const authProvider: AuthProvider = {
     login: async ({ email, password }) => {

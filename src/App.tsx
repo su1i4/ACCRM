@@ -10,6 +10,7 @@ import {
   AuthPage,
   RefineThemes,
   ThemedSiderV2,
+  useSiderVisible,
 } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
@@ -23,7 +24,7 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 
-import { App as AntdApp, Flex } from "antd";
+import { App as AntdApp, Collapse, Flex } from "antd";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
@@ -31,6 +32,7 @@ import {
   GoodsCreate,
   GoodsShow,
   GoogsProcessingList,
+  GoodsEdit,
 } from "./pages/goods-processing";
 import {
   BranchCreate,
@@ -74,7 +76,7 @@ import {
   UnderBranchShow,
 } from "./pages/under-branch";
 
-export const API_URL = "http://192.168.1.124:5001/api";
+export const API_URL = "https://alfacrm.kg/api";
 function App() {
   axiosInstance.interceptors.request.use(
     (config) => {
@@ -329,14 +331,16 @@ function App() {
                                 style={{
                                   width: "100%",
                                   paddingTop: 10,
+                                  backgroundColor: "transparent",
                                 }}
                               >
                                 <img
                                   src="/logo-alfa-crm.png" // Замени на свой путь
                                   alt="AC CRM"
                                   style={{
-                                    width: collapsed ? 100 : 100,
-                                    transition: "width 0.3s",
+                                    width: collapsed.collapsed ? 70 : 100,
+                                    transition: "width 0.28s",
+                                    backgroundColor: "transparent",
                                   }}
                                 />
                               </Flex>
@@ -357,6 +361,7 @@ function App() {
                   <Route path="/goods-processing">
                     <Route index element={<GoogsProcessingList />} />
                     <Route path="create" element={<GoodsCreate />} />
+                    <Route path="edit/:id" element={<GoodsEdit />} />
                     <Route path="show/:id" element={<GoodsShow />} />
                   </Route>
 

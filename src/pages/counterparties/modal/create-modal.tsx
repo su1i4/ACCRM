@@ -28,7 +28,6 @@ export const MyCreateModal: React.FC<{
     optionLabel: "address",
   });
 
-
   return (
     <Modal
       {...modalProps}
