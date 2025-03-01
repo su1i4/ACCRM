@@ -52,7 +52,6 @@ const ShipmentList = () => {
         {...tableProps}
         rowKey="id"
       >
-        {/* <Table.Column dataIndex="id" title={"ID"} /> */}
         <Table.Column
           dataIndex="created_at"
           title={"Дата"}
@@ -60,8 +59,8 @@ const ShipmentList = () => {
             dayjs(created_at).format("DD.MM.YYYY HH:mm")
           }
         />
-        <Table.Column dataIndex="flightNumber" title={"Номер рейса"} />
-        <Table.Column dataIndex="flightNumber" title={"Код коробки"} />
+        <Table.Column dataIndex="id" title={"Номер рейса"} />
+        <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column
           dataIndex="branch_id"
           title={"Место погрузки"}
@@ -73,7 +72,7 @@ const ShipmentList = () => {
             )
           }
         />
-        <Table.Column dataIndex="flightNumber" title={"Количество мест"} />
+        <Table.Column dataIndex="count" title={"Количество мест"} />
         <Table.Column dataIndex="weight" title={"Вес"} />
         <Table.Column
           dataIndex="Dimensions"
@@ -83,9 +82,13 @@ const ShipmentList = () => {
           }}
         />
         <Table.Column dataIndex="cube" title={"Куб"} />
-        <Table.Column dataIndex="cube" title={"Плотность"} />¥
+        <Table.Column dataIndex="density" title={"Плотность"} />
         <Table.Column dataIndex="type" title={"Тип"} />
-        <Table.Column dataIndex="type" title={"Пункт назначения"} />
+        <Table.Column
+          render={(value) => value.name}
+          dataIndex="branch"
+          title={"Пункт назначения"}
+        />
         <Table.Column
           dataIndex="user_id"
           title={"Сотрудник"}

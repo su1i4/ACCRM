@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Create, Title, useForm, useSelect, useTable } from "@refinedev/antd";
 import { useUpdateMany } from "@refinedev/core";
 import { Form, Input, DatePicker, Row, Col, Table, Flex, Select } from "antd";
@@ -14,6 +14,16 @@ const ShipmentCreate = () => {
    * Состояние для ID выбранных товаров
    */
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  
+  /**
+   * Состояние для полных данных выбранных товаров
+   */
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  
+  /**
+   * Состояние для общего веса
+   */
+  const [totalWeight, setTotalWeight] = useState<number>(0);
 
   /**
    * Хук для массового обновления (updateMany) товаров.
@@ -29,7 +39,7 @@ const ShipmentCreate = () => {
    * При удачном создании (onMutationSuccess)
    * мы получим ID нового рейса, и сразу используем updateMany для товаров.
    */
-  const { formProps, saveButtonProps } = useForm({
+  const { formProps, saveButtonProps, form } = useForm({
     resource: "shipments",
     // Срабатывает после успешного "create" (создания рейса)
     onMutationSuccess: async (createdShipment) => {
@@ -46,6 +56,64 @@ const ShipmentCreate = () => {
       }
     },
   });
+
+  // Рассчитываем общий вес при изменении выбранных строк
+  useEffect(() => {
+    if (selectedRows.length > 0) {
+      const sum = selectedRows.reduce((total, row) => {
+        // Преобразуем в число, чтобы избежать конкатенации строк
+        const weight = parseFloat(row.weight) || 0;
+        return total + weight;
+      }, 0);
+      
+      setTotalWeight(sum);
+      
+      // Обновляем поле веса в форме
+      form.setFieldsValue({ weight: sum.toFixed(2) });
+      
+      // Также расчитываем и обновляем поле "куб" и "плотность" если у вас есть нужные данные
+      const length = form.getFieldValue('length') || 0;
+      const width = form.getFieldValue('width') || 0;
+      const height = form.getFieldValue('height') || 0;
+      
+      const cube = (length * width * height / 1000000).toFixed(2);
+      form.setFieldsValue({ cube });
+      
+      //@ts-ignore
+      if (cube > 0) {
+        const density = (sum / parseFloat(cube)).toFixed(2);
+        form.setFieldsValue({ density: density });
+      }
+    } else {
+      setTotalWeight(0);
+      form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
+    }
+  }, [selectedRows, form]);
+  
+  // Обновляем куб и плотность при изменении размеров
+  useEffect(() => {
+    const updateCalculations = () => {
+      const length = form.getFieldValue('length') || 0;
+      const width = form.getFieldValue('width') || 0;
+      const height = form.getFieldValue('height') || 0;
+      
+      if (length && width && height) {
+        const cube = (length * width * height / 1000000).toFixed(2);
+        form.setFieldsValue({ cube });
+        
+        const weight = form.getFieldValue('weight') || 0;
+        //@ts-ignore
+        if (cube > 0 && weight > 0) {
+          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(2);
+          form.setFieldsValue({ density: density });
+        }
+      }
+    };
+    
+    // Задержка для обеспечения обновления после заполнения полей формы
+    const timeoutId = setTimeout(updateCalculations, 100);
+    return () => clearTimeout(timeoutId);
+  }, [form.getFieldValue('length'), form.getFieldValue('width'), form.getFieldValue('height')]);
 
   /**
    * useTable для ресурса "goods-processing".
@@ -67,14 +135,15 @@ const ShipmentCreate = () => {
           operator: "null",
           value: "null",
         },
-        // {
-        //     field:"status",
-        //     operator:"in",
-        //     value:"IN_WAREHOUSE"
-        // }
+        {
+          field: "status",
+          operator: "eq",
+          value: "В складе",
+        },
       ],
     },
   });
+  
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
     optionLabel: "name",
@@ -107,17 +176,9 @@ const ShipmentCreate = () => {
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
             <Form.Item
-              style={{ width: 150 }}
-              label="Номер рейса"
-              name="flightNumber"
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              style={{ minWidth: 150 }}
+              style={{ minWidth: 250 }}
               label="Тип"
-              name="flightNumber"
+              name="type"
               rules={[{ required: true }]}
             >
               <Select
@@ -128,88 +189,32 @@ const ShipmentCreate = () => {
               />
             </Form.Item>
             <Form.Item
-              style={{ width: 150 }}
+              style={{ width: 250 }}
               label="Код коробки"
-              name="flightNumber"
+              name="boxCode"
               rules={[{ required: true }]}
             >
               <Input />
             </Form.Item>
             <Form.Item
+              style={{ width: 250 }}
               name="branch_id"
               label="Пункт назначения"
               rules={[{ required: true, message: "Введите Пунк назначения" }]}
             >
               <Select {...branchSelectProps} />
             </Form.Item>
-            <Form.Item
-              style={{ minWidth: 150 }}
-              name="user_id"
-              label="Сотрудник"
-              rules={[{ required: true, message: "Введите Сотрудник" }]}
-            >
-              <Select {...userSelectProps} />
-            </Form.Item>
           </Flex>
-
-          {/* <Col span={6}>
-            <Flex
-              align="flex-start"
-              vertical
-              style={{ margin: "0", minWidth: 420 }}
-            >
-              <Form.Item label="Размеры (Д × Ш × В)" required>
-                <Input.Group compact>
-                  <Form.Item
-                    name="length"
-                    noStyle
-                    rules={[{ required: true, message: "Введите длину" }]}
-                  >
-                    <Input
-                      style={{ width: 100, textAlign: "center" }}
-                      placeholder="Длина"
-                    />
-                  </Form.Item>
-
-                  <span style={{ padding: "0 8px" }}>×</span>
-
-                  <Form.Item
-                    name="width"
-                    noStyle
-                    rules={[{ required: true, message: "Введите ширину" }]}
-                  >
-                    <Input
-                      style={{ width: 100, textAlign: "center" }}
-                      placeholder="Ширина"
-                    />
-                  </Form.Item>
-
-                  <span style={{ padding: "0 8px" }}>×</span>
-
-                  <Form.Item
-                    name="height"
-                    noStyle
-                    rules={[{ required: true, message: "Введите высоту" }]}
-                  >
-                    <Input
-                      style={{ width: 100, textAlign: "center" }}
-                      placeholder="Высота"
-                    />
-                  </Form.Item>
-                </Input.Group>
-              </Form.Item>
-            </Flex>
-          </Col> */}
         </Row>
         <Row>
           <Flex gap={10}>
             <Form.Item
-              style={{ width: 120}}
+              style={{ width: 120 }}
               label="Вес"
               name="weight"
-              rules={[{ required: true }]}
+              required={false}
             >
-              <Input />
+              <Input disabled />
             </Form.Item>
             <Form.Item label="Размеры (Д × Ш × В)" required>
               <Input.Group compact>
@@ -221,6 +226,10 @@ const ShipmentCreate = () => {
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Длина"
+                    onChange={() => {
+                      // Триггер для обновления расчетов
+                      form.validateFields(['width', 'height']);
+                    }}
                   />
                 </Form.Item>
 
@@ -234,6 +243,10 @@ const ShipmentCreate = () => {
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Ширина"
+                    onChange={() => {
+                      // Триггер для обновления расчетов
+                      form.validateFields(['length', 'height']);
+                    }}
                   />
                 </Form.Item>
 
@@ -247,6 +260,10 @@ const ShipmentCreate = () => {
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Высота"
+                    onChange={() => {
+                      // Триггер для обновления расчетов
+                      form.validateFields(['length', 'width']);
+                    }}
                   />
                 </Form.Item>
               </Input.Group>
@@ -257,15 +274,15 @@ const ShipmentCreate = () => {
               name="cube"
               rules={[{ required: true }]}
             >
-              <Input />
+              <Input disabled />
             </Form.Item>
             <Form.Item
               style={{ width: 120 }}
               label="Плотность"
-              name="cube"
+              name="density"
               rules={[{ required: true }]}
             >
-              <Input />
+              <Input disabled />
             </Form.Item>
           </Flex>
         </Row>
@@ -278,8 +295,9 @@ const ShipmentCreate = () => {
               rowKey="id"
               rowSelection={{
                 type: "checkbox",
-                onChange: (keys) => {
+                onChange: (keys, rows) => {
                   setSelectedRowKeys(keys as number[]);
+                  setSelectedRows(rows);
                 },
               }}
             >
@@ -291,8 +309,6 @@ const ShipmentCreate = () => {
               <Table.Column dataIndex="weight" title="Филиал" />
               <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="status" title="Статус" />
-
-              {/* Добавьте остальные нужные колонки */}
             </Table>
           </Col>
         </Row>

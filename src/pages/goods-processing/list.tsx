@@ -58,19 +58,17 @@ import dayjs from "dayjs";
 import { MyCreateModal } from "../counterparties/modal/create-modal";
 
 export const GoogsProcessingList = () => {
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const { tableProps, setFilters, setSorters } = useTable({
     syncWithLocation: true,
-    filters: {
-      initial: [
-        {
-          field: "status",
-          operator: "eq",
-          value: "В складе",
-        },
-      ],
-    },
+    initialSorter: [
+      {
+        field: "id",
+        order: 'asc',
+      },
+    ],
   });
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   const [filterVisible, setFilterVisible] = useState(false);
   const [sortVisible, setSortVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -142,7 +140,7 @@ export const GoogsProcessingList = () => {
         <Button
           type="text"
           style={{ textAlign: "left" }}
-          // onClick={() => setSorter([{ field: filter, order: 'asc' }])}
+            // onClick={() => setSorters([{ order: 'asc' }])}
         >
           От А до Я
         </Button>
@@ -150,7 +148,7 @@ export const GoogsProcessingList = () => {
         <Button
           type="text"
           style={{ textAlign: "left" }}
-          // onClick={() => setSorter([{ field: filter, order: 'desc' }])}
+        //   onClick={() => setSorters([{ order: 'desc' }])}
         >
           От Я до А
         </Button>
@@ -557,20 +555,20 @@ export const GoogsProcessingList = () => {
             return counterparty ? `${counterparty.name}` : null;
           }}
         />
-        <Table.Column dataIndex="destinationPoint" title="Пункт назначения" />
+        <Table.Column
+          dataIndex="counterparty"
+          render={(value) =>
+            `${value.branch.name},${value.under_branch?.address}`
+          }
+          title="Пункт назначения, Пвз"
+        />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
         <Table.Column
-          dataIndex="employee_id"
+          dataIndex="counterparty"
           title="Сотрудник"
-          render={(value) => {
-            if (userIsLoading) {
-              return <>Loading....</>;
-            }
-            const user = userData?.data?.find((item) => item.id === value);
-            return user ? `${user.firstName} ${user.lastName}` : null;
-          }}
+          render={(value) => value.name}
         />
         {/*<Table.Column*/}
         {/*    dataIndex={"branch_id"}*/}

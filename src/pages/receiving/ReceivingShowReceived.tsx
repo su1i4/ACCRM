@@ -6,13 +6,7 @@ import {
   TextField,
   useTable,
 } from "@refinedev/antd";
-import {
-  useUpdateMany,
-  useParsed,
-  useShow,
-  useMany,
-  useNavigation,
-} from "@refinedev/core";
+import { useUpdateMany, useParsed, useShow, useMany } from "@refinedev/core";
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
 
@@ -51,7 +45,7 @@ const ReceivingShow = () => {
         {
           field: "status",
           operator: "eq",
-          value: "В пути",
+          value: "Выдали",
         },
       ],
     },
@@ -129,10 +123,81 @@ const ReceivingShow = () => {
   // @ts-ignore
   const totalRecords = tableProps.pagination.total || 0;
 
-  const { show, push } = useNavigation();
-
   return (
-    <Show headerButtons={() => false} isLoading={isLoading}>
+    <Show
+      headerButtons={({ deleteButtonProps, editButtonProps }: any) => (
+        <>
+          <Button onClick={() => false}>Выгруженные товары</Button>
+          {editButtonProps && (
+            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {deleteButtonProps && (
+            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {/* Add your custom button here */}
+        </>
+      )}
+      isLoading={isLoading}
+    >
+      {/* Данные о текущем рейсе */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <Title level={5}>ID</Title>
+          <TextField value={record?.id} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Номер рейса</Title>
+          <TextField value={record?.flightNumber} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Пункт назначения</Title>
+          <TextField value={branch?.name} />
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Title level={5}>Дата</Title>
+          <TextField
+            value={dayjs(record?.created_at).format("DD.MM.YYYY HH:mm")}
+          />
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Title level={5}>Количество мест</Title>
+          <TextField value={totalRecords} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Вес</Title>
+          <TextField value={record?.weight} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Куб</Title>
+          <TextField value={record?.cube} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Сотрудник</Title>
+          <TextField value={user?.firstName + " " + user?.lastName} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Тип</Title>
+          <TextField value={record?.type} />
+        </Col>
+      </Row>
+
+      <Title level={4} style={{ marginTop: 24 }}>
+        Товары в этом рейсе
+      </Title>
+
+      {/* Кнопки массового изменения статуса */}
+      <Space style={{ marginBottom: 16 }}>
+        <Button
+          onClick={handleSetReadyToIssue}
+          disabled={selectedRowKeys.length === 0 || isUpdating}
+        >
+          Принять
+        </Button>
+      </Space>
+
+      {/* Таблица со списком товаров и чекбоксами */}
       <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
         <Table.Column dataIndex="receptionDate" title="Дата" />
         <Table.Column dataIndex="cargoType" title="ТПН" />

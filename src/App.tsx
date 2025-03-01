@@ -49,7 +49,6 @@ import ReceivingList from "./pages/receiving/ReceivingList";
 import ReceivingCreate from "./pages/receiving/ReceivingCreate";
 import ReceivingShow from "./pages/receiving/ReceivingShow";
 import ReceivingEdit from "./pages/receiving/ReceivingEdit";
-import { MyCreateModal } from "./pages/counterparties/modal/create-modal";
 import {
   ShoppingCartOutlined,
   WalletOutlined,
@@ -90,11 +89,12 @@ import {
   ChatbotShow,
 } from "./pages/chatbot-history";
 
-export const API_URL = "https://alfacrm.kg/api";
+export const API_URL = 'https://alfacrm.kg/api'
+
 function App() {
   axiosInstance.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem("access_token"); // Получаем токен из localStorage
+      const token = localStorage.getItem("access_token");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -121,15 +121,11 @@ function App() {
               i18nProvider={i18nProvider_ru}
               accessControlProvider={{
                 can: async ({ resource, action }) => {
-                  // Получаем роль текущего пользователя, например, из authProvider
-                  const role = localStorage.getItem("role"); // Здесь можно получить реальную роль текущего пользователя
+                  const role = localStorage.getItem("role");
 
-                  // Если роль "user" и запрашивается доступ к ресурсу "пользователи", то запрещаем доступ
                   if (role === "user" && resource === "users") {
                     return { can: false };
                   }
-
-                  // В остальных случаях используем enforcer для проверки прав
 
                   return { can: true };
                 },
@@ -478,6 +474,7 @@ function App() {
                     <Route index element={<ReceivingList />} />
                     <Route path="create" element={<ReceivingCreate />} />
                     <Route path="show/:id" element={<ReceivingShow />} />
+                    <Route path="show/:id/received" element={<ReceivingShow />} />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 

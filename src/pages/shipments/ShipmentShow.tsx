@@ -3,13 +3,17 @@ import { Show, TextField, useTable } from "@refinedev/antd";
 import { useMany, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
+import { useParams } from "react-router";
 
 const { Title } = Typography;
 
 const ShipmentShow = () => {
   const { queryResult } = useShow({});
   const { data, isLoading } = queryResult;
+  const {id} = useParams()
   const record = data?.data;
+
+  console.log(Number(id))
 
   const { tableProps } = useTable({
     resource: "goods-processing",
@@ -25,12 +29,16 @@ const ShipmentShow = () => {
         {
           field: "shipment_id",
           operator: "eq",
-          value: record?.id,
+          value: Number(id),
+        },
+        {
+            field: "status",
+            operator: "eq",
+            value: 'В пути',
         },
       ],
     },
   });
-
   const { data: branchData, isLoading: branchIsLoading } = useMany({
     resource: "branch",
     ids:
@@ -109,7 +117,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Плотность</Title>
-          <TextField value={record?.cube} />
+          <TextField value={record?.density} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Количество мест</Title>
@@ -139,18 +147,9 @@ const ShipmentShow = () => {
         <Table.Column dataIndex="trackCode" title="Треккод" />
 
         <Table.Column
-          dataIndex="counterparty_id"
+          dataIndex="counterparty"
           title="Код получателя"
-          render={(value) => {
-            if (counterpartyIsLoading) {
-              return <>Loading....</>;
-            }
-
-            const counterparty = counterpartyData?.data?.find(
-              (item) => item.id === value
-            );
-            return counterparty ? `${counterparty.code}` : null;
-          }}
+          render={(value) => value.clientCode}
         />
 
         <Table.Column dataIndex="status" title="Статус" />
