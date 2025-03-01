@@ -1,0 +1,16 @@
+.custom-menu-style .ant-menu-item-selected {
+  background-color: #ff4d4f !important;
+  color: #ffffff !important;
+}
+
+.custom-menu-style .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #ff4d4f !important;
+}
+
+.custom-menu-style .ant-menu-item-active {
+  color: #ff4d4f !important;
+}
+
+.custom-menu-style .ant-menu-submenu-active > .ant-menu-submenu-title {
+  color: #ff4d4f !important;
+}

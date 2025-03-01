@@ -14,7 +14,6 @@ import {
 import { CalendarOutlined } from "@ant-design/icons";
 import { EntityMetadata } from "typeorm";
 import { API_URL } from "../../App"; // Импорт для типа (если вы можете получить реальные метаданные TypeORM)
-import dayjs from "dayjs";
 
 export const entityFields = [
   { name: "trackCode", label: "Трек-код", type: "varchar", required: true },
@@ -79,9 +78,31 @@ export const GoodsCreate = () => {
   const { selectProps: counterpartySelectProps } = useSelect({
     resource: "counterparty",
     optionLabel: "name",
-  });
+    onSearch: (value) => {
+      // Check if the search value contains only digits
+      const isOnlyDigits = /^\d+$/.test(value);
 
-  const today = dayjs().format("YYYY-MM-DD");
+      if (isOnlyDigits) {
+        // If only digits, search by clientCode
+        return [
+          {
+            field: "clientCode",
+            operator: "contains",
+            value,
+          },
+        ];
+      } else {
+        // If contains any non-digit characters, search by name
+        return [
+          {
+            field: "name",
+            operator: "contains",
+            value,
+          },
+        ];
+      }
+    },
+  });
 
   return (
     <Create saveButtonProps={saveButtonProps}>

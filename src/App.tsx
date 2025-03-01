@@ -1,5 +1,4 @@
-import { Refine, Authenticated, type AuthProvider } from "@refinedev/core";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
+import { Refine, Authenticated} from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import authProvider from "./authProvider";
 
@@ -8,9 +7,7 @@ import {
   ThemedLayoutV2,
   ErrorComponent,
   AuthPage,
-  RefineThemes,
   ThemedSiderV2,
-  useSiderVisible,
 } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
@@ -24,7 +21,7 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 
-import { App as AntdApp, Collapse, Flex } from "antd";
+import { App as AntdApp, Flex } from "antd";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { ColorModeContextProvider } from "./contexts/color-mode";
@@ -42,7 +39,6 @@ import {
 } from "./pages/branch";
 import { UserCreate, UserEdit, UserList, UserShow } from "./pages/user";
 import { List, Create, Show, Edit } from "./pages/shipments";
-import { CategoryList } from "./pages/categories";
 import {
   CounterpartyCreate,
   CounterpartyEdit,
@@ -55,11 +51,11 @@ import ReceivingShow from "./pages/receiving/ReceivingShow";
 import ReceivingEdit from "./pages/receiving/ReceivingEdit";
 import { MyCreateModal } from "./pages/counterparties/modal/create-modal";
 import {
-  ContactsOutlined,
-  SelectOutlined,
   ShoppingCartOutlined,
-  UserOutlined,
   WalletOutlined,
+  UsergroupAddOutlined,
+  SettingOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { i18nProvider_ru } from "./i18n/ru";
 import { IssueProcessingList } from "./pages/Issue";
@@ -75,6 +71,24 @@ import {
   UnderBranchList,
   UnderBranchShow,
 } from "./pages/under-branch";
+import {
+  ReportCreate,
+  ReportEdit,
+  ReportList,
+  ReportShow,
+} from "./pages/reports";
+import {
+  NotificationsCreate,
+  NotificationsEdit,
+  NotificationsList,
+  NotificationsShow,
+} from "./pages/notifications";
+import {
+  ChatbotCreate,
+  ChatbotEdit,
+  ChatbotList,
+  ChatbotShow,
+} from "./pages/chatbot-history";
 
 export const API_URL = "https://alfacrm.kg/api";
 function App() {
@@ -130,7 +144,7 @@ function App() {
                 },
                 {
                   name: "Контрагенты",
-                  icon: <ContactsOutlined />,
+                  icon: <UsergroupAddOutlined />,
                   meta: {
                     label: "Контрагенты",
                   },
@@ -140,6 +154,20 @@ function App() {
                   icon: <WalletOutlined />,
                   meta: {
                     label: "Касса",
+                  },
+                },
+                {
+                  name: "Автоматизация",
+                  icon: <RobotOutlined />,
+                  meta: {
+                    label: "Автоматизация",
+                  },
+                },
+                {
+                  name: "Настройки",
+                  icon: <SettingOutlined />,
+                  meta: {
+                    label: "Настройки",
                   },
                 },
                 {
@@ -207,6 +235,7 @@ function App() {
                   meta: {
                     canDelete: true,
                     label: "Филиал",
+                    parent: "Настройки",
                   },
                 },
                 {
@@ -217,7 +246,8 @@ function App() {
                   show: "/under-branch/show/:id",
                   meta: {
                     canDelete: true,
-                    label: "Подфилиал",
+                    label: "Пвз",
+                    parent: "Настройки",
                   },
                 },
                 {
@@ -229,6 +259,7 @@ function App() {
                   meta: {
                     canDelete: true,
                     label: "Пользователи",
+                    parent: "Настройки",
                   },
                 },
                 {
@@ -294,7 +325,6 @@ function App() {
                     parent: "Касса",
                   },
                 },
-
                 {
                   name: "exception-code",
                   list: "/exception-code",
@@ -302,6 +332,43 @@ function App() {
                   meta: {
                     canDelete: true,
                     label: "Исключение",
+                    parent: "Настройки",
+                  },
+                },
+                {
+                  name: "reports",
+                  list: "/reports",
+                  create: "/reports/create",
+                  edit: "/reports/:id",
+                  show: "/reports/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Отчеты",
+                    parent: "Автоматизация",
+                  },
+                },
+                {
+                  name: "notifications",
+                  list: "/notifications",
+                  create: "/notifications/create",
+                  edit: "/notifications/:id",
+                  show: "/notifications/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Уведомления",
+                    parent: "Автоматизация",
+                  },
+                },
+                {
+                  name: "chatbot-history",
+                  list: "/chatbot-history",
+                  create: "/chatbot-history/create",
+                  edit: "/chatbot-history/:id",
+                  show: "/chatbot-history/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "История чат-бота",
+                    parent: "Автоматизация",
                   },
                 },
               ]}
@@ -324,7 +391,7 @@ function App() {
                           <ThemedSiderV2
                             {...props}
                             fixed
-                            Title={(collapsed) => (
+                            Title={(collapsed: any) => (
                               <Flex
                                 align="center"
                                 justify="center"
@@ -335,10 +402,10 @@ function App() {
                                 }}
                               >
                                 <img
-                                  src="/logo-alfa-crm.png" // Замени на свой путь
+                                  src="/alfa-china.png"
                                   alt="AC CRM"
                                   style={{
-                                    width: collapsed.collapsed ? 70 : 100,
+                                    width: collapsed.collapsed ? 70 : 110,
                                     transition: "width 0.28s",
                                     backgroundColor: "transparent",
                                   }}
@@ -421,6 +488,27 @@ function App() {
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 
+                  <Route path="/reports">
+                    <Route index element={<ReportList />} />
+                    <Route path="create" element={<ReportCreate />} />
+                    <Route path="show/:id" element={<ReportShow />} />
+                    <Route path="edit/:id" element={<ReportEdit />} />
+                  </Route>
+
+                  <Route path="/notifications">
+                    <Route index element={<NotificationsList />} />
+                    <Route path="create" element={<NotificationsCreate />} />
+                    <Route path="show/:id" element={<NotificationsShow />} />
+                    <Route path="edit/:id" element={<NotificationsEdit />} />
+                  </Route>
+
+                  <Route path="/chatbot-history">
+                    <Route index element={<ChatbotList />} />
+                    <Route path="create" element={<ChatbotCreate />} />
+                    <Route path="show/:id" element={<ChatbotShow />} />
+                    <Route path="edit/:id" element={<ChatbotEdit />} />
+                  </Route>
+
                   <Route path="/bank">
                     <Route index element={<BankList />} />
                     <Route path="create" element={<BankCreate />} />
@@ -466,9 +554,13 @@ function App() {
                       forgotPasswordLink={false}
                       title={
                         <img
-                          src="/logo.svg" // Путь к логотипу в public
+                          src="/alfa-china.png" // Путь к логотипу в public
                           alt="Logo"
-                          style={{ width: 150, marginBottom: 16 }}
+                          style={{
+                            width: 150,
+                            marginBottom: 16,
+                            backgroundColor: "transparent",
+                          }}
                         />
                       }
                     />
