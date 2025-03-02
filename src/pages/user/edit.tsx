@@ -96,8 +96,8 @@ export const UserEdit = () => {
           <Col span={6}>
               <Form.Item
                   name="branch_id"
-                  label="Пунк назначения"
-                  rules={[{ required: true, message: "Введите Пунк назначения" }]}
+                  label="Сотрудник какого филиала"
+                  rules={[{ required: true, message: "Сотрудник какого филиала" }]}
               >
                   <Select {...branchSelectProps}  />
               </Form.Item>

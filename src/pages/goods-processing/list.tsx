@@ -525,16 +525,10 @@ export const GoogsProcessingList = () => {
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
         <Table.Column
-          dataIndex="employee_id"
+          dataIndex="employee"
           title="Сотрудник"
           render={(value) => {
-            if (counterpartyIsLoading) {
-              return <>Loading....</>;
-            }
-
-            const user = userData?.data?.find((item) => item.id === value);
-            console.log(userData);
-            return user ? `${user?.firstName}-${user?.lastName}` : null;
+            return `${value?.firstName}-${value?.lastName}`;
           }}
         />
         <Table.Column dataIndex="comments" title="Комментарий" />

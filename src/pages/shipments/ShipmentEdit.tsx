@@ -6,73 +6,6 @@ import { useParams } from "react-router";
 
 const ShipmentEdit = () => {
   const { id } = useParams();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [totalWeight, setTotalWeight] = useState<number>(0);
-
-  // Получаем данные текущей отправки для редактирования
-  const { data: shipmentData, isLoading: isLoadingShipment } = useOne({
-    resource: "shipments",
-    id: id ? parseInt(id) : 0,
-    queryOptions: {
-      enabled: !!id,
-    },
-  });
-
-  /**
-   * Хук для массового обновления (updateMany) товаров.
-   */
-  const { mutate: updateManyGoods } = useUpdateMany({
-    resource: "goods-processing",
-  });
-
-  /**
-   * Хук формы для редактирования "shipments".
-   */
-  const { formProps, saveButtonProps, form, formLoading } = useForm({
-    resource: "shipments",
-    action: "edit",
-    id,
-    redirect: "list",
-    onMutationSuccess: async (updatedShipment) => {
-      // Получаем ID отправки
-      const shipmentId = updatedShipment.data.id;
-      
-      // Удаляем старые связи (товары, у которых больше не выбраны чекбоксы)
-      const currentAssignedGoods = tableProps?.dataSource
-        ?.filter((item: any) => item.shipment_id === parseInt(id as string))
-        .map((item: any) => item.id) || [];
-      
-      // Находим товары, которые были откреплены (были в отправке, но сейчас не выбраны)
-      const unassignedGoods = currentAssignedGoods.filter(
-        (goodId: number) => !selectedRowKeys.includes(goodId)
-      );
-      
-      // Обновляем открепленные товары (возвращаем в статус "В складе")
-      if (unassignedGoods.length > 0) {
-        updateManyGoods({
-          ids: unassignedGoods,
-          values: {
-            shipment_id: null,
-            status: "В складе",
-          },
-        });
-      }
-      
-      // Обновляем выбранные товары (привязываем к отправке)
-      if (selectedRowKeys.length > 0) {
-        updateManyGoods({
-          ids: selectedRowKeys,
-          values: {
-            shipment_id: shipmentId,
-            status: "В пути",
-          },
-        });
-      }
-    },
-  });
-
-  // Получаем данные о связанных товарах
   //@ts-ignore
   const { tableProps, refetch: refetchGoods } = useTable({
     resource: "goods-processing",
@@ -113,6 +46,110 @@ const ShipmentEdit = () => {
       },
     ],
   });
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [totalWeight, setTotalWeight] = useState<number>(0);
+
+  // Получаем данные текущей отправки для редактирования
+  const { data: shipmentData, isLoading: isLoadingShipment } = useOne({
+    resource: "shipments",
+    id: id ? parseInt(id) : 0,
+    queryOptions: {
+      enabled: !!id,
+    },
+  });
+
+  /**
+   * Хук для массового обновления (updateMany) товаров.
+   */
+  const { mutate: updateManyGoods } = useUpdateMany({
+    resource: "goods-processing",
+  });
+
+  /**
+   * Хук формы для редактирования "shipments".
+   */
+  const {
+    formProps,
+    saveButtonProps: originalSaveButtonProps,
+    form,
+    formLoading,
+  } = useForm({
+    resource: "shipments",
+    action: "edit",
+    id,
+    redirect: "list",
+    onMutationSuccess: async (updatedShipment) => {
+      // Получаем ID отправки
+      const shipmentId = updatedShipment.data.id;
+
+      // Удаляем старые связи (товары, у которых больше не выбраны чекбоксы)
+      const currentAssignedGoods =
+        tableProps?.dataSource
+          ?.filter((item: any) => item.shipment_id === parseInt(id as string))
+          .map((item: any) => item.id) || [];
+
+      // Находим товары, которые были откреплены (были в отправке, но сейчас не выбраны)
+      const unassignedGoods = currentAssignedGoods.filter(
+        (goodId: number) => !selectedRowKeys.includes(goodId)
+      );
+
+      // Обновляем открепленные товары (возвращаем в статус "В складе")
+      if (unassignedGoods.length > 0) {
+        updateManyGoods({
+          ids: unassignedGoods,
+          values: {
+            shipment_id: null,
+            status: "В складе",
+          },
+        });
+      }
+
+      // Обновляем выбранные товары (привязываем к отправке)
+      if (selectedRowKeys.length > 0) {
+        updateManyGoods({
+          ids: selectedRowKeys,
+          values: {
+            shipment_id: shipmentId,
+            status: "В пути",
+          },
+        });
+      }
+    },
+  });
+
+  // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
+  const saveButtonProps = {
+    ...originalSaveButtonProps,
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (selectedRowKeys.length === 0) {
+        // Показываем предупреждение, если товары не выбраны
+        return form
+          .validateFields()
+          .then(() => {
+            // Если форма валидна, но товары не выбраны - показываем ошибку
+            form.setFields([
+              {
+                name: "_goods",
+                errors: ["Необходимо выбрать хотя бы один товар для отправки"],
+              },
+            ]);
+          })
+          .catch((errorInfo) => {
+            // Стандартная обработка ошибок валидации формы
+          });
+      }
+
+      // Если товары выбраны, вызываем оригинальный обработчик
+      if (originalSaveButtonProps.onClick) {
+        originalSaveButtonProps.onClick(e);
+      }
+    },
+    disabled: tableProps?.loading,
+  };
+
+  // Получаем данные о связанных товарах
+  //@ts-ignore
 
   // После загрузки данных автоматически выбираем товары, которые уже привязаны к отправке
   useEffect(() => {
@@ -120,10 +157,10 @@ const ShipmentEdit = () => {
       const assignedGoods = tableProps.dataSource
         .filter((item: any) => item.shipment_id === parseInt(id as string))
         .map((item: any) => item.id);
-      
+
       setSelectedRowKeys(assignedGoods);
       setSelectedRows(
-        tableProps.dataSource.filter((item: any) => 
+        tableProps.dataSource.filter((item: any) =>
           assignedGoods.includes(item.id)
         )
       );
@@ -165,16 +202,16 @@ const ShipmentEdit = () => {
     } else {
       setTotalWeight(0);
       form.setFieldsValue({ weight: "0" });
-      
+
       // Не сбрасываем куб и плотность при отсутствии товаров, если есть размеры
       const length = form.getFieldValue("length") || 0;
       const width = form.getFieldValue("width") || 0;
       const height = form.getFieldValue("height") || 0;
-      
+
       if (length && width && height) {
         const cube = ((length * width * height) / 1000000).toFixed(2);
         form.setFieldsValue({ cube });
-        
+
         // Плотность 0, если нет веса
         form.setFieldsValue({ density: "0" });
       } else {
@@ -237,12 +274,18 @@ const ShipmentEdit = () => {
   ];
 
   return (
-    <Edit 
-      saveButtonProps={saveButtonProps} 
-      headerButtons={() => false} 
+    <Edit
+      //@ts-ignore
+      saveButtonProps={saveButtonProps}
+      headerButtons={() => false}
       isLoading={formLoading || isLoadingShipment}
     >
       <Form {...formProps} layout="vertical">
+        {/* Скрытое поле для отображения ошибки выбора товаров */}
+        <Form.Item name="_goods" style={{ display: "none" }}>
+          <Input />
+        </Form.Item>
+
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
             <Form.Item
@@ -357,6 +400,13 @@ const ShipmentEdit = () => {
         {/* Таблица со списком товаров */}
         <Row gutter={16}>
           <Col span={24}>
+            {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
+            {form.getFieldError("_goods")?.length > 0 && (
+              <div style={{ color: "#ff4d4f", marginBottom: "12px" }}>
+                {form.getFieldError("_goods")[0]}
+              </div>
+            )}
+
             <Table
               {...tableProps}
               rowKey="id"
@@ -366,7 +416,18 @@ const ShipmentEdit = () => {
                 onChange: (keys, rows) => {
                   setSelectedRowKeys(keys as number[]);
                   setSelectedRows(rows);
+
+                  // Сбрасываем ошибку при выборе товаров
+                  if (
+                    keys.length > 0 &&
+                    form.getFieldError("_goods")?.length > 0
+                  ) {
+                    form.setFields([{ name: "_goods", errors: [] }]);
+                  }
                 },
+              }}
+              locale={{
+                emptyText: "Нет доступных товаров для отправки",
               }}
             >
               <Table.Column dataIndex="created_at" title="Дата" />

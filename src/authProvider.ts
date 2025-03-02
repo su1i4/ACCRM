@@ -1,12 +1,11 @@
 import { AuthProvider } from "@refinedev/core";
 import { axiosInstance } from "@refinedev/nestjsx-crud";
-
-const API_URL = "https://alfacrm.kg/api/auth";
+import { API_URL } from "./App";
 
 const authProvider: AuthProvider = {
     login: async ({ email, password }) => {
         try {
-            const response = await fetch(`${API_URL}/login`, {
+            const response = await fetch(`${API_URL}/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

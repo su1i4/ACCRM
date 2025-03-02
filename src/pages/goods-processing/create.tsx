@@ -111,7 +111,7 @@ export const GoodsCreate = () => {
           {" "}
           {/* Добавляем отступы между колонками */}
           {entityFields.map((field, index) => (
-            <Col span={6} key={field.name}>
+            <Col span={8} key={field.name}>
               {" "}
               {/* Разбиваем строку на 3 части (24 / 8 = 3) */}
               <Form.Item

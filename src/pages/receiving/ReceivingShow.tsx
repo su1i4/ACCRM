@@ -1,6 +1,12 @@
 import React, { useState } from "react";
-import { DeleteButton, EditButton, Show, TextField, useTable } from "@refinedev/antd";
-import { useUpdateMany, useParsed, useShow, useMany } from "@refinedev/core";
+import {
+  DeleteButton,
+  EditButton,
+  Show,
+  TextField,
+  useTable,
+} from "@refinedev/antd";
+import { useUpdateMany, useParsed, useShow, useNavigation} from "@refinedev/core";
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
 
@@ -79,53 +85,13 @@ const ReceivingShow = () => {
     );
   };
 
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: usersData, isLoading: usersIsLoading } = useMany({
-    resource: "users",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: counterpartyData, isLoading: counterpartyIsLoading } = useMany({
-    resource: "counterparty",
-    ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const branch = branchData?.data?.find(
-    (item) => item.id === record?.branch_id
-  );
-  const user = usersData?.data?.find((item) => item.id === record?.user_id);
-  // @ts-ignore
-  const totalRecords = tableProps.pagination.total || 0;
+  const {push} = useNavigation()
 
   return (
     <Show
-      headerButtons={({
-        deleteButtonProps,
-        editButtonProps,
-        listButtonProps,
-        refreshButtonProps,
-      }) => (
+      headerButtons={({ deleteButtonProps, editButtonProps }) => (
         <>
+          <Button onClick={() => push('received')} >Выгруженные товары</Button>
           {editButtonProps && (
             <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
           )}
@@ -139,44 +105,71 @@ const ReceivingShow = () => {
       {/* Данные о текущем рейсе */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
-          <Title level={5}>ID</Title>
-          <TextField value={record?.id} />
+          <Title level={5}>Номер рейса</Title>
+          <TextField value={id} />
         </Col>
         <Col xs={24} md={6}>
-          <Title level={5}>Номер рейса</Title>
-          <TextField value={record?.flightNumber} />
+          <Title level={5}>Тип груза</Title>
+          <TextField value={record?.type} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}> Код коробки</Title>
+          <TextField value={record?.boxCode} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначения</Title>
-          <TextField value={branch?.name} />
+          <TextField value={record?.branch?.name} />
         </Col>
-
         <Col xs={24} md={6}>
-          <Title level={5}>Дата</Title>
+          <Title level={5}>Место погрузки</Title>
+          <TextField value={record?.employee?.branch?.name} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Сотрудник</Title>
           <TextField
-            value={dayjs(record?.created_at).format("DD.MM.YYYY HH:mm")}
+            value={`${record?.employee?.firstName || ""}-${
+              record?.employee?.lastName || ""
+            }`}
           />
-        </Col>
-
-        <Col xs={24} md={6}>
-          <Title level={5}>Количество мест</Title>
-          <TextField value={totalRecords} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Вес</Title>
           <TextField value={record?.weight} />
         </Col>
         <Col xs={24} md={6}>
+          <Title level={5}>Размеры (Д × Ш × В)</Title>
+          <TextField
+            value={`${record?.length}_x 
+               _${record?.width}_x_${record?.height}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
           <Title level={5}>Куб</Title>
           <TextField value={record?.cube} />
         </Col>
         <Col xs={24} md={6}>
-          <Title level={5}>Сотрудник</Title>
-          <TextField value={user?.firstName + " " + user?.lastName} />
+          <Title level={5}>Плотность</Title>
+          <TextField value={record?.density} />
         </Col>
         <Col xs={24} md={6}>
-          <Title level={5}>Тип</Title>
-          <TextField value={record?.type} />
+          <Title level={5}>Количество посылок</Title>
+          <TextField value={record?.count} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Дата</Title>
+          <TextField
+            value={`${record?.created_at?.split("T")[0]} ${record?.created_at
+              ?.split("T")[1]
+              ?.slice(0, 5)}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Обновлено</Title>
+          <TextField
+            value={`${record?.updated_at?.split("T")[0]} ${record?.updated_at
+              ?.split("T")[1]
+              ?.slice(0, 5)}`}
+          />
         </Col>
       </Row>
 

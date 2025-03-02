@@ -1,5 +1,11 @@
 import React from "react";
-import { DeleteButton, EditButton, Show, TextField, useTable } from "@refinedev/antd";
+import {
+  DeleteButton,
+  EditButton,
+  Show,
+  TextField,
+  useTable,
+} from "@refinedev/antd";
 import { useMany, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
@@ -59,25 +65,7 @@ const ShipmentShow = () => {
     },
   });
 
-  const { data: counterpartyData, isLoading: counterpartyIsLoading } = useMany({
-    resource: "counterparty",
-    ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
 
-  const branch = branchData?.data?.find(
-    (item) => item.id === record?.branch_id
-  );
-  const user = usersData?.data?.find((item) => item.id === record?.user_id);
-  // @ts-ignore
-  const totalRecords = tableProps.pagination.total || 0;
-
-  console.log(data);
 
   return (
     <Show
@@ -101,7 +89,7 @@ const ShipmentShow = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Номер рейса</Title>
-          <TextField value={record?.flightNumber} />
+          <TextField value={id} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Тип груза</Title>
@@ -113,11 +101,19 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначения</Title>
-          <TextField value={branch?.name} />
+          <TextField value={record?.branch?.name} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Место погрузки</Title>
+          <TextField value={record?.employee?.branch?.name} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Сотрудник</Title>
-          <TextField value={user?.firstName + " " + user?.lastName} />
+          <TextField
+            value={`${record?.employee?.firstName || ""}-${
+              record?.employee?.lastName || ""
+            }`}
+          />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Вес</Title>
@@ -139,13 +135,23 @@ const ShipmentShow = () => {
           <TextField value={record?.density} />
         </Col>
         <Col xs={24} md={6}>
-          <Title level={5}>Количество мест</Title>
-          <TextField value={totalRecords} />
+          <Title level={5}>Количество посылок</Title>
+          <TextField value={record?.count} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата</Title>
           <TextField
-            value={dayjs(record?.created_at).format("DD.MM.YYYY HH:mm")}
+            value={`${record?.created_at?.split("T")[0]} ${record?.created_at
+              ?.split("T")[1]
+              ?.slice(0, 5)}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Обновлено</Title>
+          <TextField
+            value={`${record?.updated_at?.split("T")[0]} ${record?.updated_at
+              ?.split("T")[1]
+              ?.slice(0, 5)}`}
           />
         </Col>
       </Row>
@@ -154,13 +160,15 @@ const ShipmentShow = () => {
         Товары в этом рейсе
       </Title>
       <Table {...tableProps} rowKey="id">
-        <Table.Column dataIndex="id" title="id" />
+        {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"
           title="Дата"
-          render={({ created_at }) =>
-            dayjs(created_at).format("DD.MM.YYYY HH:mm")
-          }
+          render={(value) => {
+            return `${value?.split("T")[0]} ${value
+              ?.split("T")[1]
+              ?.slice(0, 5)}`;
+          }}
         />
         <Table.Column dataIndex="cargoType" title="ТПН" />
         <Table.Column dataIndex="trackCode" title="Треккод" />

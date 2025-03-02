@@ -1,4 +1,4 @@
-import { Refine, Authenticated} from "@refinedev/core";
+import { Refine, Authenticated } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 import authProvider from "./authProvider";
 
@@ -89,7 +89,7 @@ import {
   ChatbotShow,
 } from "./pages/chatbot-history";
 
-export const API_URL = 'https://alfacrm.kg/api'
+export const API_URL = "http://192.168.77.14:5001/api";
 
 function App() {
   axiosInstance.interceptors.request.use(
@@ -200,6 +200,15 @@ function App() {
                     canDelete: true,
                     label: "Получение",
                     parent: "Продукты",
+                  },
+                },
+                {
+                  name: "received",
+                  list: "/receiving/show/:id/received",
+                  meta: {
+                    parent: "receiving",
+                    label: "Выгруженные товары",
+                    hide: true,
                   },
                 },
                 {
@@ -474,7 +483,10 @@ function App() {
                     <Route index element={<ReceivingList />} />
                     <Route path="create" element={<ReceivingCreate />} />
                     <Route path="show/:id" element={<ReceivingShow />} />
-                    <Route path="show/:id/received" element={<ReceivingShow />} />
+                    <Route
+                      path="show/:id/received"
+                      element={<ReceivingShow />}
+                    />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 

@@ -1,14 +1,6 @@
-import {
-  DateField,
-  DeleteButton,
-  EditButton,
-  List,
-  ShowButton,
-  useSelect,
-  useTable,
-} from "@refinedev/antd";
-import { type BaseRecord, useMany, useNavigation } from "@refinedev/core";
-import { Space, Table } from "antd";
+import { List, useTable } from "@refinedev/antd";
+import { useNavigation, useCustom } from "@refinedev/core";
+import { Table, Typography } from "antd";
 import dayjs from "dayjs";
 
 const ShipmentList = () => {
@@ -17,35 +9,35 @@ const ShipmentList = () => {
     syncWithLocation: true,
   });
 
-  const { data: usersData, isLoading: usersIsLoading } = useMany({
-    resource: "users",
-    ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
+  const { show } = useNavigation();
+
+  const { tableProps: customProps } = useTable({
+    resource: "shipments",
+    pagination: {
+      mode: "off",
     },
   });
 
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
+  const totalWeight = customProps?.dataSource?.reduce(
+    (acc: number, item: any) => acc + (Number(item.weight) || 0),
+    0
+  );
 
-  const { show, push } = useNavigation();
+  const totalCount = customProps?.dataSource?.reduce(
+    (acc: number, item: any) => acc + (Number(item.count) || 0),
+    0
+  );
 
   return (
     <List>
+      <Typography.Title level={5}>
+        {!totalWeight
+          ? "Загрузка итогов..."
+          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${customProps?.dataSource?.length} | Общее количество посылок: ${totalCount}`}
+      </Typography.Title>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            // Переход в детальный вид по идентификатору записи
             show("shipments", record.id as number);
           },
         })}
@@ -55,52 +47,42 @@ const ShipmentList = () => {
         <Table.Column
           dataIndex="created_at"
           title={"Дата"}
-          render={({ created_at }) =>
-            dayjs(created_at).format("DD.MM.YYYY HH:mm")
-          }
+          width={120}
+          render={(value) => {
+            return `${value?.split("T")[0]} ${value
+              ?.split("T")[1]
+              ?.slice(0, 5)}`;
+          }}
         />
         <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column
-          dataIndex="branch_id"
+          dataIndex="employee"
           title={"Место погрузки"}
-          render={(value) =>
-            branchIsLoading ? (
-              <>Loading...</>
-            ) : (
-              branchData?.data?.find((item) => item.id === value)?.name
-            )
-          }
+          render={(value) => value?.branch?.name}
         />
-        <Table.Column dataIndex="count" title={"Количество мест"} />
+        <Table.Column dataIndex="countPosition" title={"Количество посылок"} />
         <Table.Column dataIndex="weight" title={"Вес"} />
         <Table.Column
           dataIndex="Dimensions"
           title={"Размеры (Д × Ш × В)"}
-          render={(value, record, index) => {
-            return `${record.width} x ${record.height} x ${record.length}`;
+          render={(value, record) => {
+            return `${record?.width} x ${record?.height} x ${record?.length}`;
           }}
         />
         <Table.Column dataIndex="cube" title={"Куб"} />
         <Table.Column dataIndex="density" title={"Плотность"} />
         <Table.Column dataIndex="type" title={"Тип"} />
         <Table.Column
-          render={(value) => value.name}
+          render={(value) => value?.name}
           dataIndex="branch"
           title={"Пункт назначения"}
         />
         <Table.Column
-          dataIndex="user_id"
+          dataIndex="employee"
           title={"Сотрудник"}
           render={(value) => {
-            console.log(value);
-
-            if (usersIsLoading) {
-              return <>Loading....</>;
-            }
-            const user = usersData?.data?.find((item) => item.id === value);
-            console.log(user);
-            return user ? `${user.firstName} ${user.lastName}` : null;
+            return `${value?.firstName || ""}-${value?.lastName || ""}`;
           }}
         />
       </Table>

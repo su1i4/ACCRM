@@ -10,115 +10,6 @@ import { Form, Input, DatePicker, Row, Col, Table, Flex, Select } from "antd";
  *    проставляя им shipment_id = ID созданного рейса.
  */
 const ShipmentCreate = () => {
-  /**
-   * 
-   * Состояние для ID выбранных товаров
-   */
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  
-  /**
-   * Состояние для полных данных выбранных товаров
-   */
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  
-  /**
-   * Состояние для общего веса
-   */
-  const [totalWeight, setTotalWeight] = useState<number>(0);
-
-  /**
-   * Хук для массового обновления (updateMany) товаров.
-   * Здесь указываем ресурс "goods-processing" — именно его обновляем.
-   */
-  const { mutate: updateManyGoods } = useUpdateMany({
-    resource: "goods-processing",
-    // Можно дополнительно указать onSuccess / onError, если нужно.
-  });
-
-  /**
-   * Хук формы для создания "shipments".
-   * При удачном создании (onMutationSuccess)
-   * мы получим ID нового рейса, и сразу используем updateMany для товаров.
-   */
-  
-  const { formProps, saveButtonProps, form } = useForm({
-    resource: "shipments",
-    onMutationSuccess: async (createdShipment) => {
-      const newShipmentId = createdShipment.data.id;
-      if (selectedRowKeys.length > 0) {
-        updateManyGoods({
-          ids: selectedRowKeys,
-          values: {
-            shipment_id: newShipmentId,
-            status: "В пути",
-          },
-        });
-      }
-    },
-  });
-
-  // Рассчитываем общий вес при изменении выбранных строк
-  useEffect(() => {
-    if (selectedRows.length > 0) {
-      const sum = selectedRows.reduce((total, row) => {
-        // Преобразуем в число, чтобы избежать конкатенации строк
-        const weight = parseFloat(row.weight) || 0;
-        return total + weight;
-      }, 0);
-      
-      setTotalWeight(sum);
-      
-      // Обновляем поле веса в форме
-      form.setFieldsValue({ weight: sum.toFixed(2) });
-      
-      // Также расчитываем и обновляем поле "куб" и "плотность" если у вас есть нужные данные
-      const length = form.getFieldValue('length') || 0;
-      const width = form.getFieldValue('width') || 0;
-      const height = form.getFieldValue('height') || 0;
-      
-      const cube = (length * width * height / 1000000).toFixed(2);
-      form.setFieldsValue({ cube });
-      
-      //@ts-ignore
-      if (cube > 0) {
-        const density = (sum / parseFloat(cube)).toFixed(2);
-        form.setFieldsValue({ density: density });
-      }
-    } else {
-      setTotalWeight(0);
-      form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
-    }
-  }, [selectedRows, form]);
-  
-  // Обновляем куб и плотность при изменении размеров
-  useEffect(() => {
-    const updateCalculations = () => {
-      const length = form.getFieldValue('length') || 0;
-      const width = form.getFieldValue('width') || 0;
-      const height = form.getFieldValue('height') || 0;
-      
-      if (length && width && height) {
-        const cube = (length * width * height / 1000000).toFixed(2);
-        form.setFieldsValue({ cube });
-        
-        const weight = form.getFieldValue('weight') || 0;
-        //@ts-ignore
-        if (cube > 0 && weight > 0) {
-          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(2);
-          form.setFieldsValue({ density: density });
-        }
-      }
-    };
-    
-    // Задержка для обеспечения обновления после заполнения полей формы
-    const timeoutId = setTimeout(updateCalculations, 100);
-    return () => clearTimeout(timeoutId);
-  }, [form.getFieldValue('length'), form.getFieldValue('width'), form.getFieldValue('height')]);
-
-  /**
-   * useTable для ресурса "goods-processing".
-   * Показываем товары, которые пользователь сможет выбрать для привязки.
-   */
   const { tableProps } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
@@ -143,15 +34,154 @@ const ShipmentCreate = () => {
       ],
     },
   });
-  
+  /**
+   * Состояние для ID выбранных товаров
+   */
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+
+  /**
+   * Состояние для полных данных выбранных товаров
+   */
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+
+  /**
+   * Состояние для общего веса
+   */
+  const [totalWeight, setTotalWeight] = useState<number>(0);
+
+  /**
+   * Хук для массового обновления (updateMany) товаров.
+   * Здесь указываем ресурс "goods-processing" — именно его обновляем.
+   */
+  const { mutate: updateManyGoods } = useUpdateMany({
+    resource: "goods-processing",
+    // Можно дополнительно указать onSuccess / onError, если нужно.
+  });
+
+  /**
+   * Хук формы для создания "shipments".
+   * При удачном создании (onMutationSuccess)
+   * мы получим ID нового рейса, и сразу используем updateMany для товаров.
+   */
+
+  const {
+    formProps,
+    saveButtonProps: originalSaveButtonProps,
+    form,
+  } = useForm({
+    resource: "shipments",
+    onMutationSuccess: async (createdShipment) => {
+      const newShipmentId = createdShipment.data.id;
+      if (selectedRowKeys.length > 0) {
+        updateManyGoods({
+          ids: selectedRowKeys,
+          values: {
+            shipment_id: newShipmentId,
+            status: "В пути",
+          },
+        });
+      }
+    },
+  });
+
+  // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
+  const saveButtonProps = {
+    ...originalSaveButtonProps,
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (selectedRowKeys.length === 0) {
+        // Показываем предупреждение, если товары не выбраны
+        return form
+          .validateFields()
+          .then(() => {
+            // Если форма валидна, но товары не выбраны - показываем ошибку
+            form.setFields([
+              {
+                name: "_goods",
+                errors: ["Необходимо выбрать хотя бы один товар для отправки"],
+              },
+            ]);
+          })
+          .catch((errorInfo) => {
+            // Стандартная обработка ошибок валидации формы
+          });
+      }
+
+      // Если товары выбраны, вызываем оригинальный обработчик
+      if (originalSaveButtonProps.onClick) {
+        originalSaveButtonProps.onClick(e);
+      }
+    },
+    disabled: tableProps.loading,
+  };
+
+  // Рассчитываем общий вес при изменении выбранных строк
+  useEffect(() => {
+    if (selectedRows.length > 0) {
+      const sum = selectedRows.reduce((total, row) => {
+        // Преобразуем в число, чтобы избежать конкатенации строк
+        const weight = parseFloat(row.weight) || 0;
+        return total + weight;
+      }, 0);
+
+      setTotalWeight(sum);
+
+      // Обновляем поле веса в форме
+      form.setFieldsValue({ weight: sum.toFixed(2) });
+
+      // Также расчитываем и обновляем поле "куб" и "плотность" если у вас есть нужные данные
+      const length = form.getFieldValue("length") || 0;
+      const width = form.getFieldValue("width") || 0;
+      const height = form.getFieldValue("height") || 0;
+
+      const cube = ((length * width * height) / 1000000).toFixed(2);
+      form.setFieldsValue({ cube });
+
+      if (parseFloat(cube) > 0) {
+        const density = (sum / parseFloat(cube)).toFixed(2);
+        form.setFieldsValue({ density: density });
+      }
+    } else {
+      setTotalWeight(0);
+      form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
+    }
+  }, [selectedRows, form]);
+
+  // Обновляем куб и плотность при изменении размеров
+  useEffect(() => {
+    const updateCalculations = () => {
+      const length = form.getFieldValue("length") || 0;
+      const width = form.getFieldValue("width") || 0;
+      const height = form.getFieldValue("height") || 0;
+
+      if (length && width && height) {
+        const cube = ((length * width * height) / 1000000).toFixed(2);
+        form.setFieldsValue({ cube });
+
+        const weight = form.getFieldValue("weight") || 0;
+        if (parseFloat(cube) > 0 && parseFloat(weight) > 0) {
+          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(2);
+          form.setFieldsValue({ density: density });
+        }
+      }
+    };
+
+    // Задержка для обеспечения обновления после заполнения полей формы
+    const timeoutId = setTimeout(updateCalculations, 100);
+    return () => clearTimeout(timeoutId);
+  }, [
+    form.getFieldValue("length"),
+    form.getFieldValue("width"),
+    form.getFieldValue("height"),
+  ]);
+
+  /**
+   * useTable для ресурса "goods-processing".
+   * Показываем товары, которые пользователь сможет выбрать для привязки.
+   */
+
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
     optionLabel: "name",
-  });
-
-  const { selectProps: userSelectProps } = useSelect({
-    resource: "users",
-    optionLabel: "firstName",
   });
 
   const type = [
@@ -171,8 +201,14 @@ const ShipmentCreate = () => {
   ];
 
   return (
+    //@ts-ignore
     <Create saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
+        {/* Скрытое поле для отображения ошибки выбора товаров */}
+        <Form.Item name="_goods" style={{ display: "none" }}>
+          <Input />
+        </Form.Item>
+
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
             <Form.Item
@@ -228,7 +264,7 @@ const ShipmentCreate = () => {
                     placeholder="Длина"
                     onChange={() => {
                       // Триггер для обновления расчетов
-                      form.validateFields(['width', 'height']);
+                      form.validateFields(["width", "height"]);
                     }}
                   />
                 </Form.Item>
@@ -245,7 +281,7 @@ const ShipmentCreate = () => {
                     placeholder="Ширина"
                     onChange={() => {
                       // Триггер для обновления расчетов
-                      form.validateFields(['length', 'height']);
+                      form.validateFields(["length", "height"]);
                     }}
                   />
                 </Form.Item>
@@ -262,7 +298,7 @@ const ShipmentCreate = () => {
                     placeholder="Высота"
                     onChange={() => {
                       // Триггер для обновления расчетов
-                      form.validateFields(['length', 'width']);
+                      form.validateFields(["length", "width"]);
                     }}
                   />
                 </Form.Item>
@@ -287,9 +323,15 @@ const ShipmentCreate = () => {
           </Flex>
         </Row>
 
-        {/* Таблица со списком товаров, которые можно выбрать для "привязки" к новому рейсу */}
         <Row gutter={16}>
           <Col span={24}>
+            {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
+            {form.getFieldError("_goods").length > 0 && (
+              <div style={{ color: "#ff4d4f", marginBottom: "12px" }}>
+                {form.getFieldError("_goods")[0]}
+              </div>
+            )}
+
             <Table
               {...tableProps}
               rowKey="id"
@@ -298,10 +340,21 @@ const ShipmentCreate = () => {
                 onChange: (keys, rows) => {
                   setSelectedRowKeys(keys as number[]);
                   setSelectedRows(rows);
+
+                  // Сбрасываем ошибку при выборе товаров
+                  if (
+                    keys.length > 0 &&
+                    form.getFieldError("_goods").length > 0
+                  ) {
+                    form.setFields([{ name: "_goods", errors: [] }]);
+                  }
                 },
               }}
+              locale={{
+                emptyText: "Нет доступных товаров для отправки",
+              }}
             >
-              <Table.Column dataIndex="receptionDate" title="Дата" />
+              <Table.Column dataIndex="created_at" title="Дата" />
               <Table.Column dataIndex="cargoType" title="ТПН" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
               <Table.Column dataIndex="weight" title="Код Клиента" />

@@ -17,31 +17,10 @@ const ReceivingList = () => {
     syncWithLocation: true,
   });
 
-  const { data: usersData, isLoading: usersIsLoading } = useMany({
-    resource: "users",
-    ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { show, push } = useNavigation();
+  const { show } = useNavigation();
 
   return (
-    <List>
+    <List headerButtons={() => false}>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
@@ -55,24 +34,21 @@ const ReceivingList = () => {
         <Table.Column
           dataIndex="created_at"
           title={"Дата"}
-          render={({ created_at }) =>
-            dayjs(created_at).format("DD.MM.YYYY HH:mm")
-          }
+          width={120}
+          render={(value) => {
+            return `${value?.split("T")[0]} ${value
+              ?.split("T")[1]
+              ?.slice(0, 5)}`;
+          }}
         />
-        <Table.Column dataIndex="flightNumber" title={"Номер рейса"} />
+        <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column
-          dataIndex="branch_id"
+          dataIndex="employee"
           title={"Место погрузки"}
-          render={(value) =>
-            branchIsLoading ? (
-              <>Loading...</>
-            ) : (
-              branchData?.data?.find((item) => item.id === value)?.name
-            )
-          }
+          render={(value) => value?.branch?.name}
         />
-        <Table.Column dataIndex="flightNumber" title={"Количество мест"} />
+        <Table.Column dataIndex="count" title={"Количество мест"} />
         <Table.Column dataIndex="weight" title={"Вес"} />
         <Table.Column
           dataIndex="Dimensions"
@@ -90,17 +66,10 @@ const ReceivingList = () => {
           title={"Пункт назначения"}
         />
         <Table.Column
-          dataIndex="user_id"
+          dataIndex="employee"
           title={"Сотрудник"}
           render={(value) => {
-            console.log(value);
-
-            if (usersIsLoading) {
-              return <>Loading....</>;
-            }
-            const user = usersData?.data?.find((item) => item.id === value);
-            console.log(user);
-            return user ? `${user.firstName} ${user.lastName}` : null;
+            return `${value?.firstName || ""}-${value?.lastName || ""}`;
           }}
         />
       </Table>
