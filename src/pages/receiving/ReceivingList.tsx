@@ -11,7 +11,7 @@ import { type BaseRecord, useMany, useNavigation } from "@refinedev/core";
 import { Button, Space, Table } from "antd";
 import dayjs from "dayjs";
 
-const ShipmentList = () => {
+const ReceivingList = () => {
   const { tableProps } = useTable({
     resource: "shipments",
     syncWithLocation: true,
@@ -41,7 +41,7 @@ const ShipmentList = () => {
   const { show, push } = useNavigation();
 
   return (
-    <List >
+    <List>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
@@ -60,7 +60,7 @@ const ShipmentList = () => {
           }
         />
         <Table.Column dataIndex="flightNumber" title={"Номер рейса"} />
-        <Table.Column dataIndex="flightNumber" title={"Код коробки"} />
+        <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column
           dataIndex="branch_id"
           title={"Место погрузки"}
@@ -82,9 +82,13 @@ const ShipmentList = () => {
           }}
         />
         <Table.Column dataIndex="cube" title={"Куб"} />
-        <Table.Column dataIndex="cube" title={"Плотность"} />¥
+        <Table.Column dataIndex="density" title={"Плотность"} />¥
         <Table.Column dataIndex="type" title={"Тип"} />
-        <Table.Column dataIndex="type" title={"Пункт назначения"} />
+        <Table.Column
+          render={(value) => value.name}
+          dataIndex="branch"
+          title={"Пункт назначения"}
+        />
         <Table.Column
           dataIndex="user_id"
           title={"Сотрудник"}
@@ -99,20 +103,9 @@ const ShipmentList = () => {
             return user ? `${user.firstName} ${user.lastName}` : null;
           }}
         />
-        <Table.Column
-          title={"Actions"}
-          dataIndex="actions"
-          render={(_, record: BaseRecord) => (
-            <Space>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              <ShowButton hideText size="small" recordItemId={record.id} />
-              <DeleteButton hideText size="small" recordItemId={record.id} />
-            </Space>
-          )}
-        />
       </Table>
     </List>
   );
 };
 
-export default ShipmentList;
+export default ReceivingList;
