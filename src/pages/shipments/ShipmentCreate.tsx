@@ -11,6 +11,7 @@ import { Form, Input, DatePicker, Row, Col, Table, Flex, Select } from "antd";
  */
 const ShipmentCreate = () => {
   /**
+   * 
    * Состояние для ID выбранных товаров
    */
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
@@ -39,12 +40,11 @@ const ShipmentCreate = () => {
    * При удачном создании (onMutationSuccess)
    * мы получим ID нового рейса, и сразу используем updateMany для товаров.
    */
+  
   const { formProps, saveButtonProps, form } = useForm({
     resource: "shipments",
-    // Срабатывает после успешного "create" (создания рейса)
     onMutationSuccess: async (createdShipment) => {
       const newShipmentId = createdShipment.data.id;
-      // Если выбраны товары, то обновляем их массово
       if (selectedRowKeys.length > 0) {
         updateManyGoods({
           ids: selectedRowKeys,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Show, TextField, useTable } from "@refinedev/antd";
+import { DeleteButton, EditButton, Show, TextField, useTable } from "@refinedev/antd";
 import { useMany, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
@@ -10,10 +10,10 @@ const { Title } = Typography;
 const ShipmentShow = () => {
   const { queryResult } = useShow({});
   const { data, isLoading } = queryResult;
-  const {id} = useParams()
+  const { id } = useParams();
   const record = data?.data;
 
-  console.log(Number(id))
+  console.log(Number(id));
 
   const { tableProps } = useTable({
     resource: "goods-processing",
@@ -32,9 +32,9 @@ const ShipmentShow = () => {
           value: Number(id),
         },
         {
-            field: "status",
-            operator: "eq",
-            value: 'В пути',
+          field: "status",
+          operator: "eq",
+          value: "В пути",
         },
       ],
     },
@@ -77,8 +77,27 @@ const ShipmentShow = () => {
   // @ts-ignore
   const totalRecords = tableProps.pagination.total || 0;
 
+  console.log(data);
+
   return (
-    <Show isLoading={isLoading}>
+    <Show
+      headerButtons={({
+        deleteButtonProps,
+        editButtonProps,
+        listButtonProps,
+        refreshButtonProps,
+      }) => (
+        <>
+          {editButtonProps && (
+            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {deleteButtonProps && (
+            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
+          )}
+        </>
+      )}
+      isLoading={isLoading}
+    >
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Номер рейса</Title>
@@ -90,7 +109,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}> Код коробки</Title>
-          <TextField value={branch?.name} />
+          <TextField value={record?.boxCode} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначения</Title>
@@ -153,7 +172,13 @@ const ShipmentShow = () => {
         />
 
         <Table.Column dataIndex="status" title="Статус" />
-        <Table.Column dataIndex="weight" title="Город" />
+        <Table.Column
+          dataIndex="counterparty"
+          render={(value) =>
+            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+          }
+          title="Пункт назначения, Пвз"
+        />
         <Table.Column dataIndex="weight" title="Вес" />
         {/* Добавьте остальные необходимые колонки */}
       </Table>

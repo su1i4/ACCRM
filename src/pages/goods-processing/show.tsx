@@ -100,8 +100,13 @@ export const GoodsShow: React.FC = () => {
                 </Col>
 
                 <Col xs={24} md={6}>
-                    <Title level={5}>Вид  упаковки</Title>
+                    <Title level={5}>Вид упаковки</Title>
                     <TextField value={record?.packageType } />
+                </Col>
+
+                <Col xs={24} md={6}>
+                    <Title level={5}>Цена упаковки</Title>
+                    <TextField value={record?.pricePackageType } />
                 </Col>
 
                 <Col xs={24} md={6}>
@@ -110,7 +115,7 @@ export const GoodsShow: React.FC = () => {
                 </Col>
 
                 <Col xs={24} md={6}>
-                    <Title level={5}>ФИО получателя </Title>
+                    <Title level={5}>ФИО получателя</Title>
                     <TextField value={record?.counterparty?.name || record?.counterparty_id} />
                 </Col>
 

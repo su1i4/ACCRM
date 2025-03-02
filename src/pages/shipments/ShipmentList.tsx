@@ -103,17 +103,6 @@ const ShipmentList = () => {
             return user ? `${user.firstName} ${user.lastName}` : null;
           }}
         />
-        <Table.Column
-          title={"Actions"}
-          dataIndex="actions"
-          render={(_, record: BaseRecord) => (
-            <Space>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              <ShowButton hideText size="small" recordItemId={record.id} />
-              <DeleteButton hideText size="small" recordItemId={record.id} />
-            </Space>
-          )}
-        />
       </Table>
     </List>
   );

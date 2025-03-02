@@ -1,13 +1,4 @@
-import {
-  List,
-  useTable,
-  CreateButton,
-  DeleteButton,
-  EditButton,
-  ShowButton,
-  useSelect,
-} from "@refinedev/antd";
-import { BaseRecord, useGo, useOne } from "@refinedev/core";
+import { List, useTable } from "@refinedev/antd";
 import {
   Space,
   Table,
@@ -22,62 +13,41 @@ import {
   Form,
   Card,
   Modal,
-  Image,
 } from "antd";
 import {
   SearchOutlined,
-  FilterOutlined,
   CalendarOutlined,
   SwapOutlined,
   HistoryOutlined,
-  VerticalAlignTopOutlined,
-  VerticalAlignBottomOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  PlusOutlined,
-  FileAddFilled,
   FileAddOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import {
-  FileOutlined,
-  EditOutlined,
-  UnorderedListOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
-import React, { useEffect, useState } from "react";
-import {
-  useMany,
-  useNavigation,
-  useUpdateMany,
-  useUpdate,
-  useShow,
-} from "@refinedev/core";
-import { API_URL } from "../../App";
+import { SyncOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import { useMany, useNavigation, useUpdateMany } from "@refinedev/core";
 import dayjs from "dayjs";
-import { MyCreateModal } from "../counterparties/modal/create-modal";
 
 export const GoogsProcessingList = () => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const { tableProps, setFilters, setSorters } = useTable({
-    syncWithLocation: true,
-    initialSorter: [
-      {
-        field: "id",
-        order: 'asc',
-      },
-    ],
+  const { tableProps, setFilters, setSorters, sorters } = useTable({
+    syncWithLocation: false,
+    sorters: {
+      initial: [
+        {
+          field: "created_at",
+          order: "desc",
+        },
+      ],
+    },
   });
 
-  const [filterVisible, setFilterVisible] = useState(false);
   const [sortVisible, setSortVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedItems, setSelectedItems] = useState<any>({});
-  const [selectAll, setSelectAll] = useState(false);
-  const { create } = useNavigation();
   const { mutate: updateMany } = useUpdateMany();
-  const go = useGo();
 
   useEffect(() => {
     // if (tableProps.dataSource?.length && selectedItems.length) {
@@ -140,7 +110,7 @@ export const GoogsProcessingList = () => {
         <Button
           type="text"
           style={{ textAlign: "left" }}
-            // onClick={() => setSorters([{ order: 'asc' }])}
+          // onClick={() => setSorters([{ order: 'asc' }])}
         >
           От А до Я
         </Button>
@@ -148,7 +118,7 @@ export const GoogsProcessingList = () => {
         <Button
           type="text"
           style={{ textAlign: "left" }}
-        //   onClick={() => setSorters([{ order: 'desc' }])}
+          //   onClick={() => setSorters([{ order: 'desc' }])}
         >
           От Я до А
         </Button>
@@ -373,7 +343,7 @@ export const GoogsProcessingList = () => {
             >
               <Button icon={<SettingOutlined />} />
             </Dropdown>
-            <Button icon={<SyncOutlined />} />
+            {/* <Button icon={<SyncOutlined />} /> */}
           </Space>
         </Col>
         <Col flex="auto">
@@ -446,7 +416,6 @@ export const GoogsProcessingList = () => {
         rowKey="id"
         onRow={(record) => ({
           onDoubleClick: () => {
-            // Переход в детальный вид по идентификатору записи
             show("goods-processing", record.id as number);
           },
         })}
@@ -534,31 +503,21 @@ export const GoogsProcessingList = () => {
           title="Код получателя"
           render={(value, record, index) => {
             return (
-              record.counterparty?.clientPrefix +
+              record?.counterparty?.clientPrefix +
               "-" +
-              record.counterparty?.clientCode
+              record?.counterparty?.clientCode
             );
-          }}
-        />
-
-        <Table.Column
-          dataIndex="counterparty_id"
-          title="ФИО получателя"
-          render={(value) => {
-            if (counterpartyIsLoading) {
-              return <>Loading....</>;
-            }
-
-            const counterparty = counterpartyData?.data?.find(
-              (item) => item.id === value
-            );
-            return counterparty ? `${counterparty.name}` : null;
           }}
         />
         <Table.Column
           dataIndex="counterparty"
+          title="ФИО получателя"
+          render={(value) => value?.name}
+        />
+        <Table.Column
+          dataIndex="counterparty"
           render={(value) =>
-            `${value.branch.name},${value.under_branch?.address}`
+            `${value?.branch?.name},${value?.under_branch?.address || ""}`
           }
           title="Пункт назначения, Пвз"
         />
@@ -566,40 +525,19 @@ export const GoogsProcessingList = () => {
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
         <Table.Column
-          dataIndex="counterparty"
+          dataIndex="employee_id"
           title="Сотрудник"
-          render={(value) => value.name}
+          render={(value) => {
+            if (counterpartyIsLoading) {
+              return <>Loading....</>;
+            }
+
+            const user = userData?.data?.find((item) => item.id === value);
+            console.log(userData);
+            return user ? `${user?.firstName}-${user?.lastName}` : null;
+          }}
         />
-        {/*<Table.Column*/}
-        {/*    dataIndex={"branch_id"}*/}
-        {/*    title={"Филиал"}*/}
-        {/*    render={(value) =>*/}
-        {/*        branchIsLoading ? (*/}
-        {/*            <>Loading...</>*/}
-        {/*        ) : (*/}
-        {/*           branchData?.data?.find((item) => item.id === value)?.name*/}
-        {/*        )*/}
-        {/*    }*/}
-        {/*/>*/}
         <Table.Column dataIndex="comments" title="Комментарий" />
-        {/*<Table.Column dataIndex="photo" title="Фото" render={(photo)=>photo ? <Image*/}
-        {/*    width={30}*/}
-        {/*    height={30}*/}
-        {/*    src={API_URL.replace('/api', '') + '/'+ photo}*/}
-        {/*/>: null} />*/}
-
-        {/*<Table.Column dataIndex="status" title="Статус" />*/}
-
-        {/*<Table.Column*/}
-        {/*    title={"Действия"}*/}
-        {/*    dataIndex="actions"*/}
-        {/*    render={(_, record: BaseRecord) => (*/}
-        {/*        <Space>*/}
-        {/*            <ShowButton hideText size="small" recordItemId={record.id} />*/}
-        {/*            <DeleteButton hideText size="small" recordItemId={record.id} />*/}
-        {/*        </Space>*/}
-        {/*    )}*/}
-        {/*/>*/}
       </Table>
     </List>
   );
