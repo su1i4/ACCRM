@@ -1,10 +1,8 @@
 /// <reference types="vite/client" />
 interface ImportMetaEnv {
-    readonly DEV_URL: string;
-    readonly VITE_APP_NAME: string;
-  }
-  
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-  
+  readonly DEV_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

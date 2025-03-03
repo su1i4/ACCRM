@@ -90,7 +90,7 @@ import {
 } from "./pages/chatbot-history";
 import ReceivingShowReceived from "./pages/receiving/ReceivingShowReceived";
 
-export const API_URL = "http://192.168.77.14:5001/api";
+export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
   axiosInstance.interceptors.request.use(
