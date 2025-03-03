@@ -88,6 +88,7 @@ import {
   ChatbotList,
   ChatbotShow,
 } from "./pages/chatbot-history";
+import ReceivingShowReceived from "./pages/receiving/ReceivingShowReceived";
 
 export const API_URL = "http://192.168.77.14:5001/api";
 
@@ -485,7 +486,7 @@ function App() {
                     <Route path="show/:id" element={<ReceivingShow />} />
                     <Route
                       path="show/:id/received"
-                      element={<ReceivingShow />}
+                      element={<ReceivingShowReceived />}
                     />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>

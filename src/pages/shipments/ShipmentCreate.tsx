@@ -325,7 +325,6 @@ const ShipmentCreate = () => {
 
         <Row gutter={16}>
           <Col span={24}>
-            {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
             {form.getFieldError("_goods").length > 0 && (
               <div style={{ color: "#ff4d4f", marginBottom: "12px" }}>
                 {form.getFieldError("_goods")[0]}
@@ -341,7 +340,6 @@ const ShipmentCreate = () => {
                   setSelectedRowKeys(keys as number[]);
                   setSelectedRows(rows);
 
-                  // Сбрасываем ошибку при выборе товаров
                   if (
                     keys.length > 0 &&
                     form.getFieldError("_goods").length > 0
@@ -354,12 +352,34 @@ const ShipmentCreate = () => {
                 emptyText: "Нет доступных товаров для отправки",
               }}
             >
-              <Table.Column dataIndex="created_at" title="Дата" />
+              <Table.Column
+                dataIndex="created_at"
+                title="Дата"
+                render={(value) => {
+                  return `${value?.split("T")[0]} ${value
+                    ?.split("T")[1]
+                    ?.slice(0, 5)}`;
+                }}
+              />
               <Table.Column dataIndex="cargoType" title="ТПН" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
-              <Table.Column dataIndex="weight" title="Код Клиента" />
-              <Table.Column dataIndex="trackCode" title="Получатель" />
-              <Table.Column dataIndex="weight" title="Филиал" />
+              <Table.Column
+                dataIndex="counterparty"
+                title="Код получателя"
+                render={(value) => {
+                  return value?.clientPrefix + "-" + value?.clientCode;
+                }}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                title="ФИО Получателя"
+                render={(value) => value?.name}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                title="Филиал"
+                render={(value) => value?.branch?.name}
+              />
               <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="status" title="Статус" />
             </Table>

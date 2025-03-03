@@ -7,9 +7,7 @@ import {
   Row,
   Col,
   DatePicker,
-  Checkbox,
   Dropdown,
-  Select,
   Form,
   Card,
   Modal,
@@ -17,16 +15,13 @@ import {
 import {
   SearchOutlined,
   CalendarOutlined,
-  SwapOutlined,
-  HistoryOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   FileAddOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { SyncOutlined } from "@ant-design/icons";
-import { useEffect, useState } from "react";
-import { useMany, useNavigation, useUpdateMany } from "@refinedev/core";
+import { useEffect, useMemo, useState } from "react";
+import { useMany, useNavigation, useUpdate, useUpdateMany } from "@refinedev/core";
 import dayjs from "dayjs";
 
 export const GoogsProcessingList = () => {
@@ -46,23 +41,6 @@ export const GoogsProcessingList = () => {
   const [sortVisible, setSortVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<any>({});
-  const { mutate: updateMany } = useUpdateMany();
-
-  useEffect(() => {
-    // if (tableProps.dataSource?.length && selectedItems.length) {
-    let lom = {};
-    tableProps.dataSource?.forEach((item: any) => {
-      if (item.visible) {
-        //@ts-ignore
-        lom[item.id] = true;
-      }
-    });
-    setSelectedItems(lom);
-    // }
-  }, [tableProps.dataSource]);
-
-  console.log(selectedItems);
 
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -87,10 +65,7 @@ export const GoogsProcessingList = () => {
     setSortOrder(newOrder);
     setQuery((prevQuery: Query) => ({
       ...prevQuery,
-      // если нужно передать только одну сортировку:
       sort: [`created_at,${newOrder}`],
-      // если требуется добавить дополнительную сортировку, например по id:
-      // sort: [`created_at,${newOrder}`, "id,DESC"],
     }));
   };
 
@@ -100,12 +75,10 @@ export const GoogsProcessingList = () => {
         <div style={{ marginBottom: "8px", color: "#666", fontSize: "14px" }}>
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
 
         <Button type="text" style={{ textAlign: "left" }} onClick={toggleSort}>
           Дата создания ({sortOrder === "desc" ? "↓" : "↑"})
         </Button>
-        {/* Предположим, что filter содержит название поля для алфавитной сортировки, например "name" */}
 
         <Button
           type="text"
@@ -123,74 +96,6 @@ export const GoogsProcessingList = () => {
           От Я до А
         </Button>
       </div>
-    </Card>
-  );
-
-  const filterContent = (
-    <Card style={{ width: 300, padding: "12px", border: "1px solid #f0f0f0" }}>
-      <Form layout="vertical">
-        <Form.Item label="Филиалы">
-          <Input
-            placeholder="Выберите город"
-            prefix={<SearchOutlined />}
-            style={{ marginBottom: "8px" }}
-          />
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              maxHeight: "150px",
-              overflowY: "auto",
-            }}
-          >
-            <Checkbox.Group style={{ width: "100%" }}>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-              >
-                <Checkbox value="guangzhou">Гуанчжоу</Checkbox>
-                <Checkbox value="bishkek">Бишкек</Checkbox>
-                <Checkbox value="osh">Ош</Checkbox>
-              </div>
-            </Checkbox.Group>
-          </div>
-        </Form.Item>
-
-        <Form.Item label="Дата">
-          <Row gutter={8}>
-            <Col span={11}>
-              <Select placeholder="От" style={{ width: "100%" }}>
-                <Select.Option value="today">Сегодня</Select.Option>
-                <Select.Option value="yesterday">Вчера</Select.Option>
-                <Select.Option value="week">Неделя</Select.Option>
-              </Select>
-            </Col>
-            <Col span={11} offset={2}>
-              <Select placeholder="До" style={{ width: "100%" }}>
-                <Select.Option value="today">Сегодня</Select.Option>
-                <Select.Option value="tomorrow">Завтра</Select.Option>
-                <Select.Option value="week">Неделя</Select.Option>
-              </Select>
-            </Col>
-          </Row>
-        </Form.Item>
-
-        <Form.Item label="Поиск по трек-коду">
-          <Input
-            placeholder="Введите номер трек-кода"
-            prefix={<SearchOutlined />}
-          />
-        </Form.Item>
-
-        <Form.Item label="Отбор и сортировка">
-          <Space>
-            <Dropdown overlay={sortContent} trigger={["click"]}>
-              <Button icon={<SwapOutlined />}>Сортировка</Button>
-            </Dropdown>
-            <Button icon={<HistoryOutlined />}>История</Button>
-          </Space>
-        </Form.Item>
-      </Form>
     </Card>
   );
 
@@ -217,10 +122,6 @@ export const GoogsProcessingList = () => {
     />
   );
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -229,68 +130,50 @@ export const GoogsProcessingList = () => {
     setIsModalVisible(false);
   };
 
-  const handleBulkEdit = () => {
-    const selectedRowKeys = tableProps.rowSelection?.selectedRowKeys;
-    if (selectedRowKeys && selectedRowKeys.length > 0) {
-      updateMany({
-        resource: "goods",
-        // @ts-ignore
-        ids: selectedRowKeys,
-        values: {
-          /* новые значения для всех полей */
-        },
-      });
-    } else {
-      alert("Выберите элементы для массового изменения");
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  useEffect(() => {
+    if (tableProps?.dataSource) {
+      const visibleIds = tableProps.dataSource
+        .filter((item: any) => item.visible)
+        .map((item: any) => item.id);
+      setSelectedRowKeys(visibleIds);
+    }
+  }, [tableProps.dataSource]);
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedKeys);
+    },
+  };
+
+  const { mutateAsync: update } = useUpdate();
+
+  const handleSaveChanges = async () => {
+    const selectedItems = (tableProps.dataSource || []).map((item: any) => ({
+      id: item.id,
+      visible: selectedRowKeys.includes(item.id),
+    }));
+
+    try {
+      await Promise.all(
+        selectedItems.map((item) =>
+          update({
+            resource: "goods-processing",
+            id: item.id,
+            values: { visible: item.visible },
+          })
+        )
+      );
+      console.log("Все обновления прошли успешно");
+    } catch (error) {
+      console.error("Ошибка при обновлении", error);
     }
   };
 
-  const handleSaveChanges = () => {
-    const ids = Object.keys(selectedItems);
-
-    const firstId = ids[0];
-    const visibilityValue = selectedItems[firstId];
-
-    updateMany({
-      resource: "goods-processing",
-      ids,
-      values: { visible: visibilityValue },
-    });
-  };
-
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: userData, isLoading: userIsLoading } = useMany({
-    resource: "users",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.user?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: counterpartyData, isLoading: counterpartyIsLoading } = useMany({
-    resource: "counterparty",
-    ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
   const checkboxContent = (
-    <Card>
+    <Card style={{ padding: 10 }}>
       <Button onClick={handleSaveChanges}>Показать клиенту</Button>
     </Card>
   );
@@ -343,7 +226,6 @@ export const GoogsProcessingList = () => {
             >
               <Button icon={<SettingOutlined />} />
             </Dropdown>
-            {/* <Button icon={<SyncOutlined />} /> */}
           </Space>
         </Col>
         <Col flex="auto">
@@ -360,27 +242,6 @@ export const GoogsProcessingList = () => {
               ]);
             }}
           />
-        </Col>
-        <Col>
-          {/* <Select */}
-          {/*    mode="multiple"*/}
-          {/*    placeholder="Выберите филиал"*/}
-          {/*    style={{ width: 200 }}*/}
-          {/*    onChange={(value) => {*/}
-          {/*        setFilters([*/}
-          {/*            {*/}
-          {/*                field: "branch",*/}
-          {/*                operator: "in",*/}
-          {/*                value,*/}
-          {/*            },*/}
-          {/*        ]);*/}
-          {/*    }}*/}
-          {/*    options={[*/}
-          {/*        { label: 'Гуанчжоу', value: 'guangzhou' },*/}
-          {/*        { label: 'Бишкек', value: 'bishkek' },*/}
-          {/*        { label: 'Ош', value: 'osh' },*/}
-          {/*    ]}*/}
-          {/*/> */}
         </Col>
         <Col>
           <Dropdown
@@ -419,76 +280,8 @@ export const GoogsProcessingList = () => {
             show("goods-processing", record.id as number);
           },
         })}
+        rowSelection={rowSelection}
       >
-        <Table.Column
-          dataIndex="visible"
-          title={
-            <Checkbox
-              onChange={(e) => {
-                const isChecked = e.target.checked;
-                const newSelectedItems = {};
-
-                // For all rows in the table, set their ID to true when checked
-                if (isChecked) {
-                  //@ts-ignore
-                  tableProps.dataSource.forEach((row) => {
-                    //@ts-ignore
-                    newSelectedItems[row.id] = true;
-                  });
-                }
-                // Otherwise leave the object empty when unchecking all
-
-                setSelectedItems(newSelectedItems);
-
-                // Update selectedRowKeys if you're using row selection
-                if (isChecked) {
-                  //@ts-ignore
-                  setSelectedRowKeys(
-                    //@ts-ignore
-                    tableProps.dataSource.map((row) => row.id)
-                  );
-                } else {
-                  //@ts-ignore
-                  setSelectedRowKeys([]);
-                }
-              }}
-              // Header checkbox is checked if we have selected items matching data length
-              checked={
-                Object.keys(selectedItems).length > 0 &&
-                Object.keys(selectedItems).length ===
-                  //@ts-ignore
-                  tableProps.dataSource.length
-              }
-              // Indeterminate if some but not all rows are selected
-              indeterminate={
-                Object.keys(selectedItems).length > 0 &&
-                //@ts-ignore
-                Object.keys(selectedItems).length < tableProps.dataSource.length
-              }
-            />
-          }
-          render={(value, record) => (
-            //@ts-ignore
-            <Checkbox
-              onChange={(e) => {
-                const checked = e.target.checked;
-                if (checked) {
-                  // When checking a box, add it to the selected items
-                  setSelectedItems((prev: any) => ({
-                    ...prev,
-                    [record.id]: true,
-                  }));
-                } else {
-                  // When unchecking, remove it from selected items
-                  const newSelectedItems = { ...selectedItems };
-                  delete newSelectedItems[record.id];
-                  setSelectedItems(newSelectedItems);
-                }
-              }}
-              checked={!!selectedItems[record.id]}
-            />
-          )}
-        />
         <Table.Column
           dataIndex="created_at"
           title="Дата"
@@ -499,13 +292,13 @@ export const GoogsProcessingList = () => {
         <Table.Column dataIndex="trackCode" title="Треккод" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
-          dataIndex="counterparty_id"
+          dataIndex="counterparty"
           title="Код получателя"
-          render={(value, record, index) => {
+          render={(value) => {
             return (
-              record?.counterparty?.clientPrefix +
+              value?.clientPrefix +
               "-" +
-              record?.counterparty?.clientCode
+              value?.clientCode
             );
           }}
         />

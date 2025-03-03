@@ -45,35 +45,12 @@ const ShipmentShow = () => {
       ],
     },
   });
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-  const { data: usersData, isLoading: usersIsLoading } = useMany({
-    resource: "users",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
-    queryOptions: {
-      enabled: !!tableProps?.dataSource,
-    },
-  });
-
-
 
   return (
     <Show
       headerButtons={({
         deleteButtonProps,
         editButtonProps,
-        listButtonProps,
-        refreshButtonProps,
       }) => (
         <>
           {editButtonProps && (
@@ -176,7 +153,9 @@ const ShipmentShow = () => {
         <Table.Column
           dataIndex="counterparty"
           title="Код получателя"
-          render={(value) => value.clientCode}
+          render={(value) => {
+            return value?.clientPrefix + "-" + value?.clientCode;
+          }}
         />
 
         <Table.Column dataIndex="status" title="Статус" />

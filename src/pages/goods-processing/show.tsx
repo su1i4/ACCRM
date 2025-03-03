@@ -116,7 +116,7 @@ export const GoodsShow: React.FC = () => {
           <TextField
             value={
               record?.counterparty?.clientPrefix +
-              "" +
+              "-" +
               record?.counterparty?.clientCode
             }
           />

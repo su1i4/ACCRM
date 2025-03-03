@@ -430,11 +430,29 @@ const ShipmentEdit = () => {
                 emptyText: "Нет доступных товаров для отправки",
               }}
             >
-              <Table.Column dataIndex="created_at" title="Дата" />
+              <Table.Column
+                dataIndex="created_at"
+                title="Дата"
+                render={(value) => {
+                  return `${value?.split("T")[0]} ${value
+                    ?.split("T")[1]
+                    ?.slice(0, 5)}`;
+                }}
+              />
               <Table.Column dataIndex="cargoType" title="ТПН" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
-              <Table.Column dataIndex="weight" title="Код Клиента" />
-              <Table.Column dataIndex="trackCode" title="Получатель" />
+              <Table.Column
+                dataIndex="counterparty"
+                title="Код получателя"
+                render={(value) => {
+                  return value?.clientPrefix + "-" + value?.clientCode;
+                }}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                title="ФИО Получателя"
+                render={(value) => value?.name}
+              />
               <Table.Column dataIndex="weight" title="Филиал" />
               <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="status" title="Статус" />
