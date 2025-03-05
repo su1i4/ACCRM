@@ -93,6 +93,7 @@ import { DiscountList } from "./pages/discount/list";
 import { DiscountCreate } from "./pages/discount/create";
 import { DiscountShow } from "./pages/discount/show";
 import { DiscountEdit } from "./pages/discount/edit";
+import { IssueProcessingListReceived } from "./pages/Issue/listReceived";
 
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
@@ -224,6 +225,15 @@ function App() {
                     canDelete: true,
                     label: "Выдача",
                     parent: "Продукты",
+                  },
+                },
+                {
+                  name: "received",
+                  list: "/issue/show/:id/received",
+                  meta: {
+                    parent: "issue",
+                    label: "Выданные посылки",
+                    hide: true,
                   },
                 },
                 {
@@ -459,6 +469,10 @@ function App() {
                     {/*<Route path="create" element={<GoodsCreate />} />*/}
                     {/*<Route path="edit/:id" element={<BlogPostEdit />} />*/}
                     <Route path="show/:id" element={<GoodsShow />} />
+                    <Route
+                      path="received"
+                      element={<IssueProcessingListReceived/>}
+                    />
                   </Route>
 
                   <Route path="/branch">

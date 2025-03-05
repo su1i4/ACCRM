@@ -1,5 +1,5 @@
 import { List, useTable, DeleteButton, ShowButton } from "@refinedev/antd";
-import { BaseRecord, useUpdateMany } from "@refinedev/core";
+import { BaseRecord, useNavigation, useUpdateMany } from "@refinedev/core";
 import {
   Space,
   Table,
@@ -83,6 +83,8 @@ export const IssueProcessingList = () => {
     setFilters(filters);
   };
 
+  const { push } = useNavigation();
+
   // @ts-ignore
   // @ts-ignore
   return (
@@ -154,7 +156,7 @@ export const IssueProcessingList = () => {
         >
           Принять выбранные товары
         </Button>
-        <Button type="primary" onClick={handleAcceptSelected}>
+        <Button type="primary" onClick={() => push("received")}>
           Выданные посылки
         </Button>
       </Flex>
