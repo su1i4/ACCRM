@@ -1,18 +1,40 @@
 import { List, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
 import { Table, Typography } from "antd";
+import { useState, useEffect } from "react";
 
 const ShipmentList = () => {
+  const [countGoods, setCountGoods] = useState(0);
+  
+  // Get the shipments data with pagination
   const { tableProps } = useTable({
     resource: "shipments",
     syncWithLocation: false,
-    meta: {
-      include: ["count_goods"],
+    queryOptions: {
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  // Fetch the metadata directly from the API using useCustom
+  const { data: metaData, isLoading: isMetaLoading } = useCustom({
+    url: "http://192.168.77.31:5001/api/shipments?page=1&size=10",
+    method: "get",
+    config: {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+    queryOptions: {
+      enabled: true,
+      onSuccess: (data) => {
+        console.log("Meta data:", data);
+      },
     },
   });
 
   const { show } = useNavigation();
 
+  // Get all data without pagination to calculate totals
   const { tableProps: customProps } = useTable({
     resource: "shipments",
     pagination: {
@@ -20,27 +42,28 @@ const ShipmentList = () => {
     },
   });
 
+  // Calculate totals
   const totalWeight = customProps?.dataSource?.reduce(
-    (acc: number, item: any) => acc + (Number(item.weight) || 0),
+    (acc, item) => acc + (Number(item.weight) || 0),
     0
   );
 
   const totalCount = customProps?.dataSource?.reduce(
-    (acc: number, item: any) => acc + (Number(item.count) || 0),
+    (acc, item) => acc + (Number(item.count) || 0),
     0
   );
 
   return (
     <List>
       <Typography.Title level={5}>
-        {!totalWeight
-          ? "Загрузка итогов..." //@ts-ignore
-          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${tableProps.pagination?.total} | Общее количество посылок: ${totalCount}`}
+        {!totalWeight || isMetaLoading
+          ? "Загрузка итогов..."
+          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${tableProps.pagination?.total} | Общее количество посылок: ${countGoods}`}
       </Typography.Title>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("shipments", record.id as number);
+            show("shipments", record.id);
           },
         })}
         {...tableProps}

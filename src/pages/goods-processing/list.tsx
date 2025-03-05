@@ -235,7 +235,7 @@ export const GoogsProcessingList = () => {
         </Col>
         <Col flex="auto">
           <Input
-            placeholder="Поиск по треку, клиенту или заказу"
+            placeholder="Поиск по трек-коду, ФИО получателя или по коду получателя"
             prefix={<SearchOutlined />}
             onChange={(e) => {
               const value = e.target.value;

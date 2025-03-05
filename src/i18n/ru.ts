@@ -51,12 +51,14 @@ export const i18nProvider_ru = {
       "users.titles.show": "Список пользователей",
       "users.titles.edit": "Редактирование пользователя",
       "counterparty.titles.edit": "Редактирование контрагента",
-      "notifications.editSuccess": "",
+      "notifications.editSuccess": "Успешно обновлено",
       "counterparty.titles.show": "Просмотр контрагента",
       "discount.titles.list": "Скидки",
       "discount.titles.create": "Создать скидку",
       "discount.titles.show": "Просмотр скидки",
       "discount.titles.edit": "Редактирование скидки",
+      "buttons.confirm": "Подтвердить",
+      "notifications.deleteSuccess": "Успешно удалено",
     };
     return translations[key] || key;
   },
