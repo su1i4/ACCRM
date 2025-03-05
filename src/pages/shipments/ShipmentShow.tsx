@@ -37,11 +37,26 @@ const ShipmentShow = () => {
           operator: "eq",
           value: Number(id),
         },
-        {
-          field: "status",
-          operator: "eq",
-          value: "В пути",
-        },
+        // {
+        //   operator: "or",
+        //   value: [
+        //     {
+        //       field: "trackCode",
+        //       operator: "contains",
+        //       value: "В пути",
+        //     },
+        //     {
+        //       field: "counterparty.clientCode",
+        //       operator: "contains",
+        //       value: "В рейсе",
+        //     },
+        //     {
+        //       field: "counterparty.name",
+        //       operator: "contains",
+        //       value: "Доставлено",
+        //     },
+        //   ],
+        // },
       ],
     },
   });

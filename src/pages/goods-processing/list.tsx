@@ -21,7 +21,12 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
-import { useMany, useNavigation, useUpdate, useUpdateMany } from "@refinedev/core";
+import {
+  useMany,
+  useNavigation,
+  useUpdate,
+  useUpdateMany,
+} from "@refinedev/core";
 import dayjs from "dayjs";
 
 export const GoogsProcessingList = () => {
@@ -29,9 +34,9 @@ export const GoogsProcessingList = () => {
   const { tableProps, setFilters, setSorters, sorters } = useTable({
     syncWithLocation: false,
     sorters: {
-      initial: [
+      permanent: [
         {
-          field: "created_at",
+          field: "id",
           order: "desc",
         },
       ],
@@ -230,16 +235,39 @@ export const GoogsProcessingList = () => {
         </Col>
         <Col flex="auto">
           <Input
-            placeholder="Поиск по трек-коду или коду клиента"
+            placeholder="Поиск по треку, клиенту или заказу"
             prefix={<SearchOutlined />}
             onChange={(e) => {
-              setFilters([
-                {
-                  field: "trackCode",
-                  operator: "contains",
-                  value: e.target.value,
-                },
-              ]);
+              const value = e.target.value;
+              if (!value) {
+                setFilters([], "replace");
+                return;
+              }
+              setFilters(
+                [
+                  {
+                    operator: "or",
+                    value: [
+                      {
+                        field: "trackCode",
+                        operator: "contains",
+                        value,
+                      },
+                      {
+                        field: "counterparty.clientCode",
+                        operator: "contains",
+                        value,
+                      },
+                      {
+                        field: "counterparty.name",
+                        operator: "contains",
+                        value,
+                      },
+                    ],
+                  },
+                ],
+                "replace"
+              );
             }}
           />
         </Col>
@@ -295,11 +323,7 @@ export const GoogsProcessingList = () => {
           dataIndex="counterparty"
           title="Код получателя"
           render={(value) => {
-            return (
-              value?.clientPrefix +
-              "-" +
-              value?.clientCode
-            );
+            return value?.clientPrefix + "-" + value?.clientCode;
           }}
         />
         <Table.Column
@@ -316,6 +340,7 @@ export const GoogsProcessingList = () => {
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
+        <Table.Column dataIndex="discount" title="Скидка" />
         <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
         <Table.Column
           dataIndex="employee"

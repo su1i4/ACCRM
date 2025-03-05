@@ -50,7 +50,13 @@ export const i18nProvider_ru = {
       "users.titles.create": "Создание сотрудников",
       "users.titles.show": "Список пользователей",
       "users.titles.edit": "Редактирование пользователя",
+      "counterparty.titles.edit": "Редактирование контрагента",
       "notifications.editSuccess": "",
+      "counterparty.titles.show": "Просмотр контрагента",
+      "discount.titles.list": "Скидки",
+      "discount.titles.create": "Создать скидку",
+      "discount.titles.show": "Просмотр скидки",
+      "discount.titles.edit": "Редактирование скидки",
     };
     return translations[key] || key;
   },

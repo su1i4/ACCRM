@@ -196,6 +196,13 @@ export const CounterpartyList: React.FC = () => {
         <Table.Column dataIndex="email" title="Почта" />
         <Table.Column dataIndex="totalWeight" title="Сумма заказов Кг" />
         <Table.Column dataIndex="totalUsd" title="Сумма заказов USD" />
+        <Table.Column
+          dataIndex="clientPrefix"
+          title="Код клиента"
+          render={(value) => {
+            return `${value?.clientPrefix}-${value?.clientCode}`;
+          }}
+        />
         <Table.Column dataIndex="comment" title="Комментарий" />
       </Table>
     </List>

@@ -89,6 +89,10 @@ import {
   ChatbotShow,
 } from "./pages/chatbot-history";
 import ReceivingShowReceived from "./pages/receiving/ReceivingShowReceived";
+import { DiscountList } from "./pages/discount/list";
+import { DiscountCreate } from "./pages/discount/create";
+import { DiscountShow } from "./pages/discount/show";
+import { DiscountEdit } from "./pages/discount/edit";
 
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
@@ -228,7 +232,7 @@ function App() {
                   show: "/remaining-stock/show/:id",
                   meta: {
                     canDelete: true,
-                    label: "Остатки на скаде",
+                    label: "Остатки на складе",
                     parent: "Продукты",
                   },
                 },
@@ -293,6 +297,18 @@ function App() {
                   },
                 },
 
+                {
+                  name: "discount",
+                  list: "/discount",
+                  create: "/discount/create",
+                  edit: "/discount/edit/:id",
+                  show: "/discount/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Скидки",
+                    parent: "Контрагенты",
+                  },
+                },
                 {
                   name: "bank",
                   list: "/bank",
@@ -496,6 +512,13 @@ function App() {
                     <Route path="create" element={<ReceivingCreate />} />
                     <Route path="show/:id" element={<ReceivingShow />} />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
+                  </Route>
+
+                  <Route path="/discount">
+                    <Route index element={<DiscountList />} />
+                    <Route path="create" element={<DiscountCreate />} />
+                    <Route path="show/:id" element={<DiscountShow />} />
+                    <Route path="edit/:id" element={<DiscountEdit />} />
                   </Route>
 
                   <Route path="/reports">

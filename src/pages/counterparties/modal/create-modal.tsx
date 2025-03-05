@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useModalForm } from "@refinedev/antd";
 import { Col, Flex, Form, Input, Modal, Select } from "antd";
 import InputMask from "react-input-mask";
@@ -10,6 +10,8 @@ export const MyCreateModal: React.FC<{
   open: boolean;
   onClose: () => void;
 }> = ({ open, onClose }) => {
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  
   const { modalProps, formProps, submit } = useModalForm({
     resource: "counterparty",
     action: "create",
@@ -21,12 +23,36 @@ export const MyCreateModal: React.FC<{
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
     optionLabel: "name",
+    onSearch: (value) => {
+      return [
+        {
+          field: "name",
+          operator: "contains",
+          value,
+        },
+      ];
+    },
   });
 
   const { selectProps: underBranchSelectProps } = useSelect({
     resource: "under-branch",
     optionLabel: "address",
+    filters: [
+      {
+        field: "branch_id",
+        operator: "eq",
+        value: selectedBranchId,
+      },
+    ],
+    queryOptions: {
+      enabled: !!selectedBranchId,
+    },
   });
+
+  const handleBranchChange = (value: any) => {
+    setSelectedBranchId(value);
+    formProps.form?.setFieldValue("under_branch_id", undefined);
+  };
 
   return (
     <Modal
@@ -45,7 +71,11 @@ export const MyCreateModal: React.FC<{
             label="Пунк назначения"
             rules={[{ required: true, message: "Введите Пунк назначения" }]}
           >
-            <Select {...branchSelectProps} style={{ width: "100%" }} />
+            <Select 
+              {...branchSelectProps} 
+              style={{ width: "100%" }} 
+              onChange={handleBranchChange}
+            />
           </Form.Item>
           <Form.Item
             style={{ width: "100%" }}

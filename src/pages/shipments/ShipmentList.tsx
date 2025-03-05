@@ -1,12 +1,14 @@
 import { List, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
 import { Table, Typography } from "antd";
-import dayjs from "dayjs";
 
 const ShipmentList = () => {
   const { tableProps } = useTable({
     resource: "shipments",
-    syncWithLocation: true,
+    syncWithLocation: false,
+    meta: {
+      include: ["count_goods"],
+    },
   });
 
   const { show } = useNavigation();
@@ -32,8 +34,8 @@ const ShipmentList = () => {
     <List>
       <Typography.Title level={5}>
         {!totalWeight
-          ? "Загрузка итогов..."
-          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${customProps?.dataSource?.length} | Общее количество посылок: ${totalCount}`}
+          ? "Загрузка итогов..." //@ts-ignore
+          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${tableProps.pagination?.total} | Общее количество посылок: ${totalCount}`}
       </Typography.Title>
       <Table
         onRow={(record) => ({
@@ -61,7 +63,7 @@ const ShipmentList = () => {
           title={"Место погрузки"}
           render={(value) => value?.branch?.name}
         />
-        <Table.Column dataIndex="countPosition" title={"Количество посылок"} />
+        <Table.Column dataIndex="count" title={"Количество посылок"} />
         <Table.Column dataIndex="weight" title={"Вес"} />
         <Table.Column
           dataIndex="Dimensions"
