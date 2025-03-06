@@ -228,8 +228,8 @@ function App() {
                   },
                 },
                 {
-                  name: "received",
-                  list: "/issue/show/:id/received",
+                  name: "issued",
+                  list: "/issue/received",
                   meta: {
                     parent: "issue",
                     label: "Выданные посылки",
@@ -466,8 +466,6 @@ function App() {
 
                   <Route path="/issue">
                     <Route index element={<IssueProcessingList />} />
-                    {/*<Route path="create" element={<GoodsCreate />} />*/}
-                    {/*<Route path="edit/:id" element={<BlogPostEdit />} />*/}
                     <Route path="show/:id" element={<GoodsShow />} />
                     <Route
                       path="received"

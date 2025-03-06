@@ -59,6 +59,7 @@ export const i18nProvider_ru = {
       "discount.titles.edit": "Редактирование скидки",
       "buttons.confirm": "Подтвердить",
       "notifications.deleteSuccess": "Успешно удалено",
+      "issued.titles.list": "Выданные посылки",
     };
     return translations[key] || key;
   },

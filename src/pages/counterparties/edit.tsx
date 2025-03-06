@@ -1,19 +1,29 @@
 import React from "react";
-import { Edit, useForm, useSelect } from "@refinedev/antd";
+import { Edit, useForm, useSelect, useTable } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
 import InputMask from "react-input-mask";
+import PhoneInput from "react-phone-input-2";
 
 export const CounterpartyEdit: React.FC = () => {
   const { formProps, saveButtonProps, formLoading, queryResult } = useForm();
 
-  const { selectProps: underBranchSelectProps } = useSelect({
+  const { tableProps } = useTable({
     resource: "under-branch",
-    optionLabel: "address",
-    defaultValue: formProps.initialValues?.under_branch_id,
     pagination: {
       mode: "off",
     },
   });
+
+  // const { selectProps: underBranchSelectProps } = useSelect({
+  //   resource: "under-branch",
+  //   optionLabel: "address",
+  //   defaultValue: formProps.initialValues?.under_branch_id,
+  //   pagination: {
+  //     mode: "off",
+  //   },
+  // });
+
+  console.log(formProps.initialValues?.branch_id);
 
   return (
     <Edit
@@ -33,10 +43,15 @@ export const CounterpartyEdit: React.FC = () => {
           rules={[{ required: true, message: "Введите пвз" }]}
         >
           <Select
-            options={underBranchSelectProps?.options?.filter(
-              (option) =>
-                option.value === formProps.initialValues?.branch_id
-            )}
+            options={tableProps?.dataSource
+              ?.filter(
+                (option) =>
+                  option.branch_id === formProps.initialValues?.branch_id
+              )
+              ?.map((option) => ({
+                label: option.address,
+                value: option.id,
+              }))}
             style={{ width: "100%" }}
           />
         </Form.Item>
@@ -50,15 +65,15 @@ export const CounterpartyEdit: React.FC = () => {
         </Form.Item>
 
         <Form.Item
+          style={{ width: "100%" }}
           label="Номер телефона"
           name="phoneNumber"
-          rules={[
-            { required: true, message: "Пожалуйста, введите номер телефона" },
-          ]}
+          rules={[{ required: true, message: "Введите номер телефона" }]}
         >
-          <InputMask mask="+7 (999) 999-99-99" maskChar="_">
-            {(inputProps: any) => <Input {...inputProps} />}
-          </InputMask>
+          <PhoneInput
+            inputStyle={{ width: "100%", height: 32 }}
+            country={"kg"}
+          />
         </Form.Item>
         <Form.Item
           style={{ width: "100%" }}
@@ -72,10 +87,6 @@ export const CounterpartyEdit: React.FC = () => {
         <Form.Item
           label="Email"
           name="email"
-          rules={[
-            { required: true, message: "Пожалуйста, введите email" },
-            { type: "email", message: "Неверный формат email" },
-          ]}
         >
           <Input />
         </Form.Item>

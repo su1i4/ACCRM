@@ -122,38 +122,40 @@ export const CounterpartyList: React.FC = () => {
         </Col>
         <Col flex="auto">
           <Input
-            placeholder="Поиск по трек-коду или коду клиента"
+            placeholder="Поиск по фио или по коду клиента"
             prefix={<SearchOutlined />}
             onChange={(e) => {
-              setFilters([
-                {
-                  field: "trackCode",
-                  operator: "contains",
-                  value: e.target.value,
-                },
-              ]);
+              const value = e.target.value;
+              if (!value) {
+                setFilters([], "replace");
+                return;
+              }
+              setFilters(
+                [
+                  {
+                    operator: "or",
+                    value: [
+                      {
+                        field: "clientCode",
+                        operator: "contains",
+                        value,
+                      },
+                      {
+                        field: "clientPrefix",
+                        operator: "contains",
+                        value,
+                      },
+                      {
+                        field: "name",
+                        operator: "contains",
+                        value,
+                      },
+                    ],
+                  },
+                ],
+                "replace"
+              );
             }}
-          />
-        </Col>
-        <Col>
-          <Select
-            mode="multiple"
-            placeholder="Выберите филиал"
-            style={{ width: 200 }}
-            onChange={(value) => {
-              setFilters([
-                {
-                  field: "branch",
-                  operator: "in",
-                  value,
-                },
-              ]);
-            }}
-            options={[
-              { label: "Гуанчжоу", value: "guangzhou" },
-              { label: "Бишкек", value: "bishkek" },
-              { label: "Ош", value: "osh" },
-            ]}
           />
         </Col>
         <Col>
@@ -196,13 +198,6 @@ export const CounterpartyList: React.FC = () => {
         <Table.Column dataIndex="email" title="Почта" />
         <Table.Column dataIndex="totalWeight" title="Сумма заказов Кг" />
         <Table.Column dataIndex="totalUsd" title="Сумма заказов USD" />
-        <Table.Column
-          dataIndex="clientPrefix"
-          title="Код клиента"
-          render={(value) => {
-            return `${value?.clientPrefix}-${value?.clientCode}`;
-          }}
-        />
         <Table.Column dataIndex="comment" title="Комментарий" />
       </Table>
     </List>

@@ -38,8 +38,8 @@ const ReceivingShowReceived = () => {
               ?.slice(0, 5)}`;
           }}
         />
-        <Table.Column dataIndex="cargoType" title="ТПН" />
-        <Table.Column dataIndex="trackCode" title="Треккод" />
+        <Table.Column dataIndex="cargoType" title="Тип груза" />
+        <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column
           dataIndex="counterparty"
           title="Код клиента"

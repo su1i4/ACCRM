@@ -162,7 +162,7 @@ const ShipmentShow = () => {
               ?.slice(0, 5)}`;
           }}
         />
-        <Table.Column dataIndex="cargoType" title="ТПН" />
+        <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
 
         <Table.Column

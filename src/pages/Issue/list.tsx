@@ -19,11 +19,14 @@ import dayjs from "dayjs";
 import { API_URL } from "../../App";
 
 export const IssueProcessingList = () => {
+  const firstName = localStorage.getItem("firstName");
+  const lastName = localStorage.getItem("lastName");
+  console.log(firstName, lastName);
   const { tableProps, setFilters } = useTable({
     resource: "goods-processing",
-    syncWithLocation: true,
+    syncWithLocation: false,
     filters: {
-      initial: [
+      permanent: [
         {
           field: "status",
           operator: "eq",
@@ -95,7 +98,7 @@ export const IssueProcessingList = () => {
           <Form layout="inline" onFinish={handleFilter}>
             <Form.Item name="trackCode">
               <Input
-                style={{ width: 400 }}
+                style={{ width: 500 }}
                 placeholder="Поиск по трек-коду, ФИО получателя или по коду получателя"
                 prefix={<SearchOutlined />}
                 onChange={(e) => {
@@ -172,13 +175,13 @@ export const IssueProcessingList = () => {
       >
         <Table.Column
           dataIndex="created_at"
-          title={"Дата"}
+          title={"Дата выдачи"}
           width={120}
           render={(value) =>
             value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
           }
         />
-        <Table.Column dataIndex="trackCode" title="Треккод" />
+        <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
           dataIndex="counterparty"
@@ -193,9 +196,11 @@ export const IssueProcessingList = () => {
           render={(value) => value?.name}
         />
         <Table.Column
-          render={(value) => value?.name}
-          dataIndex="branch"
-          title={"Пункт назначения"}
+          dataIndex="counterparty"
+          render={(value) =>
+            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+          }
+          title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />

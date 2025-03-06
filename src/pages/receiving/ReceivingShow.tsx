@@ -190,7 +190,7 @@ const ReceivingShow = () => {
       {/* Таблица со списком товаров и чекбоксами */}
       <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
         <Table.Column dataIndex="receptionDate" title="Дата" />
-        <Table.Column dataIndex="cargoType" title="ТПН" />
+        <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
         <Table.Column dataIndex="clientCode" title="Код Клиента" />
         <Table.Column dataIndex="recipient" title="Получатель" />

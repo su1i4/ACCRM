@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 
 const ShipmentList = () => {
   const [countGoods, setCountGoods] = useState(0);
-  
+
   // Get the shipments data with pagination
   const { tableProps } = useTable({
     resource: "shipments",
@@ -55,15 +55,44 @@ const ShipmentList = () => {
 
   return (
     <List>
-      <Typography.Title level={5}>
-        {!totalWeight || isMetaLoading
-          ? "Загрузка итогов..."
-          : `Общий вес: ${totalWeight} кг | Общее количество рейсов: ${tableProps.pagination?.total} | Общее количество посылок: ${countGoods}`}
-      </Typography.Title>
+      <div
+        style={{
+          border: "1px dashed gainsboro",
+          padding: "6px 10px",
+          borderRadius: 5,
+          marginBottom: 10,
+          backgroundColor: "#f9f9f9",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        {!totalWeight ? (
+          <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
+            Загрузка итогов...
+          </Typography.Title>
+        ) : (
+          <>
+            <Typography.Text style={{ fontSize: 14 }}>
+              Общий вес: <strong>{totalWeight} кг</strong>
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 14 }}>
+              {/* @ts-ignore */}
+              Количество рейсов: <strong>{tableProps.pagination?.total}</strong>
+            </Typography.Text>
+            <Typography.Text style={{ fontSize: 14 }}>
+              Количество посылок: <strong>{countGoods}</strong>
+            </Typography.Text>
+          </>
+        )}
+      </div>
+
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("shipments", record.id);
+            show("shipments", record.id as number);
           },
         })}
         {...tableProps}
@@ -71,7 +100,7 @@ const ShipmentList = () => {
       >
         <Table.Column
           dataIndex="created_at"
-          title={"Дата"}
+          title={"Дата отправки"}
           width={120}
           render={(value) => {
             return `${value?.split("T")[0]} ${value

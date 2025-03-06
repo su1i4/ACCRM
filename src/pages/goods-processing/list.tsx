@@ -312,12 +312,12 @@ export const GoogsProcessingList = () => {
       >
         <Table.Column
           dataIndex="created_at"
-          title="Дата"
+          title="Дата приемки"
           render={(value) =>
             value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
           }
         />
-        <Table.Column dataIndex="trackCode" title="Треккод" />
+        <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
           dataIndex="counterparty"

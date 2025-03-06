@@ -10,7 +10,7 @@ import { Form, Input, DatePicker, Row, Col, Table, Flex, Select } from "antd";
  *    проставляя им shipment_id = ID созданного рейса.
  */
 const ShipmentCreate = () => {
-  const { tableProps } = useTable({
+  const { tableProps, setFilters } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
     initialSorter: [
@@ -20,7 +20,7 @@ const ShipmentCreate = () => {
       },
     ],
     filters: {
-      initial: [
+      permanent: [
         {
           field: "shipment_id",
           operator: "null",
@@ -200,6 +200,9 @@ const ShipmentCreate = () => {
     "Аксессуары",
   ];
 
+  //@ts-ignore
+  console.log(formProps.form?.getFieldsValue()?.branch_id);
+
   return (
     //@ts-ignore
     <Create saveButtonProps={saveButtonProps}>
@@ -238,7 +241,21 @@ const ShipmentCreate = () => {
               label="Пункт назначения"
               rules={[{ required: true, message: "Введите Пунк назначения" }]}
             >
-              <Select {...branchSelectProps} />
+              <Select
+                onChange={(e) => {
+                  setFilters(
+                    [
+                      {
+                        field: "counterparty.branch_id",
+                        operator: "eq",
+                        value: e,
+                      },
+                    ],
+                    "replace"
+                  );
+                }}
+                {...branchSelectProps}
+              />
             </Form.Item>
           </Flex>
         </Row>
@@ -347,6 +364,10 @@ const ShipmentCreate = () => {
                     form.setFields([{ name: "_goods", errors: [] }]);
                   }
                 },
+                getCheckboxProps: () => ({
+                  //@ts-ignore
+                  disabled: !formProps.form?.getFieldsValue()?.branch_id,
+                }),
               }}
               locale={{
                 emptyText: "Нет доступных товаров для отправки",
@@ -361,7 +382,7 @@ const ShipmentCreate = () => {
                     ?.slice(0, 5)}`;
                 }}
               />
-              <Table.Column dataIndex="cargoType" title="ТПН" />
+              <Table.Column dataIndex="cargoType" title="Тип груза" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
               <Table.Column
                 dataIndex="counterparty"
@@ -377,7 +398,7 @@ const ShipmentCreate = () => {
               />
               <Table.Column
                 dataIndex="counterparty"
-                title="Филиал"
+                title="Пункт назначения"
                 render={(value) => value?.branch?.name}
               />
               <Table.Column dataIndex="weight" title="Вес" />
