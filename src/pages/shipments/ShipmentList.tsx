@@ -15,26 +15,8 @@ const ShipmentList = () => {
     },
   });
 
-  // Fetch the metadata directly from the API using useCustom
-  const { data: metaData, isLoading: isMetaLoading } = useCustom({
-    url: "http://192.168.77.31:5001/api/shipments?page=1&size=10",
-    method: "get",
-    config: {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    },
-    queryOptions: {
-      enabled: true,
-      onSuccess: (data) => {
-        console.log("Meta data:", data);
-      },
-    },
-  });
-
   const { show } = useNavigation();
 
-  // Get all data without pagination to calculate totals
   const { tableProps: customProps } = useTable({
     resource: "shipments",
     pagination: {
@@ -53,6 +35,8 @@ const ShipmentList = () => {
     0
   );
 
+  console.log(totalWeight );
+
   return (
     <List>
       <div
@@ -69,7 +53,7 @@ const ShipmentList = () => {
           flexWrap: "wrap",
         }}
       >
-        {!totalWeight ? (
+        {!customProps?.dataSource ? (
           <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
             Загрузка итогов...
           </Typography.Title>

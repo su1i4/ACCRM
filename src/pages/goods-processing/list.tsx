@@ -1,4 +1,4 @@
-import { List, useTable } from "@refinedev/antd";
+import { List } from "@refinedev/antd";
 import {
   Space,
   Table,
@@ -20,108 +20,76 @@ import {
   FileAddOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  useCustom,
   useMany,
   useNavigation,
   useUpdate,
   useUpdateMany,
 } from "@refinedev/core";
 import dayjs from "dayjs";
+import { API_URL } from "../../App";
 
 export const GoogsProcessingList = () => {
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const { tableProps, setFilters, setSorters, sorters } = useTable({
-    syncWithLocation: false,
-    sorters: {
-      permanent: [
-        {
-          field: "id",
-          order: "desc",
-        },
-      ],
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [searchFilters, setSearchFilters] = useState<any[]>([{ trackCode: { $contL: "" } }]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Fixed: Ensure consistent filter structure for API calls
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({ $and: searchFilters }),
+      sort: `id,${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: (currentPage - 1) * pageSize,
+    };
+  };
+
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
     },
   });
 
-  const [sortVisible, setSortVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  interface Query {
-    s?: string;
-    sort?: string | string[];
-    limit?: number;
-    page?: number;
-    offset?: number;
-  }
-
-  const [query, setQuery] = useState<Query>({
-    s: JSON.stringify({ $and: [{ trackCode: { $contL: "" } }] }),
-    sort: ["created_at,DESC"],
-    limit: 10,
-    page: 1,
-    offset: 0,
-  });
-
-  const toggleSort = () => {
-    const newOrder = sortOrder === "desc" ? "asc" : "desc";
-    setSortOrder(newOrder);
-    setQuery((prevQuery: Query) => ({
-      ...prevQuery,
-      sort: [`created_at,${newOrder}`],
-    }));
+  // Fixed: Update filters function that properly formats filters
+  const setFilters = (filters: any[], mode: "replace" | "append" = "append") => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+    
+    // We'll refetch in useEffect after state updates
   };
 
-  const sortContent = (
-    <Card style={{ width: 200, padding: "12px" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div style={{ marginBottom: "8px", color: "#666", fontSize: "14px" }}>
-          Сортировать по
-        </div>
-
-        <Button type="text" style={{ textAlign: "left" }} onClick={toggleSort}>
-          Дата создания ({sortOrder === "desc" ? "↓" : "↑"})
-        </Button>
-
-        <Button
-          type="text"
-          style={{ textAlign: "left" }}
-          // onClick={() => setSorters([{ order: 'asc' }])}
-        >
-          От А до Я
-        </Button>
-
-        <Button
-          type="text"
-          style={{ textAlign: "left" }}
-          //   onClick={() => setSorters([{ order: 'desc' }])}
-        >
-          От Я до А
-        </Button>
-      </div>
-    </Card>
-  );
+  // Fixed: Add effect to trigger refetch when filters or sorting changes
+  useEffect(() => {
+    refetch();
+  }, [searchFilters, sortDirection, currentPage, pageSize]);
 
   const datePickerContent = (
     <DatePicker.RangePicker
       style={{ width: "280px" }}
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
-        if (dates) {
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          // Fixed: Use consistent filter format
           setFilters([
             {
-              field: "created_at",
-              operator: "gte",
-              value: dateStrings[0],
-            },
-            {
-              field: "created_at",
-              operator: "lte",
-              value: dateStrings[1],
-            },
-          ]);
+              created_at: {
+                $gte: dateStrings[0],
+                $lte: dateStrings[1]
+              }
+            }
+          ], "replace");
         }
       }}
     />
@@ -137,14 +105,17 @@ export const GoogsProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  // Получаем актуальные данные из хука useCustom
+  const dataSource = data?.data?.data || [];
+  
   useEffect(() => {
-    if (tableProps?.dataSource) {
-      const visibleIds = tableProps.dataSource
+    if (dataSource) {
+      const visibleIds = dataSource
         .filter((item: any) => item.visible)
         .map((item: any) => item.id);
       setSelectedRowKeys(visibleIds);
     }
-  }, [tableProps.dataSource]);
+  }, [dataSource]);
 
   const rowSelection = {
     selectedRowKeys,
@@ -156,14 +127,14 @@ export const GoogsProcessingList = () => {
   const { mutateAsync: update } = useUpdate();
 
   const handleSaveChanges = async () => {
-    const selectedItems = (tableProps.dataSource || []).map((item: any) => ({
+    const selectedItems = (dataSource || []).map((item: any) => ({
       id: item.id,
       visible: selectedRowKeys.includes(item.id),
     }));
 
     try {
       await Promise.all(
-        selectedItems.map((item) =>
+        selectedItems.map((item: any) =>
           update({
             resource: "goods-processing",
             id: item.id,
@@ -185,6 +156,24 @@ export const GoogsProcessingList = () => {
 
   const { show, push } = useNavigation();
 
+  // Создаем функции для пагинации, которые обычно предоставляет tableProps
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  };
+
+  // Формируем пропсы для таблицы из данных useCustom
+  const tableProps = {
+    dataSource: dataSource,
+    loading: isLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
+  };
+
   return (
     <List headerButtons={() => false}>
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
@@ -195,38 +184,26 @@ export const GoogsProcessingList = () => {
               style={{}}
               onClick={() => push("/goods-processing/create")}
             />
-            <Dropdown
-              overlay={sortContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              visible={sortVisible}
-              onVisibleChange={(visible) => {
-                setSortVisible(visible);
-                if (visible) {
-                  setSortVisible(true);
-                }
+            <Button
+              onClick={() => {
+                setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+                // No need to call refetch here as it will be triggered by the useEffect
               }}
-            >
-              <Button
-                icon={
-                  sortDirection === "asc" ? (
-                    <ArrowUpOutlined />
-                  ) : (
-                    <ArrowDownOutlined />
-                  )
-                }
-              />
-            </Dropdown>
+              icon={
+                sortDirection === "ASC" ? (
+                  <ArrowUpOutlined />
+                ) : (
+                  <ArrowDownOutlined />
+                )
+              }
+            />
             <Dropdown
               overlay={checkboxContent}
               trigger={["click"]}
               placement="bottomLeft"
-              visible={settingVisible}
-              onVisibleChange={(visible) => {
+              open={settingVisible}
+              onOpenChange={(visible) => {
                 setSettingVisible(visible);
-                if (visible) {
-                  setSettingVisible(true);
-                }
               }}
             >
               <Button icon={<SettingOutlined />} />
@@ -235,36 +212,25 @@ export const GoogsProcessingList = () => {
         </Col>
         <Col flex="auto">
           <Input
-            placeholder="Поиск по трек-коду, ФИО получателя или по коду получателя"
+            placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
             prefix={<SearchOutlined />}
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
-                setFilters([], "replace");
+                setFilters([{ trackCode: { $contL: "" } }], "replace");
                 return;
               }
+              
+              // Fixed: Use consistent filter format
               setFilters(
                 [
                   {
-                    operator: "or",
-                    value: [
-                      {
-                        field: "trackCode",
-                        operator: "contains",
-                        value,
-                      },
-                      {
-                        field: "counterparty.clientCode",
-                        operator: "contains",
-                        value,
-                      },
-                      {
-                        field: "counterparty.name",
-                        operator: "contains",
-                        value,
-                      },
-                    ],
-                  },
+                    $or: [
+                      { trackCode: { $contL: value } },
+                      { "counterparty.clientCode": { $contL: value } },
+                      { "counterparty.name": { $contL: value } }
+                    ]
+                  }
                 ],
                 "replace"
               );
@@ -286,7 +252,7 @@ export const GoogsProcessingList = () => {
 
       <Modal
         title="Новая спецификация"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >
@@ -303,6 +269,7 @@ export const GoogsProcessingList = () => {
       <Table
         {...tableProps}
         rowKey="id"
+        scroll={{ x: 'max-content' }}
         onRow={(record) => ({
           onDoubleClick: () => {
             show("goods-processing", record.id as number);

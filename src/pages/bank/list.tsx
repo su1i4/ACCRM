@@ -24,7 +24,7 @@ export const BankList = () => {
         {dataSource?.map((bank) => (
           <Col
             key={bank.id}
-            xs={24} // на маленьких экранах колонка занимает всю ширину (24 «доли»)
+            xs={24}
             sm={12}
             md={8}
             lg={6}
