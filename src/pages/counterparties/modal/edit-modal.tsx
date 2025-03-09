@@ -4,7 +4,7 @@ import { Form, Input, Modal } from "antd";
 import InputMask from "react-input-mask";
 import PhoneInput from "react-phone-input-2";
 
-export const MyEditModal: React.FC<{ id?: number | null; open: boolean; onClose: () => void }> = ({ id, open, onClose }) => {
+export const MyEditModal: React.FC<{ id?: number | null; open: boolean; onClose: () => void; onSuccess?: () => void }> = ({ id, open, onClose, onSuccess }) => {
 
     const {
         modalProps,
@@ -17,6 +17,9 @@ export const MyEditModal: React.FC<{ id?: number | null; open: boolean; onClose:
         id, // Передаем ID редактируемого элемента
         onMutationSuccess: () => {
             onClose(); // Закрываем модальное окно после успешного обновления
+            if (onSuccess) {
+                onSuccess(); // Вызываем функцию обновления данных
+            }
         },
     });
 

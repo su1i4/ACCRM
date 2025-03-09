@@ -7,9 +7,10 @@ import {
   useLogout,
   useMenu,
   useWarnAboutChange,
+  useNavigation,
 } from "@refinedev/core";
 import { Link } from "react-router";
-import { type Sider, ThemedTitleV2 } from "@refinedev/antd";
+import { type Sider } from "@refinedev/antd";
 import { Layout as AntdLayout, Menu, Grid, theme, Button } from "antd";
 import {
   LogoutOutlined,
@@ -29,7 +30,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
   const { mutate: mutateLogout } = useLogout();
   const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-  const { SubMenu } = Menu;
+
 
   const breakpoint = Grid.useBreakpoint();
 
@@ -40,7 +41,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
     return tree.map((item: ITreeMenu) => {
       const { name, children, meta, key, list } = item;
 
-      const icon = meta?.icon;
+      const icon = item?.icon;
       const label = meta?.label ?? name;
       const parent = meta?.parent;
       const route =
@@ -50,19 +51,30 @@ export const CustomSider: typeof Sider = ({ render }) => {
           ? list?.path
           : key;
 
+      const customSelectedKey = selectedKey.split("/")[1];
+      const customKey = key?.split("/")[1] || "";
+
+      const isColor =
+        children.length > 0 ? customSelectedKey === customKey : false;
+
       if (children.length > 0) {
         return (
-          <SubMenu
+          <Menu.SubMenu
             key={route}
-            icon={icon ?? <UnorderedListOutlined />}
+            icon={icon}
             title={label}
+            className={isColor ? "gradient-submenu" : ""}
+            style={{
+              textTransform: "capitalize",
+            }}
           >
             {renderTreeView(children, selectedKey)}
-          </SubMenu>
+          </Menu.SubMenu>
         );
       }
+
       const isSelected = route === selectedKey;
-      const isRoute = !(parent !== undefined && children.length === 0);
+
       return (
         <CanAccess
           key={route}
@@ -75,9 +87,9 @@ export const CustomSider: typeof Sider = ({ render }) => {
             style={{
               textTransform: "capitalize",
             }}
-            icon={icon ?? (isRoute && <UnorderedListOutlined />)}
+            icon={icon}
           >
-            {route ? <Link to={route || "/"}>{label}</Link> : label}
+            {route ? <Link style={{ fontSize: 13 }} to={route || "/"}>{label}</Link> : label}
             {!collapsed && isSelected && (
               <div className="ant-menu-tree-arrow" />
             )}
@@ -131,6 +143,8 @@ export const CustomSider: typeof Sider = ({ render }) => {
   };
 
   const siderStyle = isMobile ? antLayoutSiderMobile : antLayoutSider;
+
+  const { push } = useNavigation();
 
   return (
     <AntdLayout.Sider
@@ -187,9 +201,9 @@ export const CustomSider: typeof Sider = ({ render }) => {
         <img
           style={{
             width: collapsed ? "70px" : "110px",
-          
           }}
-          src="./alfa-china.png"
+          onClick={() => push("/goods-processing")}
+          src="../../public/alfa-china.png"
         />
       </div>
       <Menu

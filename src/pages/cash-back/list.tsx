@@ -16,7 +16,7 @@ import {MyEditModal} from "./modal/edit-modal";
 export const CashBackList: React.FC = () => {
     const { tableProps, setFilters } = useTable({
         resource: "cash-back",
-        syncWithLocation: true,
+        syncWithLocation: false,
     });
 
     const [open, setOpen] = useState(false);

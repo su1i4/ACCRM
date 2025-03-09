@@ -9,7 +9,8 @@ import "react-phone-input-2/lib/style.css";
 export const MyCreateModal: React.FC<{
   open: boolean;
   onClose: () => void;
-}> = ({ open, onClose }) => {
+  onSuccess?: () => void;
+}> = ({ open, onClose, onSuccess }) => {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   
   const { modalProps, formProps, submit } = useModalForm({
@@ -17,6 +18,9 @@ export const MyCreateModal: React.FC<{
     action: "create",
     onMutationSuccess: () => {
       onClose(); // Закрываем модальное окно после успешного создания
+      if (onSuccess) {
+        onSuccess(); // Вызываем функцию обновления данных
+      }
     },
   });
 

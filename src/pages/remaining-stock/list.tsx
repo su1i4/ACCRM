@@ -1,13 +1,12 @@
 import {
   List,
-  useTable,
   CreateButton,
   DeleteButton,
   EditButton,
   ShowButton,
   useSelect,
 } from "@refinedev/antd";
-import { BaseRecord, useGo, useUpdate } from "@refinedev/core";
+import { BaseRecord, useGo, useUpdate, useCustom } from "@refinedev/core";
 import {
   Space,
   Table,
@@ -46,7 +45,7 @@ import {
   UnorderedListOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMany, useNavigation, useUpdateMany } from "@refinedev/core";
 import { API_URL } from "../../App";
 import dayjs from "dayjs";
@@ -54,31 +53,83 @@ import { MyCreateModal } from "../counterparties/modal/create-modal";
 import { divider } from "@uiw/react-md-editor";
 
 export const RemainingStockProcessingList = () => {
-  const { tableProps, setFilters, setSorter } = useTable({
-    syncWithLocation: true,
-    resource: "goods-processing",
-    filters: {
-      permanent: [
-        {
-          field: "status",
-          operator: "contains",
-          value: "В Складе",
-        },
-        {
-          field: "status",
-          operator: "contains",
-          value: "Готов к выдаче",
-        },
-      ],
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortField, setSortField] = useState<
+    "created_at" | "status" | "name" | "counterparty.name"
+  >("created_at");
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    {
+      status: {
+        $in: ["В Складе", "Готов к выдаче"],
+      },
     },
-  });
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  ]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [filterVisible, setFilterVisible] = useState(false);
   const [sortVisible, setSortVisible] = useState(false);
   const [isModalVisible1, setIsModalVisible1] = useState(false);
   const { create } = useNavigation();
   const { mutate: updateMany } = useUpdateMany();
   const go = useGo();
+
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({ $and: searchFilters }),
+      sort: `${sortField},${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: (currentPage - 1) * pageSize,
+    };
+  };
+
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
+
+  // Получаем данные из ответа API
+  const dataSource = data?.data?.data || [];
+  const total = data?.data?.total || 0;
+
+  // Функция для обновления фильтров
+  const setFilters = (
+    filters: any[],
+    mode: "replace" | "append" = "append"
+  ) => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+  };
+
+  // Обновление данных при изменении фильтров или сортировки
+  useEffect(() => {
+    refetch();
+  }, [searchFilters, sortDirection, sortField, currentPage, pageSize]);
+
+  // Обработка изменений в таблице (пагинация, сортировка)
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+
+    // Обрабатываем сортировку, если она пришла из таблицы
+    if (sorter && sorter.field) {
+      if (sorter.field === "counterparty") {
+        setSortField("name");
+      } else if (sorter.field === "counterparty_id") {
+        setSortField("counterparty.name");
+      } else if (sorter.field === "created_at" || sorter.field === "status") {
+        setSortField(sorter.field);
+      }
+      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+    }
+  };
 
   const sortContent = (
     <Card style={{ width: 200, padding: "12px" }}>
@@ -89,33 +140,32 @@ export const RemainingStockProcessingList = () => {
         {/* Сортировка по дате создания */}
         <Button
           type="text"
-          style={{ textAlign: "left" }}
-          onClick={() => setSorter([{ field: "created_at", order: "desc" }])}
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "created_at" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("created_at");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
         >
-          Дата создания
+          Дата создания{" "}
+          {sortField === "created_at" && (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
-        {/* Предположим, что filter содержит название поля для алфавитной сортировки, например "name" */}
         <Button
           type="text"
-          style={{ textAlign: "left" }}
-          // onClick={() => setSorter([{ field: filter, order: 'asc' }])}
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
         >
-          От А до Я
-        </Button>
-        <Button
-          type="text"
-          style={{ textAlign: "left" }}
-          // onClick={() => setSorter([{ field: filter, order: 'desc' }])}
-        >
-          От Я до А
-        </Button>
-        {/* Сортировка по статусу */}
-        <Button
-          type="text"
-          style={{ textAlign: "left" }}
-          onClick={() => setSorter([{ field: "status", order: "asc" }])}
-        >
-          Статус
+          По фио{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
       </div>
     </Card>
@@ -194,19 +244,18 @@ export const RemainingStockProcessingList = () => {
       style={{ width: "280px" }}
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
-        if (dates) {
-          setFilters([
-            {
-              field: "created_at",
-              operator: "gte",
-              value: dateStrings[0],
-            },
-            {
-              field: "created_at",
-              operator: "lte",
-              value: dateStrings[1],
-            },
-          ]);
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          setFilters(
+            [
+              {
+                created_at: {
+                  $gte: dateStrings[0],
+                  $lte: dateStrings[1],
+                },
+              },
+            ],
+            "replace"
+          );
         }
       }}
     />
@@ -226,11 +275,10 @@ export const RemainingStockProcessingList = () => {
   };
 
   const handleBulkEdit = () => {
-    const selectedRowKeys = tableProps.rowSelection?.selectedRowKeys;
-    if (selectedRowKeys && selectedRowKeys.length > 0) {
+    const selectedRowKeys = data?.data?.map((item: any) => item.id) || [];
+    if (selectedRowKeys.length > 0) {
       updateMany({
         resource: "goods",
-        // @ts-ignore
         ids: selectedRowKeys,
         values: {
           /* новые значения для всех полей */
@@ -244,32 +292,27 @@ export const RemainingStockProcessingList = () => {
 
   const { data: branchData, isLoading: branchIsLoading } = useMany({
     resource: "branch",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.branch?.id).filter(Boolean) ??
-      [],
+    ids: dataSource?.map((item: any) => item?.branch?.id).filter(Boolean) ?? [],
     queryOptions: {
-      enabled: !!tableProps?.dataSource,
+      enabled: !!dataSource,
     },
   });
 
   const { data: userData, isLoading: userIsLoading } = useMany({
     resource: "users",
-    ids:
-      tableProps?.dataSource?.map((item) => item?.user?.id).filter(Boolean) ??
-      [],
+    ids: dataSource?.map((item: any) => item?.user?.id).filter(Boolean) ?? [],
     queryOptions: {
-      enabled: !!tableProps?.dataSource,
+      enabled: !!dataSource,
     },
   });
 
   const { data: counterpartyData, isLoading: counterpartyIsLoading } = useMany({
     resource: "counterparty",
     ids:
-      tableProps?.dataSource
-        ?.map((item) => item?.counterparty?.id)
-        .filter(Boolean) ?? [],
+      dataSource?.map((item: any) => item?.counterparty?.id).filter(Boolean) ??
+      [],
     queryOptions: {
-      enabled: !!tableProps?.dataSource,
+      enabled: !!dataSource,
     },
   });
 
@@ -335,7 +378,7 @@ export const RemainingStockProcessingList = () => {
             >
               <Button
                 icon={
-                  sortDirection === "asc" ? (
+                  sortDirection === "ASC" ? (
                     <ArrowUpOutlined />
                   ) : (
                     <ArrowDownOutlined />
@@ -348,7 +391,16 @@ export const RemainingStockProcessingList = () => {
               style={{}}
               onClick={() => {
                 setSelectedBranch(undefined); // сброс значения Select
-                setFilters([], "replace"); // сброс фильтров
+                setFilters(
+                  [
+                    {
+                      status: {
+                        $in: ["В Складе", "Готов к выдаче"],
+                      },
+                    },
+                  ],
+                  "replace"
+                ); // сброс фильтров
               }}
             />
           </Space>
@@ -361,29 +413,25 @@ export const RemainingStockProcessingList = () => {
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
-                setFilters([], "replace");
+                setFilters(
+                  [
+                    {
+                      status: {
+                        $in: ["В Складе", "Готов к выдаче"],
+                      },
+                    },
+                  ],
+                  "replace"
+                );
                 return;
               }
               setFilters(
                 [
                   {
-                    operator: "or",
-                    value: [
-                      {
-                        field: "trackCode",
-                        operator: "contains",
-                        value,
-                      },
-                      {
-                        field: "counterparty.clientCode",
-                        operator: "contains",
-                        value,
-                      },
-                      {
-                        field: "counterparty.name",
-                        operator: "contains",
-                        value,
-                      },
+                    $or: [
+                      { trackCode: { $contL: value } },
+                      { "counterparty.clientCode": { $contL: value } },
+                      { "counterparty.name": { $contL: value } },
                     ],
                   },
                 ],
@@ -400,12 +448,28 @@ export const RemainingStockProcessingList = () => {
             value={selectedBranch}
             onChange={(e) => {
               setSelectedBranch(e);
+              if (!e) {
+                setFilters(
+                  [
+                    {
+                      status: {
+                        $in: ["В Складе", "Готов к выдаче"],
+                      },
+                    },
+                  ],
+                  "replace"
+                );
+                return;
+              }
               setFilters(
                 [
                   {
-                    field: "counterparty.branch_id",
-                    operator: "eq",
-                    value: e,
+                    status: {
+                      $in: ["В Складе", "Готов к выдаче"],
+                    },
+                  },
+                  {
+                    "counterparty.branch_id": e,
                   },
                 ],
                 "replace"
@@ -442,129 +506,137 @@ export const RemainingStockProcessingList = () => {
         </Form>
       </Modal>
 
-      <Table
-        {...tableProps}
-        rowKey="id"
-        rowSelection={{
-          type: "checkbox",
-          onChange: (selectedRowKeys, selectedRows) => {
-            console.log("selectedRowKeys:", selectedRowKeys);
-            console.log("selectedRows:", selectedRows);
-          },
-        }}
-      >
-        <Table.Column
-          dataIndex="created_at"
-          title="Дата"
-          render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
-          }
-        />
-        <Table.Column dataIndex="trackCode" title="Трек-код" />
-        <Table.Column dataIndex="cargoType" title="Тип груза" />
-        <Table.Column
-          dataIndex="counterparty"
-          title="Код получателя"
-          render={(value) => {
-            return `${value?.clientPrefix}-${value?.clientCode}`;
+      <div style={{ width: "100%", overflow: "auto" }}>
+        <Table
+          dataSource={dataSource}
+          loading={isLoading}
+          rowKey="id"
+          scroll={{ x: "max-content" }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
+            onChange: (page, pageSize) => {
+              setCurrentPage(page);
+              setPageSize(pageSize);
+            },
           }}
-        />
-        <Table.Column
-          dataIndex="counterparty_id"
-          title="ФИО получателя"
-          render={(value) => {
-            if (counterpartyIsLoading) {
-              return <>Loading....</>;
+          onChange={handleTableChange}
+          rowSelection={{
+            type: "checkbox",
+            onChange: (selectedRowKeys, selectedRows) => {
+              console.log("selectedRowKeys:", selectedRowKeys);
+              console.log("selectedRows:", selectedRows);
+            },
+          }}
+        >
+          <Table.Column
+            dataIndex="created_at"
+            title="Дата"
+            render={(value) =>
+              value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
             }
+          />
+          <Table.Column dataIndex="trackCode" title="Трек-код" />
+          <Table.Column dataIndex="cargoType" title="Тип груза" />
+          <Table.Column
+            dataIndex="counterparty"
+            title="Код получателя"
+            render={(value) => {
+              return `${value?.clientPrefix}-${value?.clientCode}`;
+            }}
+          />
+          <Table.Column
+            dataIndex="counterparty_id"
+            title="ФИО получателя"
+            render={(value) => {
+              if (counterpartyIsLoading) {
+                return <>Loading....</>;
+              }
 
-            const counterparty = counterpartyData?.data?.find(
-              (item) => item.id === value
-            );
-            return counterparty ? `${counterparty.name}` : null;
-          }}
-        />
-        <Table.Column
-          render={(value) => value?.name}
-          dataIndex="branch"
-          title={"Пункт назначения"}
-        />
-        <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
-        <Table.Column
-          dataIndex="employee_id"
-          title="Сотрудник"
-          render={(value) => {
-            if (userIsLoading) {
-              return <>Loading....</>;
-            }
-            const user = userData?.data?.find((item) => item.id === value);
-            return user ? `${user.firstName} ${user.lastName}` : null;
-          }}
-        />
-        <Table.Column
-          dataIndex={"branch_id"}
-          title={"Филиал"}
-          render={(value) =>
-            branchIsLoading ? (
-              <>Loading...</>
-            ) : (
-              branchData?.data?.find((item) => item.id === value)?.name
-            )
-          }
-        />
-        <Table.Column dataIndex="comments" title="Комментарий" />
-        <Table.Column
-          dataIndex="photo"
-          title="Фото"
-          render={(photo) =>
-            photo ? (
-              <Image
-                width={30}
-                height={30}
-                src={API_URL.replace("/api", "") + "/" + photo}
-              />
-            ) : null
-          }
-        />
-
-        <Table.Column dataIndex="status" title="Статус" />
-
-        <Table.Column
-          title="Переместить"
-          dataIndex="actions"
-          render={(_, record: BaseRecord) => {
-            return record.transfer ? (
-              <Button
-                type="dashed"
-                onClick={() => handleConfirmTransfer(record)}
-              >
-                Подвердит
-              </Button>
-            ) : (
-              <>
-                <Select
-                  {...branchSelectProps}
-                  style={{ width: 200 }}
-                  // @ts-ignore
-                  onChange={(value) => handleSelectChange(value, record)}
+              const counterparty = counterpartyData?.data?.find(
+                (item) => item.id === value
+              );
+              return counterparty ? `${counterparty.name}` : null;
+            }}
+          />
+          <Table.Column
+            render={(value) => value?.branch?.name}
+            dataIndex="counterparty"
+            title={"Пункт назначения"}
+          />
+          <Table.Column dataIndex="weight" title="Вес" />
+          <Table.Column dataIndex="amount" title="Сумма" />
+          <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
+          <Table.Column
+            dataIndex="employee_id"
+            title="Сотрудник"
+            render={(value) => {
+              if (userIsLoading) {
+                return <>Loading....</>;
+              }
+              const user = userData?.data?.find((item) => item.id === value);
+              return user ? `${user.firstName} ${user.lastName}` : null;
+            }}
+          />
+          <Table.Column
+            dataIndex="employee"
+            title={"Филиал"}
+            render={(value) => value?.branch?.name}
+          />
+          <Table.Column dataIndex="comments" title="Комментарий" />
+          <Table.Column
+            dataIndex="photo"
+            title="Фото"
+            render={(photo) =>
+              photo ? (
+                <Image
+                  width={30}
+                  height={30}
+                  src={API_URL.replace("/api", "") + "/" + photo}
                 />
+              ) : null
+            }
+          />
 
-                <Modal
-                  title="Подтверждение перемещения"
-                  open={isModalVisible1}
-                  onOk={() => handleConfirm(record.id)}
-                  onCancel={() => setIsModalVisible1(false)}
-                  okText="Переместить"
-                  cancelText="Отмена"
+          <Table.Column dataIndex="status" title="Статус" />
+
+          <Table.Column
+            title="Переместить"
+            dataIndex="actions"
+            render={(_, record: BaseRecord) => {
+              return record.transfer ? (
+                <Button
+                  type="dashed"
+                  onClick={() => handleConfirmTransfer(record)}
                 >
-                  <p>Вы уверены, что хотите переместить товар</p>
-                </Modal>
-              </>
-            );
-          }}
-        />
-      </Table>
+                  Подвердить
+                </Button>
+              ) : (
+                <>
+                  <Select
+                    {...branchSelectProps}
+                    style={{ width: 200 }}
+                    // @ts-ignore
+                    onChange={(value) => handleSelectChange(value, record)}
+                  />
+
+                  <Modal
+                    title="Подтверждение перемещения"
+                    open={isModalVisible1}
+                    onOk={() => handleConfirm(record.id)}
+                    onCancel={() => setIsModalVisible1(false)}
+                    okText="Переместить"
+                    cancelText="Отмена"
+                  >
+                    <p>Вы уверены, что хотите переместить товар</p>
+                  </Modal>
+                </>
+              );
+            }}
+          />
+        </Table>
+      </div>
     </List>
   );
 };

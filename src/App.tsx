@@ -7,7 +7,6 @@ import {
   ThemedLayoutV2,
   ErrorComponent,
   AuthPage,
-  ThemedSiderV2,
 } from "@refinedev/antd";
 import "@refinedev/antd/dist/reset.css";
 
@@ -24,6 +23,7 @@ import routerBindings, {
 import { App as AntdApp, Flex } from "antd";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
+import { CustomSider } from "./components/sider";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 import {
   GoodsCreate,
@@ -94,6 +94,7 @@ import { DiscountCreate } from "./pages/discount/create";
 import { DiscountShow } from "./pages/discount/show";
 import { DiscountEdit } from "./pages/discount/edit";
 import { IssueProcessingListReceived } from "./pages/Issue/listReceived";
+import "./styles/global.css";
 
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
@@ -420,31 +421,7 @@ function App() {
                       <ThemedLayoutV2
                         Header={() => <Header sticky />}
                         Sider={(props) => (
-                          <ThemedSiderV2
-                            {...props}
-                            fixed
-                            Title={(collapsed: any) => (
-                              <Flex
-                                align="center"
-                                justify="center"
-                                style={{
-                                  width: "100%",
-                                  paddingTop: 10,
-                                  backgroundColor: "transparent",
-                                }}
-                              >
-                                <img
-                                  src="/alfa-china.png"
-                                  alt="AC CRM"
-                                  style={{
-                                    width: collapsed.collapsed ? 70 : 110,
-                                    transition: "width 0.28s",
-                                    backgroundColor: "transparent",
-                                  }}
-                                />
-                              </Flex>
-                            )}
-                          />
+                          <CustomSider {...props} />
                         )}
                       >
                         <Outlet />

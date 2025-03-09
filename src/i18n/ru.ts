@@ -60,6 +60,7 @@ export const i18nProvider_ru = {
       "buttons.confirm": "Подтвердить",
       "notifications.deleteSuccess": "Успешно удалено",
       "issued.titles.list": "Выданные посылки",
+      "notifications.createSuccess": "Успешно создано",
     };
     return translations[key] || key;
   },

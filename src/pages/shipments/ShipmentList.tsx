@@ -1,19 +1,13 @@
+import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import { List, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
-import { Table, Typography } from "antd";
+import { Button, Flex, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
+import { API_URL } from "../../App";
 
 const ShipmentList = () => {
   const [countGoods, setCountGoods] = useState(0);
-
-  // Get the shipments data with pagination
-  const { tableProps } = useTable({
-    resource: "shipments",
-    syncWithLocation: false,
-    queryOptions: {
-      refetchOnWindowFocus: false,
-    },
-  });
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
 
   const { show } = useNavigation();
 
@@ -35,44 +29,86 @@ const ShipmentList = () => {
     0
   );
 
-  console.log(totalWeight );
+  const buildQueryParams = () => ({
+    sort: `id,${sortDirection}`,
+  });
+
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/shipments`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
+
+  useEffect(() => {
+    refetch();
+  }, [sortDirection]);
+
+  const dataSource = data?.data || [];
+
+  const tableProps = {
+    dataSource,
+    loading: isLoading,
+    pagination: {
+      total: data?.data?.total || 0,
+    },
+  };
+
 
   return (
     <List>
-      <div
-        style={{
-          border: "1px dashed gainsboro",
-          padding: "6px 10px",
-          borderRadius: 5,
-          marginBottom: 10,
-          backgroundColor: "#f9f9f9",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        {!customProps?.dataSource ? (
-          <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
-            Загрузка итогов...
-          </Typography.Title>
-        ) : (
-          <>
-            <Typography.Text style={{ fontSize: 14 }}>
-              Общий вес: <strong>{totalWeight} кг</strong>
-            </Typography.Text>
-            <Typography.Text style={{ fontSize: 14 }}>
-              {/* @ts-ignore */}
-              Количество рейсов: <strong>{tableProps.pagination?.total}</strong>
-            </Typography.Text>
-            <Typography.Text style={{ fontSize: 14 }}>
-              Количество посылок: <strong>{countGoods}</strong>
-            </Typography.Text>
-          </>
-        )}
-      </div>
-
+      <Flex gap={10} style={{ width: "100%" }}>
+        <Button
+          icon={
+            sortDirection === "ASC" ? (
+              <ArrowUpOutlined />
+            ) : (
+              <ArrowDownOutlined />
+            )
+          }
+          onClick={() => {
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          {/* {sortField === "id" ? "Дата" : "Имя"} */}
+        </Button>
+        <div
+          style={{
+            border: "1px dashed gainsboro",
+            padding: "4px 10px",
+            borderRadius: 5,
+            marginBottom: 10,
+            backgroundColor: "#f9f9f9",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            width: "100%",
+          }}
+        >
+          {!customProps?.dataSource ? (
+            <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
+              Загрузка итогов...
+            </Typography.Title>
+          ) : (
+            <>
+              <Typography.Text style={{ fontSize: 14 }}>
+                Общий вес: <strong>{totalWeight} кг</strong>
+              </Typography.Text>
+              <Typography.Text style={{ fontSize: 14 }}>
+                {/* @ts-ignore */}
+                Количество рейсов:{" "}
+                <strong>{tableProps.pagination?.total}</strong>
+              </Typography.Text>
+              <Typography.Text style={{ fontSize: 14 }}>
+                Количество посылок: <strong>{countGoods}</strong>
+              </Typography.Text>
+            </>
+          )}
+        </div>
+      </Flex>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {

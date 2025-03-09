@@ -1,170 +1,272 @@
 import React, { useState } from "react";
-import { List, useTable, EditButton, ShowButton, DeleteButton } from "@refinedev/antd";
-import {Space, Table, Form, Input, Button, Row, Col, Dropdown, Select} from "antd";
-import {BaseKey, BaseRecord} from "@refinedev/core";
-import { MyCreateModal } from "./modal/create-modal";
+import { List, useTable } from "@refinedev/antd";
 import {
-    ArrowDownOutlined,
-    ArrowUpOutlined, CalendarOutlined,
-    EditOutlined,
-    FileAddOutlined,
-    SearchOutlined, SyncOutlined,
-    UnorderedListOutlined
+  Space,
+  Table,
+  Form,
+  Input,
+  Button,
+  Row,
+  Col,
+  Dropdown,
+  Select,
+  Card,
+} from "antd";
+import { useCustom } from "@refinedev/core";
+import { MyCreateModalOutcome } from "./modal/create-modal-outcome";
+import {
+  FileAddOutlined,
+  SearchOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from "@ant-design/icons";
-import {MyEditModal} from "./modal/edit-modal";
 import dayjs from "dayjs";
-import {MyCreateModalOutcome} from "./modal/create-modal-outcome";
+import { API_URL } from "../../App";
+import { typeOperationMap } from "../bank";
 
 export const CashDeskOutcomeList: React.FC = () => {
-    const { tableProps, setFilters } = useTable({
-        resource: "cash-desk",
-        syncWithLocation: true,
-        filters:{
-            initial:[
-                {
-                    field:"type",
-                    operator:"eq",
-                    value:"outcome"
-                },
-                // {
-                //     field:"status",
-                //     operator:"in",
-                //     value:"IN_WAREHOUSE"
-                // }
-            ]
-        }
-    });
+  const { tableProps: bankTableProps } = useTable({
+    resource: "bank",
+  });
 
-    const [open, setOpen] = useState(false);
-    const [filterForm] = Form.useForm();
-    const [openEdit, setOpenEdit] = useState(false);
-    const [editId, setEditId] = useState<number | null>(null);
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    { type: { $eq: "outcome" } },
+  ]);
 
-    const handleEditClick = (id: BaseKey | undefined) => {
-        // @ts-ignore
-        setEditId(id);
-        setOpenEdit(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sorterVisible, setSorterVisible] = useState(false);
+
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({ $and: searchFilters }),
+      sort: `${sortField},${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: (currentPage - 1) * pageSize,
     };
+  };
 
-    // @ts-ignore
-    return (
-        <List headerButtons={() => null} title={"Расход"}>
-            {/* Передаем open и setOpen в модальное окно */}
-            <MyCreateModalOutcome open={open} onClose={() => setOpen(false)} />
-            {/*<MyEditModal id={editId} open={openEdit} onClose={() => setOpenEdit(false)} />*/}
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/cash-desk`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
 
-            {/* Верхняя панель с фильтром и кнопкой создания */}
-            <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
-                <Col>
-                    <Space size="middle">
-                        <Button
-                            icon={<FileAddOutlined />}
-                            style={{}}
-                            onClick={() => setOpen(true)}
-                        />
+  const [open, setOpen] = useState(false);
 
-                        {/*<Button icon={<EditOutlined />} onClick={handleBulkEdit} />*/}
-                        <Button icon={<UnorderedListOutlined />} />
-                        {/*<Dropdown*/}
-                        {/*    overlay={sortContent}*/}
-                        {/*    trigger={['click']}*/}
-                        {/*    placement="bottomLeft"*/}
-                        {/*    visible={sortVisible}*/}
-                        {/*    onVisibleChange={(visible) => {*/}
-                        {/*        setSortVisible(visible);*/}
-                        {/*        if (visible) {*/}
-                        {/*            setFilterVisible(true);*/}
-                        {/*        }*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*    <Button*/}
-                        {/*        icon={sortDirection === 'asc' ?*/}
-                        {/*            <ArrowUpOutlined /> :*/}
-                        {/*            <ArrowDownOutlined />*/}
-                        {/*        }*/}
-                        {/*    />*/}
-                        {/*</Dropdown>*/}
-                        <Button icon={<SyncOutlined />} />
-                    </Space>
-                </Col>
-                <Col flex="auto">
-                    <Input
-                        placeholder="Поиск по трек-коду или коду клиента"
-                        prefix={<SearchOutlined />}
-                        onChange={(e) => {
-                            setFilters([
-                                {
-                                    field: "trackCode",
-                                    operator: "contains",
-                                    value: e.target.value,
-                                },
-                            ]);
-                        }}
-                    />
-                </Col>
-                <Col>
-                    <Select
-                        mode="multiple"
-                        placeholder="Выберите филиал"
-                        style={{ width: 200 }}
-                        onChange={(value) => {
-                            setFilters([
-                                {
-                                    field: "branch",
-                                    operator: "in",
-                                    value,
-                                },
-                            ]);
-                        }}
-                        options={[
-                            { label: 'Гуанчжоу', value: 'guangzhou' },
-                            { label: 'Бишкек', value: 'bishkek' },
-                            { label: 'Ош', value: 'osh' },
-                        ]}
-                    />
-                </Col>
-                <Col>
-                    {/*<Dropdown*/}
-                    {/*    overlay={}*/}
-                    {/*    trigger={['click']}*/}
-                    {/*    placement="bottomRight"*/}
-                    {/*>*/}
-                    {/*    <Button*/}
-                    {/*        icon={<CalendarOutlined />}*/}
-                    {/*        className="date-picker-button"*/}
-                    {/*    >*/}
-                    {/*        Дата*/}
-                    {/*    </Button>*/}
-                    {/*</Dropdown>*/}
-                </Col>
-            </Row>
+  const setFilters = (
+    filters: any[],
+    mode: "replace" | "append" = "append"
+  ) => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+  };
 
-            <Table {...tableProps} rowKey="id">
-                <Table.Column dataIndex="id" title="Номер накладной" />
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
+        </div>
+        {/* Сортировка по дате создания */}
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По контрагенту{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
 
+  // Создаем функции для пагинации
+  const handleTableChange = (pagination: any) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  };
 
-                <Table.Column
-                    dataIndex="user"
-                    title="Сотрудник"
-                    render={(user) => user ? user.firstName +" " + user.lastName : ""}
-                />
+  // Формируем пропсы для таблицы из данных useCustom
+  const tableProps = {
+    dataSource: data?.data?.data || [],
+    loading: isLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
+  };
 
-                <Table.Column
-                    dataIndex="date"
-                    title="Дата расхода"
-                    render={(date) => dayjs(date).format("DD.MM.YYYY HH:mm")}
-                />
+  return (
+    <List headerButtons={() => null}>
+      <MyCreateModalOutcome open={open} onClose={() => setOpen(false)} />
 
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Space size="middle">
+            <Button
+              icon={<FileAddOutlined />}
+              style={{}}
+              onClick={() => setOpen(true)}
+            />
+            <Dropdown
+              overlay={sortContent}
+              trigger={["click"]}
+              placement="bottomLeft"
+              open={sorterVisible}
+              onOpenChange={(visible) => {
+                setSorterVisible(visible);
+              }}
+            >
+              <Button
+                icon={
+                  sortDirection === "ASC" ? (
+                    <ArrowUpOutlined />
+                  ) : (
+                    <ArrowDownOutlined />
+                  )
+                }
+              ></Button>
+            </Dropdown>
+          </Space>
+        </Col>
+        <Col flex="auto">
+          <Input
+            placeholder="Поиск по трек-коду или коду клиента"
+            prefix={<SearchOutlined />}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!value) {
+                setFilters([{ type: { $eq: "outcome" } }], "replace");
+                return;
+              }
 
-                <Table.Column
-                    dataIndex="amount"
-                    title="Сумма"
-                />
+              setFilters(
+                [
+                  {
+                    $and: [
+                      { type: { $eq: "outcome" } },
+                      {
+                        $or: [
+                          { trackCode: { $contL: value } },
+                          { "counterparty.clientCode": { $contL: value } },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+                "replace"
+              );
+            }}
+          />
+        </Col>
+        <Col>
+          <Select
+            mode="multiple"
+            placeholder="Выберите банк"
+            style={{ width: 200 }}
+            onChange={(value) => {
+              if (!value || value.length === 0) {
+                setFilters([{ type: { $eq: "outcome" } }], "replace");
+                return;
+              }
 
-                <Table.Column dataIndex="type_currency" title="валюта" />
-                <Table.Column dataIndex="comment" title="Комментарий" />
+              setFilters(
+                [
+                  {
+                    $and: [
+                      { type: { $eq: "outcome" } },
+                      { bank_id: { $in: value } },
+                    ],
+                  },
+                ],
+                "replace"
+              );
+            }}
+            options={bankTableProps?.dataSource?.map((bank: any) => ({
+              label: bank.name,
+              value: bank.id,
+            }))}
+          />
+        </Col>
+      </Row>
 
-            </Table>
-        </List>
-    );
+      <Table {...tableProps} rowKey="id">
+        <Table.Column
+          dataIndex="date"
+          title="Дата расхода"
+          render={(date) => dayjs(date).format("DD.MM.YYYY HH:mm")}
+        />
+
+        <Table.Column
+          dataIndex="bank_id"
+          title="Банк"
+          render={(value) => {
+            const bank = bankTableProps?.dataSource?.find(
+              (bank) => bank.id === value
+            );
+            return bank?.name;
+          }}
+        />
+
+        <Table.Column
+          dataIndex="type_operation"
+          title="Вид расхода"
+          render={(value) => typeOperationMap[value] || value}
+        />
+
+        <Table.Column dataIndex="id" title="Трек-код" />
+
+        <Table.Column
+          dataIndex="counterparty"
+          title="Контрагент"
+          render={(counterparty) => (counterparty ? counterparty.name : "")}
+        />
+
+        <Table.Column dataIndex="amount" title="Сумма" />
+
+        <Table.Column dataIndex="type_currency" title="валюта" />
+
+        <Table.Column dataIndex="comment" title="Комментарий" />
+      </Table>
+    </List>
+  );
 };

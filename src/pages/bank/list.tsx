@@ -16,7 +16,7 @@ export const BankList = () => {
     syncWithLocation: true,
   });
 
-  const { dataSource, loading } = tableProps;
+  const { dataSource } = tableProps;
   const { show, push } = useNavigation();
   return (
     <List>

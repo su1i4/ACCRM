@@ -1,16 +1,10 @@
-.custom-menu-style .ant-menu-item-selected {
-  background-color: #ff4d4f !important;
-  color: #ffffff !important;
+.gradient-submenu > .ant-menu-submenu-title {
+  background: linear-gradient(to bottom, #EA653A, #EB2540) !important;
+  color: white !important;
 }
 
-.custom-menu-style .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  color: #ff4d4f !important;
-}
-
-.custom-menu-style .ant-menu-item-active {
-  color: #ff4d4f !important;
-}
-
-.custom-menu-style .ant-menu-submenu-active > .ant-menu-submenu-title {
-  color: #ff4d4f !important;
+/* Для стрелки в подменю */
+.gradient-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow::before,
+.gradient-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow::after {
+  background: white !important;
 }

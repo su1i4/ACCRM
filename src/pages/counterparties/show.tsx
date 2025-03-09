@@ -16,8 +16,8 @@ export const CounterpartyShow: React.FC = () => {
 
   const record = data?.data;
 
-
-  console.log(record);
+  const totalWeight = record?.goods.reduce((acc: number, curr: any) => acc + Number(curr.weight), 0);
+  const totalAmount = record?.goods.reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
 
   return (
     <Show
@@ -51,8 +51,11 @@ export const CounterpartyShow: React.FC = () => {
       <Title level={5}>Email</Title>
       <TextField value={record?.email} />
 
-      <Title level={5}>Сумма заказов</Title>
-      <TextField value={record?.totalOrders} />
+      <Title level={5}>Сумма заказов кг</Title>
+      <TextField value={totalWeight} />
+
+      <Title level={5}>Сумма заказов USD</Title>
+      <TextField value={totalAmount} />
 
       <Title level={5}>Комментарий</Title>
       <TextField value={record?.comment} />
