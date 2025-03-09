@@ -6,31 +6,17 @@ import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 
 const ShipmentList = () => {
-  const [countGoods, setCountGoods] = useState(0);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { show } = useNavigation();
 
-  const { tableProps: customProps } = useTable({
-    resource: "shipments",
-    pagination: {
-      mode: "off",
-    },
-  });
-
-  // Calculate totals
-  const totalWeight = customProps?.dataSource?.reduce(
-    (acc, item) => acc + (Number(item.weight) || 0),
-    0
-  );
-
-  const totalCount = customProps?.dataSource?.reduce(
-    (acc, item) => acc + (Number(item.count) || 0),
-    0
-  );
-
   const buildQueryParams = () => ({
     sort: `id,${sortDirection}`,
+    page: current - 1,
+    limit: pageSize,
+    offset: (current - 1) * pageSize,
   });
 
   const { data, isLoading, refetch } = useCustom<any>({
@@ -43,15 +29,24 @@ const ShipmentList = () => {
 
   useEffect(() => {
     refetch();
-  }, [sortDirection]);
+  }, [sortDirection, current, pageSize]);
 
-  const dataSource = data?.data || [];
+  const dataSource = data?.data?.data || [];
+  const total = data?.data?.total || 0;
+
+  console.log(data);
 
   const tableProps = {
     dataSource,
     loading: isLoading,
     pagination: {
-      total: data?.data?.total || 0,
+      current,
+      pageSize,
+      total,
+      onChange: (page: number, size: number) => {
+        setCurrent(page);
+        setPageSize(size);
+      },
     },
   };
 
@@ -88,14 +83,14 @@ const ShipmentList = () => {
             width: "100%",
           }}
         >
-          {!customProps?.dataSource ? (
+          {false ? (
             <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
               Загрузка итогов...
             </Typography.Title>
           ) : (
             <>
               <Typography.Text style={{ fontSize: 14 }}>
-                Общий вес: <strong>{totalWeight} кг</strong>
+                Общий вес: <strong>20 кг</strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
                 {/* @ts-ignore */}
@@ -103,7 +98,7 @@ const ShipmentList = () => {
                 <strong>{tableProps.pagination?.total}</strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
-                Количество посылок: <strong>{countGoods}</strong>
+                Количество посылок: <strong>20</strong>
               </Typography.Text>
             </>
           )}
@@ -117,6 +112,7 @@ const ShipmentList = () => {
         })}
         {...tableProps}
         rowKey="id"
+        scroll={{ x: 1500 }}
       >
         <Table.Column
           dataIndex="created_at"
@@ -141,7 +137,7 @@ const ShipmentList = () => {
           dataIndex="Dimensions"
           title={"Размеры (Д × Ш × В)"}
           render={(value, record) => {
-            return `${record?.width} x ${record?.height} x ${record?.length}`;
+            return `${record?.length} x ${record?.width} x ${record?.height}`;
           }}
         />
         <Table.Column dataIndex="cube" title={"Куб"} />
@@ -152,6 +148,7 @@ const ShipmentList = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
+        <Table.Column dataIndex="status" title={"Статус"} />
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

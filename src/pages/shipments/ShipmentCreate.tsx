@@ -64,11 +64,24 @@ const ShipmentCreate = () => {
    * мы получим ID нового рейса, и сразу используем updateMany для товаров.
    */
 
+  interface IShipment {
+    id?: number;
+    type: string;
+    boxCode: string;
+    branch_id: number;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+    cube: string;
+    density: string;
+  }
+
   const {
     formProps,
     saveButtonProps: originalSaveButtonProps,
     form,
-  } = useForm({
+  } = useForm<IShipment>({
     resource: "shipments",
     onMutationSuccess: async (createdShipment) => {
       const newShipmentId = createdShipment.data.id;
@@ -83,6 +96,14 @@ const ShipmentCreate = () => {
       }
     },
   });
+
+  const modifiedFormProps = {
+    ...formProps,
+    onFinish: async (values: IShipment) => {
+      const { cube, ...dataToSubmit } = values;
+      return formProps.onFinish?.(dataToSubmit);
+    },
+  };
 
   // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
   const saveButtonProps = {
@@ -206,7 +227,8 @@ const ShipmentCreate = () => {
   return (
     //@ts-ignore
     <Create saveButtonProps={saveButtonProps}>
-      <Form {...formProps} layout="vertical">
+      {/* @ts-ignore */}
+      <Form {...modifiedFormProps} layout="vertical">
         {/* Скрытое поле для отображения ошибки выбора товаров */}
         <Form.Item name="_goods" style={{ display: "none" }}>
           <Input />

@@ -424,7 +424,9 @@ function App() {
                           <CustomSider {...props} />
                         )}
                       >
-                        <Outlet />
+                        <div style={{ paddingLeft: 190 }}>
+                          <Outlet />
+                        </div>
                       </ThemedLayoutV2>
                     </Authenticated>
                   }

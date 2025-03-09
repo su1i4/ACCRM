@@ -61,6 +61,7 @@ export const i18nProvider_ru = {
       "notifications.deleteSuccess": "Успешно удалено",
       "issued.titles.list": "Выданные посылки",
       "notifications.createSuccess": "Успешно создано",
+      "outcome.titles.list": "Расход",
     };
     return translations[key] || key;
   },

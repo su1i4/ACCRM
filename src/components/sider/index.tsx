@@ -14,7 +14,6 @@ import { type Sider } from "@refinedev/antd";
 import { Layout as AntdLayout, Menu, Grid, theme, Button } from "antd";
 import {
   LogoutOutlined,
-  UnorderedListOutlined,
   RightOutlined,
   LeftOutlined,
 } from "@ant-design/icons";
@@ -157,6 +156,12 @@ export const CustomSider: typeof Sider = ({ render }) => {
         ...siderStyle,
         backgroundColor: token.colorBgContainer,
         borderRight: `1px solid ${token.colorBgElevated}`,
+        overflow: "hidden",
+        position: "fixed",
+        height: "100vh",
+        left: 0,
+        top: 0,
+        bottom: 0,
       }}
       trigger={
         !isMobile && (
@@ -213,6 +218,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
         style={{
           marginTop: "8px",
           border: "none",
+          overflowY: "hidden",
         }}
         onClick={() => {
           if (!breakpoint.lg) {

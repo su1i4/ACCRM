@@ -7,20 +7,74 @@ import {
   useSelect,
   useTable,
 } from "@refinedev/antd";
-import { type BaseRecord, useMany, useNavigation } from "@refinedev/core";
-import { Button, Space, Table } from "antd";
+import { type BaseRecord, useMany, useNavigation, useCustom } from "@refinedev/core";
+import { Button, Space, Table, Flex, Typography } from "antd";
+import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { API_URL } from "../../App";
 import dayjs from "dayjs";
 
 const ReceivingList = () => {
-  const { tableProps } = useTable({
-    resource: "shipments",
-    syncWithLocation: true,
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [current, setCurrent] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const buildQueryParams = () => ({
+    sort: `id,${sortDirection}`,
+    page: current - 1,
+    limit: pageSize,
+    offset: (current - 1) * pageSize,
   });
+
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/shipments`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
+
+  useEffect(() => {
+    refetch();
+  }, [sortDirection, current, pageSize]);
+
+  const dataSource = data?.data?.data || [];
+  const total = data?.data?.total || 0;
+
+  const tableProps = {
+    dataSource,
+    loading: isLoading,
+    pagination: {
+      current,
+      pageSize,
+      total,
+      onChange: (page: number, size: number) => {
+        setCurrent(page);
+        setPageSize(size);
+      },
+    },
+  };
 
   const { show } = useNavigation();
 
   return (
     <List headerButtons={() => false}>
+      <Flex gap={10} style={{ width: "100%", marginBottom: 10 }}>
+        <Button
+          icon={
+            sortDirection === "ASC" ? (
+              <ArrowUpOutlined />
+            ) : (
+              <ArrowDownOutlined />
+            )
+          }
+          onClick={() => {
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          {/* Сортировка по дате */}
+        </Button>
+      </Flex>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
