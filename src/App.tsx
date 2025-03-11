@@ -32,6 +32,10 @@ import {
   GoodsEdit,
 } from "./pages/goods-processing";
 import {
+  AcceptedGoodsList,
+  AcceptedGoodsShow,
+} from "./pages/accepted-goods";
+import {
   BranchCreate,
   BranchEdit,
   BranchList,
@@ -75,6 +79,16 @@ import {
   ReportEdit,
   ReportList,
   ReportShow,
+  CargoReceivedReport,
+  CashBookReport,
+  CargoTypesReport,
+  IncomeReport,
+  ExpenseReport,
+  EmployeesReport,
+  BranchesReport,
+  CashOperationsReport,
+  IncomingFundsReport,
+  ExpenseFinanceReport
 } from "./pages/reports";
 import {
   NotificationsCreate,
@@ -95,7 +109,7 @@ import { DiscountShow } from "./pages/discount/show";
 import { DiscountEdit } from "./pages/discount/edit";
 import { IssueProcessingListReceived } from "./pages/Issue/listReceived";
 import "./styles/global.css";
-
+import ShipmentAdd from "./pages/shipments/ShipmentAdd";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -174,14 +188,12 @@ function App() {
                   },
                 },
                 {
-                  name: "goods-processing",
-                  list: "/goods-processing",
-                  create: "/goods-processing/create",
-                  edit: "/goods-processing/edit/:id",
-                  show: "/goods-processing/show/:id",
+                  name: "accepted-goods",
+                  list: "/accepted-goods",
+                  show: "/accepted-goods/show/:id",
                   meta: {
                     canDelete: true,
-                    label: "Спецификация",
+                    label: "Принятые товары",
                     parent: "Продукты",
                   },
                 },
@@ -195,6 +207,15 @@ function App() {
                     canDelete: true,
                     label: "Отправка ",
                     parent: "Продукты",
+                  },
+                },
+                {
+                  name: "shipment",
+                  list: "/shipments/show/:id/adding",
+                  meta: {
+                    parent: "shipments",
+                    label: "Подбор товаров",
+                    hide: true,
                   },
                 },
                 {
@@ -244,6 +265,18 @@ function App() {
                   meta: {
                     canDelete: true,
                     label: "Остатки на складе",
+                    parent: "Продукты",
+                  },
+                },
+                {
+                  name: "goods-processing",
+                  list: "/goods-processing",
+                  create: "/goods-processing/create",
+                  edit: "/goods-processing/edit/:id",
+                  show: "/goods-processing/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Спецификация",
                     parent: "Продукты",
                   },
                 },
@@ -419,14 +452,11 @@ function App() {
                       fallback={<CatchAllNavigate to="/login" />}
                     >
                       <ThemedLayoutV2
+                      
                         Header={() => <Header sticky />}
-                        Sider={(props) => (
-                          <CustomSider {...props} />
-                        )}
+                        Sider={(props) => <CustomSider {...props} />}
                       >
-                        <div style={{ paddingLeft: 190 }}>
-                          <Outlet />
-                        </div>
+                        <Outlet />
                       </ThemedLayoutV2>
                     </Authenticated>
                   }
@@ -443,12 +473,17 @@ function App() {
                     <Route path="show/:id" element={<GoodsShow />} />
                   </Route>
 
+                  <Route path="/accepted-goods">
+                    <Route index element={<AcceptedGoodsList />} />
+                    <Route path="show/:id" element={<AcceptedGoodsShow />} />
+                  </Route>
+
                   <Route path="/issue">
                     <Route index element={<IssueProcessingList />} />
                     <Route path="show/:id" element={<GoodsShow />} />
                     <Route
                       path="received"
-                      element={<IssueProcessingListReceived/>}
+                      element={<IssueProcessingListReceived />}
                     />
                   </Route>
 
@@ -478,6 +513,10 @@ function App() {
                     <Route path="create" element={<Create />} />
                     <Route path="show/:id" element={<Show />} />
                     <Route path="edit/:id" element={<Edit />} />
+                    <Route
+                      path="show/:id/adding"
+                      element={<ShipmentAdd />}
+                    />
                   </Route>
 
                   <Route path="/counterparty">
@@ -517,6 +556,18 @@ function App() {
                     <Route path="create" element={<ReportCreate />} />
                     <Route path="show/:id" element={<ReportShow />} />
                     <Route path="edit/:id" element={<ReportEdit />} />
+                    
+                    {/* Маршруты для отдельных отчетов */}
+                    <Route path="cargo-received" element={<CargoReceivedReport />} />
+                    <Route path="cash-book" element={<CashBookReport />} />
+                    <Route path="cargo-types" element={<CargoTypesReport />} />
+                    <Route path="income" element={<IncomeReport />} />
+                    <Route path="expense" element={<ExpenseReport />} />
+                    <Route path="employees" element={<EmployeesReport />} />
+                    <Route path="branches" element={<BranchesReport />} />
+                    <Route path="cash-operations" element={<CashOperationsReport />} />
+                    <Route path="incoming-funds" element={<IncomingFundsReport />} />
+                    <Route path="expense-finance" element={<ExpenseFinanceReport />} />
                   </Route>
 
                   <Route path="/notifications">

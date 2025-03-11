@@ -18,18 +18,15 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   FileAddOutlined,
-  SettingOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import {
-  useCustom,
-  useNavigation,
-  useUpdate,
-} from "@refinedev/core";
+import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
-import { API_URL } from "../../App";
+import { API_URL } from "../../../App";
 
-export const GoogsProcessingList = () => {
+const { RangePicker } = DatePicker;
+
+export const CargoReceivedReport = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
@@ -58,7 +55,6 @@ export const GoogsProcessingList = () => {
   });
 
   const [sorterVisible, setSorterVisible] = useState(false);
-  const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Fixed: Update filters function that properly formats filters
@@ -158,56 +154,9 @@ export const GoogsProcessingList = () => {
     setIsModalVisible(false);
   };
 
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
-
-  useEffect(() => {
-    if (dataSource) {
-      const visibleIds = dataSource
-        .filter((item: any) => item.visible)
-        .map((item: any) => item.id);
-      setSelectedRowKeys(visibleIds);
-    }
-  }, [dataSource]);
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedKeys);
-    },
-  };
-
-  const { mutateAsync: update } = useUpdate();
-
-  const handleSaveChanges = async () => {
-    const selectedItems = (dataSource || []).map((item: any) => ({
-      id: item.id,
-      visible: selectedRowKeys.includes(item.id),
-    }));
-
-    try {
-      await Promise.all(
-        selectedItems.map((item: any) =>
-          update({
-            resource: "goods-processing",
-            id: item.id,
-            values: { visible: item.visible },
-          })
-        )
-      );
-      console.log("Все обновления прошли успешно");
-    } catch (error) {
-      console.error("Ошибка при обновлении", error);
-    }
-  };
-
-  const checkboxContent = (
-    <Card style={{ padding: 10 }}>
-      <Button onClick={handleSaveChanges}>Показать клиенту</Button>
-    </Card>
-  );
 
   const { show, push } = useNavigation();
 
@@ -238,7 +187,7 @@ export const GoogsProcessingList = () => {
   };
 
   return (
-    <List headerButtons={() => false}>
+    <List title="Отчет по принятым грузам">
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
@@ -264,19 +213,7 @@ export const GoogsProcessingList = () => {
                     <ArrowDownOutlined />
                   )
                 }
-              >
-              </Button>
-            </Dropdown>
-            <Dropdown
-              overlay={checkboxContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={settingVisible}
-              onOpenChange={(visible) => {
-                setSettingVisible(visible);
-              }}
-            >
-              <Button icon={<SettingOutlined />} />
+              ></Button>
             </Dropdown>
           </Space>
         </Col>
@@ -345,7 +282,6 @@ export const GoogsProcessingList = () => {
             show("goods-processing", record.id as number);
           },
         })}
-        rowSelection={rowSelection}
       >
         <Table.Column
           dataIndex="created_at"
@@ -378,8 +314,7 @@ export const GoogsProcessingList = () => {
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="discount" title="Скидка" />
-        {/* <Table.Column dataIndex="discount_custom" title="Ручная скидка" /> */}
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

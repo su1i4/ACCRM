@@ -31,11 +31,16 @@ const ShipmentShow = () => {
       },
     ],
     filters: {
-      initial: [
+      permanent: [
         {
           field: "shipment_id",
           operator: "eq",
           value: Number(id),
+        },
+        {
+          field: "status",
+          operator: "eq",
+          value: "В пути",
         },
         // {
         //   operator: "or",
@@ -145,6 +150,10 @@ const ShipmentShow = () => {
               ?.split("T")[1]
               ?.slice(0, 5)}`}
           />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Статус</Title>
+          <TextField value={record?.status} />
         </Col>
       </Row>
 

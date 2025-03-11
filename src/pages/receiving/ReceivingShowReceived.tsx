@@ -21,6 +21,21 @@ const ReceivingShowReceived = () => {
           operator: "eq",
           value: Number(id),
         },
+        {
+          operator: "or",
+          value: [
+            {
+              field: "status",
+              operator: "eq",
+              value: "Готов к выдаче",
+            },
+            {
+              field: "status",
+              operator: "eq",
+              value: "Выдали",
+            },
+          ],
+        },
       ],
     },
   });

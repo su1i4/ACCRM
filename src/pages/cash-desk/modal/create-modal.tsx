@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useModalForm, useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
-import { DatePicker, Form, Input, Modal, Select } from "antd";
+import { DatePicker, Form, Input, Modal, Select, Upload } from "antd";
 import dayjs from "dayjs";
+import { PaperClipOutlined } from "@ant-design/icons";
+import { API_URL } from "../../../App";
 
 export const MyCreateModal: React.FC<{
   open: boolean;
@@ -92,12 +94,15 @@ export const MyCreateModal: React.FC<{
     { value: "advance_payment", label: "Выдача подотчет" },
   ];
 
-  const incomeTypes = [{ value: "cash", label: "Оплата наличными" }];
+  const incomeTypes = [
+    { value: "cash", label: "Оплата наличными" },
+    { value: "transfer", label: "Оплата переводом" },
+    { value: "transfer_to_card", label: "Оплата перечислением" },
+    { value: "bonus", label: "Оплата баллами" },
+  ];
 
-  const date = new Date().toLocaleString();
-  const currentDateDayjs = dayjs(); // Используем dayjs вместо new Date()
+  const currentDateDayjs = dayjs();
 
-  // Добавим useEffect для установки даты при открытии модального окна
   useEffect(() => {
     if (open && formProps.form) {
       formProps.form.setFieldsValue({
@@ -131,7 +136,7 @@ export const MyCreateModal: React.FC<{
         <Form.Item
           label="Дата поступление"
           name="date"
-          style={{ marginBottom: 10 }}
+          style={{ marginBottom: 5 }}
         >
           <DatePicker
             disabled={true}
@@ -146,7 +151,7 @@ export const MyCreateModal: React.FC<{
           name={["bank_id"]}
           rules={[{ required: true, message: "Пожалуйста, выберите Банк" }]}
           // Настройка отступов между лейблом и инпутом
-          style={{ marginBottom: 10 }}
+          style={{ marginBottom: 5 }}
         >
           <Select
             {...bankSelectProps}
@@ -160,7 +165,7 @@ export const MyCreateModal: React.FC<{
           name={["type_operation"]}
           rules={[{ required: false, message: "Пожалуйста, выберите Банк" }]}
           // Настройка отступов между лейблом и инпутом
-          style={{ marginBottom: 10 }}
+          style={{ marginBottom: 5 }}
         >
           <Select
             options={incomeTypes}
@@ -174,7 +179,7 @@ export const MyCreateModal: React.FC<{
           label="Код Клиента"
           name={["counterparty_id"]}
           rules={[{ required: true, message: "Пожалуйста, выберите клиента" }]}
-          style={{ marginBottom: 10 }}
+          style={{ marginBottom: 5 }}
         >
           <Select
             {...counterpartySelectProps}
@@ -190,7 +195,7 @@ export const MyCreateModal: React.FC<{
           label="Трек-код"
           name="name"
           rules={[{ required: false, message: "Укажите имя" }]}
-          style={{ marginBottom: 10 }}
+          style={{ marginBottom: 5 }}
         >
           <Input />
         </Form.Item>
@@ -199,7 +204,7 @@ export const MyCreateModal: React.FC<{
           label="Вид операции"
           name="type"
           rules={[{ required: false, message: "Укажите имя" }]}
-          style={{ marginBottom: 10, display: "none" }}
+          style={{ marginBottom: 5, display: "none" }}
         >
           <Input disabled style={{ backgroundColor: "#f5f5f5" }} />
         </Form.Item>
@@ -208,7 +213,7 @@ export const MyCreateModal: React.FC<{
           label="Сумма"
           name="amount"
           rules={[{ required: true, message: "Укажите сумму" }]}
-          style={{ marginBottom: 24 }}
+          style={{ marginBottom: 5 }}
         >
           <Input
             type="number"
@@ -222,9 +227,23 @@ export const MyCreateModal: React.FC<{
           label="Комментарий"
           name="comment"
           rules={[{ required: false }]}
-          style={{ marginBottom: 24 }}
+          style={{ marginBottom: 5 }}
         >
           <Input placeholder="Комментарий" style={{ width: "100%" }} />
+        </Form.Item>
+        <Form.Item label="Чек">
+          <Form.Item name="photo" noStyle>
+            <Upload.Dragger
+              name="file"
+              action={`${API_URL}/file-upload`}
+              listType="picture"
+              accept=".png,.jpg,.jpeg"
+            >
+              <p className="ant-upload-text">
+                <PaperClipOutlined /> Прикрепить чек
+              </p>
+            </Upload.Dragger>
+          </Form.Item>
         </Form.Item>
       </Form>
     </Modal>

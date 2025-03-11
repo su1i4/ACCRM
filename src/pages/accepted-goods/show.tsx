@@ -15,7 +15,7 @@ import { DownloadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
-export const GoodsShow: React.FC = () => {
+export const AcceptedGoodsShow: React.FC = () => {
   const { queryResult } = useShow();
   const { data, isLoading } = queryResult;
 
@@ -26,8 +26,6 @@ export const GoodsShow: React.FC = () => {
     id: record?.counterparty.branch_id,
   });
   const { data: branch } = dataBranch;
-
-  console.log(API_URL + "/" + record?.photo, "this is lox");
 
   // Function to handle photo download
   const handleDownloadPhoto = async () => {
@@ -152,16 +150,6 @@ export const GoodsShow: React.FC = () => {
           <TextField value={`${record?.counterparty?.branch?.name}, ${record?.counterparty?.under_branch?.address || ''}`} />
         </Col>
 
-          <Col xs={24} md={6}>
-            <Title level={5}>Скидка</Title>
-            <TextField value={record?.discount} />
-          </Col>
-
-        <Col xs={24} md={6}>
-          <Title level={5}>Ручная скидка</Title>
-          <TextField value={record?.discount_custom} />
-        </Col>
-
         <Col xs={24} md={24}>
           <Title level={5}>Фото</Title>
           {record?.photo ? (
@@ -187,4 +175,4 @@ export const GoodsShow: React.FC = () => {
       </Row>
     </Show>
   );
-};
+}; 

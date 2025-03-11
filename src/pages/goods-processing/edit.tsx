@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Create, getValueFromEvent, useForm, Edit, useSelect } from "@refinedev/antd";
+import {
+  Create,
+  getValueFromEvent,
+  useForm,
+  Edit,
+  useSelect,
+} from "@refinedev/antd";
 import {
   Form,
   Input,
@@ -21,23 +27,25 @@ import { entityFields } from "./create";
 export const GoodsEdit = () => {
   const { formProps, saveButtonProps, id, queryResult } = useForm();
   const [fileList, setFileList] = useState<any>([]);
-  
+
   const record = queryResult?.data?.data;
-  
+
   // Handle initializing the file list when the record is loaded
   useEffect(() => {
     if (record?.photo) {
       // If the photo is a string URL
-      if (typeof record.photo === 'string') {
+      if (typeof record.photo === "string") {
         setFileList([
           {
-            uid: '-1',
-            name: 'Current Photo',
-            status: 'done',
-            url: record.photo.startsWith('http') ? record.photo : `${API_URL}/${record.photo}`,
+            uid: "-1",
+            name: "Current Photo",
+            status: "done",
+            url: record.photo.startsWith("http")
+              ? record.photo
+              : `${API_URL}/${record.photo}`,
           },
         ]);
-      } 
+      }
       // If photo is already an array of file objects
       else if (Array.isArray(record.photo)) {
         setFileList(record.photo);
@@ -47,7 +55,9 @@ export const GoodsEdit = () => {
 
   const { selectProps: counterpartySelectProps } = useSelect({
     resource: "counterparty",
-    optionLabel: "name",
+    optionLabel: (record: any) => {
+      return `${record?.name}, ${record?.clientPrefix}-${record?.clientCode}`;
+    },
   });
 
   // Custom upload change handler
@@ -55,11 +65,11 @@ export const GoodsEdit = () => {
     // Ensure we're working with an array
     const newFileList = Array.isArray(info.fileList) ? info.fileList : [];
     setFileList(newFileList);
-    
+
     // Show success message when upload is complete
-    if (info.file.status === 'done') {
+    if (info.file.status === "done") {
       message.success(`${info.file.name} успешно загружен`);
-    } else if (info.file.status === 'error') {
+    } else if (info.file.status === "error") {
       message.error(`Ошибка загрузки ${info.file.name}`);
     }
   };
@@ -74,12 +84,16 @@ export const GoodsEdit = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps}>
-      <Form 
-        {...formProps} 
+      <Form
+        {...formProps}
         layout="horizontal"
         onFinish={(values: any) => {
           // Handle the photo field specially
-          if (values.photo && Array.isArray(values.photo) && values.photo.length > 0) {
+          if (
+            values.photo &&
+            Array.isArray(values.photo) &&
+            values.photo.length > 0
+          ) {
             // If file is already uploaded, extract the response
             if (values.photo[0].response) {
               // Check if response is an object with filePath property
@@ -90,7 +104,7 @@ export const GoodsEdit = () => {
               } else {
                 values.photo = values.photo[0].response;
               }
-            } 
+            }
             // If file is existing and hasn't changed
             else if (values.photo[0].url) {
               values.photo = values.photo[0].url;
@@ -99,7 +113,7 @@ export const GoodsEdit = () => {
             // If photo is not an array, preserve the original value
             values.photo = record?.photo || null;
           }
-          
+
           // Call the original onFinish
           formProps.onFinish && formProps.onFinish(values);
         }}
@@ -149,17 +163,30 @@ export const GoodsEdit = () => {
               <Select {...counterpartySelectProps} />
             </Form.Item>
           </Col>
+          <Col span={8}>
+            <Form.Item
+              label={"Скидка"}
+              name={["discount_custom"]}
+            >
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
         </Row>
 
         {/* Поле загрузки фото - на отдельной строке */}
         <Row>
           <Col span={24}>
             <Form.Item label="Фото">
-              <Form.Item 
-                name="photo" 
+              <Form.Item
+                name="photo"
                 valuePropName="fileList"
                 getValueProps={(value) => ({
-                  fileList: Array.isArray(value) ? value : fileList
+                  fileList: Array.isArray(value) ? value : fileList,
                 })}
                 getValueFromEvent={normFile}
                 noStyle

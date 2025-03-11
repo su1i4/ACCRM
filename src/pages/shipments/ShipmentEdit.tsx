@@ -1,51 +1,33 @@
 import { useState, useEffect } from "react";
 import { Edit, useForm, useSelect, useTable } from "@refinedev/antd";
-import { useUpdateMany, useOne } from "@refinedev/core";
-import { Form, Input, Row, Flex, Select, Col, Table } from "antd";
+import { useUpdateMany, useOne, useNavigation } from "@refinedev/core";
+import { Form, Input, Row, Flex, Select, Col, Table, Button } from "antd";
 import { useParams } from "react-router";
+import { FileAddOutlined } from "@ant-design/icons";
 
 const ShipmentEdit = () => {
   const { id } = useParams();
+  const { push } = useNavigation();
   //@ts-ignore
   const { tableProps, refetch: refetchGoods } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
     filters: {
-      initial: [
+      permanent: [
         {
-          operator: "or",
-          value: [
-            {
-              field: "status",
-              operator: "eq",
-              value: "В складе",
-            },
-            {
-              operator: "and",
-              value: [
-                {
-                  field: "shipment_id",
-                  operator: "eq",
-                  value: Number(id),
-                },
-                {
-                  field: "status",
-                  operator: "eq",
-                  value: "В пути",
-                },
-              ],
-            },
-          ],
+          field: "shipment_id",
+          operator: "eq",
+          value: Number(id),
+        },
+        {
+          field: "status",
+          operator: "eq",
+          value: "В пути",
         },
       ],
     },
-    initialSorter: [
-      {
-        field: "id",
-        order: "desc",
-      },
-    ],
   });
+
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [totalWeight, setTotalWeight] = useState<number>(0);
@@ -397,7 +379,11 @@ const ShipmentEdit = () => {
           </Flex>
         </Row>
 
-        {/* Таблица со списком товаров */}
+        <Button
+          icon={<FileAddOutlined />}
+          style={{ marginBottom: 10 }}
+          onClick={() => push(`/shipments/show/${id}/adding`)}
+        />
         <Row gutter={16}>
           <Col span={24}>
             {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
@@ -439,8 +425,9 @@ const ShipmentEdit = () => {
                     ?.slice(0, 5)}`;
                 }}
               />
-              <Table.Column dataIndex="cargoType" title="ТПН" />
+              <Table.Column dataIndex="cargoType" title="Тип груза" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
+
               <Table.Column
                 dataIndex="counterparty"
                 title="Код получателя"
@@ -448,14 +435,16 @@ const ShipmentEdit = () => {
                   return value?.clientPrefix + "-" + value?.clientCode;
                 }}
               />
+
+              <Table.Column dataIndex="status" title="Статус" />
               <Table.Column
                 dataIndex="counterparty"
-                title="ФИО Получателя"
-                render={(value) => value?.name}
+                render={(value) =>
+                  `${value?.branch?.name},${value?.under_branch?.address || ""}`
+                }
+                title="Пункт назначения, Пвз"
               />
-              <Table.Column dataIndex="weight" title="Филиал" />
               <Table.Column dataIndex="weight" title="Вес" />
-              <Table.Column dataIndex="status" title="Статус" />
             </Table>
           </Col>
         </Row>

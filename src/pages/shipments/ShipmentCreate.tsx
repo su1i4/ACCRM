@@ -21,11 +21,11 @@ const ShipmentCreate = () => {
     ],
     filters: {
       permanent: [
-        {
-          field: "shipment_id",
-          operator: "null",
-          value: "null",
-        },
+        // {
+        //   field: "shipment_id",
+        //   operator: "null",
+        //   value: "null",
+        // },
         {
           field: "status",
           operator: "eq",

@@ -62,6 +62,14 @@ export const i18nProvider_ru = {
       "issued.titles.list": "Выданные посылки",
       "notifications.createSuccess": "Успешно создано",
       "outcome.titles.list": "Расход",
+      "reports.titles.list": "Отчеты",
+      "reports.titles.cargoReceived": "Полученные грузы",
+      "reports.titles.cargoReceived.searchPlaceholder":
+      "Поиск по трек-коду, фио получателя или по коду получателя",
+      "accepted-goods.titles.list": "Принятые товары",
+      "accepted-goods.titles.show": "Просмотр принятого товара",
+      "pages.login.errors.validEmail": "Неверный формат электронной почты",
+      "shipment.titles.show": "Подбор товаров",
     };
     return translations[key] || key;
   },

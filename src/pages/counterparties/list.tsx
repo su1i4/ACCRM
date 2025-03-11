@@ -6,16 +6,7 @@ import {
   ShowButton,
   DeleteButton,
 } from "@refinedev/antd";
-import {
-  Space,
-  Table,
-  Input,
-  Button,
-  Row,
-  Col,
-  Dropdown,
-  Card,
-} from "antd";
+import { Space, Table, Input, Button, Row, Col, Dropdown, Card } from "antd";
 import { BaseKey, BaseRecord, useNavigation, useCustom } from "@refinedev/core";
 import { MyCreateModal } from "./modal/create-modal";
 import {
@@ -30,10 +21,12 @@ import { MyEditModal } from "./modal/edit-modal";
 import { API_URL } from "../../App";
 
 export const CounterpartyList: React.FC = () => {
-  const [sortField, setSortField] = useState<"name" | "clientCode" | "id">("id");
+  const [sortField, setSortField] = useState<"name" | "clientCode" | "id">(
+    "id"
+  );
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sorterVisible, setSorterVisible] = useState(false);
-  
+
   const { tableProps: defaultTableProps, setFilters } = useTable({
     resource: "counterparty",
     syncWithLocation: false,
@@ -50,18 +43,18 @@ export const CounterpartyList: React.FC = () => {
     const params: any = {
       sort: `${sortField},${sortDirection}`,
     };
-    
+
     // Добавляем параметр поиска, если он есть
     if (searchValue) {
       params.s = JSON.stringify({
         $or: [
           { name: { $contL: searchValue } },
           { clientCode: { $contL: searchValue } },
-          { clientPrefix: { $contL: searchValue } }
-        ]
+          { clientPrefix: { $contL: searchValue } },
+        ],
       });
     }
-    
+
     return params;
   };
 
@@ -144,8 +137,7 @@ export const CounterpartyList: React.FC = () => {
             // setSorterVisible(false);
           }}
         >
-          Имени{" "}
-          {sortField === "name" && (sortDirection === "ASC" ? "↑" : "↓")}
+          Имени {sortField === "name" && (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
         {/* Сортировка по коду клиента */}
         <Button
@@ -170,10 +162,10 @@ export const CounterpartyList: React.FC = () => {
   return (
     <List headerButtons={() => null}>
       {/* Передаем open и setOpen в модальное окно */}
-      <MyCreateModal 
-        open={open} 
-        onClose={() => setOpen(false)} 
-        onSuccess={() => refetch()} 
+      <MyCreateModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSuccess={() => refetch()}
       />
       <MyEditModal
         id={editId}
@@ -194,7 +186,7 @@ export const CounterpartyList: React.FC = () => {
 
             {/*<Button icon={<EditOutlined />} onClick={handleBulkEdit} />*/}
             {/* <Button icon={<UnorderedListOutlined />} /> */}
-            
+
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -214,8 +206,12 @@ export const CounterpartyList: React.FC = () => {
                 }
               />
             </Dropdown>
-            
-            <Button icon={<SyncOutlined />} onClick={() => refetch()} title="Обновить данные" />
+
+            <Button
+              icon={<SyncOutlined />}
+              onClick={() => refetch()}
+              title="Обновить данные"
+            />
           </Space>
         </Col>
         <Col flex="auto">
@@ -230,9 +226,9 @@ export const CounterpartyList: React.FC = () => {
             suffix={
               searchValue ? (
                 <CloseCircleOutlined
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: "pointer" }}
                   onClick={() => {
-                    setSearchValue('');
+                    setSearchValue("");
                   }}
                 />
               ) : isLoading ? (
@@ -266,7 +262,9 @@ export const CounterpartyList: React.FC = () => {
         {...tableProps}
         rowKey="id"
         locale={{
-          emptyText: searchValue ? 'По вашему запросу ничего не найдено' : 'Нет данных'
+          emptyText: searchValue
+            ? "По вашему запросу ничего не найдено"
+            : "Нет данных",
         }}
       >
         <Table.Column dataIndex="id" title="ID" />
@@ -282,14 +280,44 @@ export const CounterpartyList: React.FC = () => {
         <Table.Column dataIndex="name" title="Фио" />
         <Table.Column dataIndex="address" title="Адрес" />
         <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
-        <Table.Column dataIndex="email" title="Почта" />
-        <Table.Column dataIndex="goods" title="Сумма заказов Кг" render={(value) => {
-          return value.reduce((acc: number, curr: any) => acc + Number(curr.weight), 0);
+        <Table.Column dataIndex="email" title="Почта" render={(value) => {
+          return value ? value : "-";
         }} />
-        <Table.Column dataIndex="goods" title="Сумма заказов USD" render={(value) => {
-          return value.reduce((acc: number, curr: any) => acc + Number(curr.amount), 0);
-        }} />
-        <Table.Column dataIndex="comment" title="Комментарий" />
+        <Table.Column
+          dataIndex="discount"
+          title="Скидка"
+          render={(value) => {
+            return value ? value : "0";
+          }}
+        />
+
+        <Table.Column
+          dataIndex="goods"
+          title="Сумма заказов Кг"
+          render={(value) => {
+            return value.reduce(
+              (acc: number, curr: any) => acc + Number(curr.weight),
+              0
+            );
+          }}
+        />
+        <Table.Column
+          dataIndex="goods"
+          title="Сумма заказов USD"
+          render={(value) => {
+            return value.reduce(
+              (acc: number, curr: any) => acc + Number(curr.amount),
+              0
+            );
+          }}
+        />
+        <Table.Column
+          dataIndex="comment"
+          title="Комментарий"
+          render={(value) => {
+            return value ? value : "-";
+          }}
+        />
       </Table>
     </List>
   );

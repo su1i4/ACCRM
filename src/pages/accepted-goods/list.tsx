@@ -21,19 +21,15 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import {
-  useCustom,
-  useNavigation,
-  useUpdate,
-} from "@refinedev/core";
+import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
 
-export const GoogsProcessingList = () => {
+export const AcceptedGoodsList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
-    { trackCode: { $contL: "" } },
+    { status: { $eq: "В складе" } },
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -191,7 +187,7 @@ export const GoogsProcessingList = () => {
       await Promise.all(
         selectedItems.map((item: any) =>
           update({
-            resource: "goods-processing",
+            resource: "accepted-goods",
             id: item.id,
             values: { visible: item.visible },
           })
@@ -211,12 +207,10 @@ export const GoogsProcessingList = () => {
 
   const { show, push } = useNavigation();
 
-  // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
-    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -242,11 +236,11 @@ export const GoogsProcessingList = () => {
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
+            {/* <Button
               icon={<FileAddOutlined />}
               style={{}}
-              onClick={() => push("/goods-processing/create")}
-            />
+              onClick={() => push("/accepted-goods/create")}
+            /> */}
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -264,10 +258,9 @@ export const GoogsProcessingList = () => {
                     <ArrowDownOutlined />
                   )
                 }
-              >
-              </Button>
+              ></Button>
             </Dropdown>
-            <Dropdown
+            {/* <Dropdown
               overlay={checkboxContent}
               trigger={["click"]}
               placement="bottomLeft"
@@ -277,7 +270,7 @@ export const GoogsProcessingList = () => {
               }}
             >
               <Button icon={<SettingOutlined />} />
-            </Dropdown>
+            </Dropdown> */}
           </Space>
         </Col>
         <Col flex="auto">
@@ -287,7 +280,7 @@ export const GoogsProcessingList = () => {
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
-                setFilters([{ trackCode: { $contL: "" } }], "replace");
+                setFilters([{ status: { $eq: "В складе" } }], "replace");
                 return;
               }
 
@@ -301,6 +294,7 @@ export const GoogsProcessingList = () => {
                       { "counterparty.name": { $contL: value } },
                     ],
                   },
+                  { status: { $eq: "В складе" } },
                 ],
                 "replace"
               );
@@ -342,10 +336,10 @@ export const GoogsProcessingList = () => {
         scroll={{ x: "max-content" }}
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("goods-processing", record.id as number);
+            show("accepted-goods", record.id as number);
           },
         })}
-        rowSelection={rowSelection}
+        // rowSelection={rowSelection}
       >
         <Table.Column
           dataIndex="created_at"
@@ -378,7 +372,6 @@ export const GoogsProcessingList = () => {
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="discount" title="Скидка" />
-        {/* <Table.Column dataIndex="discount_custom" title="Ручная скидка" /> */}
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"

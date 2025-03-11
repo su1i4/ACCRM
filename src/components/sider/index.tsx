@@ -12,11 +12,7 @@ import {
 import { Link } from "react-router";
 import { type Sider } from "@refinedev/antd";
 import { Layout as AntdLayout, Menu, Grid, theme, Button } from "antd";
-import {
-  LogoutOutlined,
-  RightOutlined,
-  LeftOutlined,
-} from "@ant-design/icons";
+import { LogoutOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
 import { antLayoutSider, antLayoutSiderMobile } from "./styles";
 
 const { useToken } = theme;
@@ -29,7 +25,6 @@ export const CustomSider: typeof Sider = ({ render }) => {
   const { mutate: mutateLogout } = useLogout();
   const translate = useTranslate();
   const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-
 
   const breakpoint = Grid.useBreakpoint();
 
@@ -88,7 +83,13 @@ export const CustomSider: typeof Sider = ({ render }) => {
             }}
             icon={icon}
           >
-            {route ? <Link style={{ fontSize: 13 }} to={route || "/"}>{label}</Link> : label}
+            {route ? (
+              <Link style={{ fontSize: 13 }} to={route || "/"}>
+                {label}
+              </Link>
+            ) : (
+              label
+            )}
             {!collapsed && isSelected && (
               <div className="ant-menu-tree-arrow" />
             )}
@@ -156,12 +157,11 @@ export const CustomSider: typeof Sider = ({ render }) => {
         ...siderStyle,
         backgroundColor: token.colorBgContainer,
         borderRight: `1px solid ${token.colorBgElevated}`,
-        overflow: "hidden",
-        position: "fixed",
         height: "100vh",
-        left: 0,
+        position: "sticky",
         top: 0,
-        bottom: 0,
+        left: 0,
+        overflowY: "auto",
       }}
       trigger={
         !isMobile && (
@@ -174,19 +174,13 @@ export const CustomSider: typeof Sider = ({ render }) => {
               backgroundColor: token.colorBgElevated,
             }}
           >
-            {collapsed ? (
-              <RightOutlined
-                style={{
-                  color: token.colorPrimary,
-                }}
-              />
-            ) : (
-              <LeftOutlined
-                style={{
-                  color: token.colorPrimary,
-                }}
-              />
-            )}
+            <RightOutlined
+              style={{
+                color: token.colorPrimary,
+                rotate: !collapsed ? "180deg" : "0deg",
+                transition: "transform 2s linear",
+              }}
+            />
           </Button>
         )
       }
@@ -218,7 +212,6 @@ export const CustomSider: typeof Sider = ({ render }) => {
         style={{
           marginTop: "8px",
           border: "none",
-          overflowY: "hidden",
         }}
         onClick={() => {
           if (!breakpoint.lg) {

@@ -84,6 +84,7 @@ const ReceivingList = () => {
         })}
         {...tableProps}
         rowKey="id"
+        scroll={{ x: "max-content"}}
       >
         <Table.Column
           dataIndex="created_at"
@@ -119,6 +120,7 @@ const ReceivingList = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
+        <Table.Column dataIndex="status" title={"Статус"} />
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

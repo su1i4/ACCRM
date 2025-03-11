@@ -43,7 +43,7 @@ export const entityFields = [
     name: "packageType",
     label: "Вид упаковки",
     type: "enum",
-    required: true,
+    // required: true,
     enumValues: [
       "Коробка+скотч",
       "Коробка+водонепронц мешок+скотч",
@@ -61,7 +61,7 @@ export const entityFields = [
     name: "pricePackageType",
     label: "Цена за упаковку ",
     type: "decimal",
-    required: true,
+    // required: true,
   },
   { name: "weight", label: "Вес", type: "decimal", required: true },
   { name: "comments", label: "Комментарии", type: "text", required: false },
@@ -77,7 +77,9 @@ export const GoodsCreate = () => {
 
   const { selectProps: counterpartySelectProps } = useSelect({
     resource: "counterparty",
-    optionLabel: "name",
+    optionLabel: (record: any) => {
+      return `${record?.name}, ${record?.clientPrefix}-${record?.clientCode}`;
+    },
     onSearch: (value) => {
       // Check if the search value contains only digits
       const isOnlyDigits = /^\d+$/.test(value);
@@ -157,7 +159,7 @@ export const GoodsCreate = () => {
           {/*    <Select {...branchSelectProps}  />*/}
           {/*    </Form.Item>*/}
           {/*</Col>*/}
-          <Col span={8}>
+          <Col span={12}>
             <Form.Item
               label={"Код Клиента"}
               name={["counterparty_id"]}
@@ -168,6 +170,14 @@ export const GoodsCreate = () => {
               ]}
             >
               <Select {...counterpartySelectProps} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              label={"Скидка"}
+              name={["discount_custom"]}
+            >
+              <Input type="number" min={0} max={100} style={{ width: "100%" }} />
             </Form.Item>
           </Col>
         </Row>

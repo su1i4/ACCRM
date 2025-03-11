@@ -9,12 +9,13 @@ import {
 import { useUpdateMany, useParsed, useShow, useNavigation} from "@refinedev/core";
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
+import { useParams } from "react-router";
 
 const { Title } = Typography;
 
 const ReceivingShow = () => {
   // Получаем ID из URL (например, /shipments/show/123)
-  const { id } = useParsed();
+  const { id } = useParams();
 
   // Запрашиваем данные о конкретном рейсе (shipment) по ID
   const { queryResult } = useShow({
@@ -36,11 +37,11 @@ const ReceivingShow = () => {
       },
     ],
     filters: {
-      initial: [
+      permanent: [
         {
           field: "shipment_id",
           operator: "eq",
-          value: record?.id,
+          value: Number(id),
         },
         {
           field: "status",
@@ -169,6 +170,12 @@ const ReceivingShow = () => {
             value={`${record?.updated_at?.split("T")[0]} ${record?.updated_at
               ?.split("T")[1]
               ?.slice(0, 5)}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Статус</Title>
+          <TextField
+            value={record?.status}
           />
         </Col>
       </Row>
