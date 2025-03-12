@@ -25,16 +25,6 @@ const ShipmentAdd = () => {
           operator: "eq",
           value: "В складе",
         },
-        {
-          field: "status",
-          operator: "eq",
-          value: "Готово к выдаче",
-        },
-        {
-          field: "status",
-          operator: "eq",
-          value: "Выдали",
-        },
       ],
     },
   });

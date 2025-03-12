@@ -29,6 +29,7 @@ import {
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
 
+
 export const GoogsProcessingList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
@@ -376,6 +377,11 @@ export const GoogsProcessingList = () => {
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
+        <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value) => {
+            console.log(value)
+            return `${value?.branch?.tarif}`;
+          }}/>
+        
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="discount" title="Скидка" />
         {/* <Table.Column dataIndex="discount_custom" title="Ручная скидка" /> */}
