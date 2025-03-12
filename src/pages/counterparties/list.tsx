@@ -280,6 +280,10 @@ export const CounterpartyList: React.FC = () => {
         <Table.Column dataIndex="name" title="Фио" />
         <Table.Column dataIndex="address" title="Адрес" />
         <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
+        <Table.Column dataIndex="branch" title="Тариф клиента" render={(value) => {
+          console.log(value)
+          return value?.tarif;
+        }}   />
         <Table.Column dataIndex="email" title="Почта" render={(value) => {
           return value ? value : "-";
         }} />

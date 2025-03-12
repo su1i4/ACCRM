@@ -261,7 +261,7 @@ const ShipmentCreate = () => {
               style={{ width: 250 }}
               name="branch_id"
               label="Пункт назначения"
-              rules={[{ required: true, message: "Введите Пунк назначения" }]}
+              rules={[{ required: true, message: "Введите Пункт назначения" }]}
             >
               <Select
                 onChange={(e) => {

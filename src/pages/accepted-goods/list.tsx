@@ -365,13 +365,11 @@ export const AcceptedGoodsList = () => {
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>
-            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+            `${value?.branch?.name}`
           }
-          title="Пункт назначения, Пвз"
+          title="Пункт назначения"
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="discount" title="Скидка" />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"
