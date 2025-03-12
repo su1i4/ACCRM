@@ -8,7 +8,7 @@ import {
   EditButton,
   DeleteButton,
 } from "@refinedev/antd";
-import { useShow } from "@refinedev/core";
+import { useParsed, useShow } from "@refinedev/core";
 import { Col, Image, Row, Typography, Button, Space } from "antd";
 import { API_URL } from "../../App";
 import { DownloadOutlined } from "@ant-design/icons";
@@ -16,7 +16,8 @@ import { DownloadOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 
 export const AcceptedGoodsShow: React.FC = () => {
-  const { queryResult } = useShow();
+  const { id } = useParsed();
+  const { queryResult } = useShow({ resource: "goods-processing", id });
   const { data, isLoading } = queryResult;
 
   // Предполагается, что data.data содержит объект записи, а связанные данные (branch, counterparty) подгружаются через joins

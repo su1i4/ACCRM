@@ -11,6 +11,7 @@ import {
   Form,
   Card,
   Modal,
+  Checkbox,
 } from "antd";
 import {
   SearchOutlined,
@@ -19,6 +20,7 @@ import {
   ArrowDownOutlined,
   FileAddOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
@@ -155,6 +157,8 @@ export const AcceptedGoodsList = () => {
   };
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [mainChecked, setMainChecked] = useState(false);
 
   // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
@@ -187,7 +191,7 @@ export const AcceptedGoodsList = () => {
       await Promise.all(
         selectedItems.map((item: any) =>
           update({
-            resource: "accepted-goods",
+            resource: "goods-processing",
             id: item.id,
             values: { visible: item.visible },
           })
@@ -231,6 +235,12 @@ export const AcceptedGoodsList = () => {
     onChange: handleTableChange,
   };
 
+  const clickAll = () => {
+    tableProps.dataSource.forEach((item: any) => {
+      setSelectedRows((prev) => [...prev, item]);
+    });
+  };
+
   return (
     <List headerButtons={() => false}>
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
@@ -260,7 +270,7 @@ export const AcceptedGoodsList = () => {
                 }
               ></Button>
             </Dropdown>
-            {/* <Dropdown
+            <Dropdown
               overlay={checkboxContent}
               trigger={["click"]}
               placement="bottomLeft"
@@ -270,7 +280,7 @@ export const AcceptedGoodsList = () => {
               }}
             >
               <Button icon={<SettingOutlined />} />
-            </Dropdown> */}
+            </Dropdown>
           </Space>
         </Col>
         <Col flex="auto">
@@ -342,6 +352,17 @@ export const AcceptedGoodsList = () => {
         // rowSelection={rowSelection}
       >
         <Table.Column
+          dataIndex="visible"
+          title={<Checkbox checked={mainChecked} onChange={clickAll} />}
+          render={(value) => {
+            if (value) {
+              return <EyeOutlined />;
+            } else {
+              return <Checkbox />;
+            }
+          }}
+        />
+        <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) =>
@@ -364,12 +385,18 @@ export const AcceptedGoodsList = () => {
         />
         <Table.Column
           dataIndex="counterparty"
-          render={(value) =>
-            `${value?.branch?.name}`
-          }
+          render={(value) => `${value?.branch?.name}`}
           title="Пункт назначения"
         />
         <Table.Column dataIndex="weight" title="Вес" />
+        <Table.Column
+          dataIndex="counterparty"
+          title="Тариф клиента"
+          render={(value) => {
+            console.log(value);
+            return `${value?.branch?.tarif}`;
+          }}
+        />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"
