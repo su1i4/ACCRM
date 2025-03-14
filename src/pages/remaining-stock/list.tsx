@@ -386,23 +386,6 @@ export const RemainingStockProcessingList = () => {
                 }
               />
             </Dropdown>
-            <Button
-              icon={<SyncOutlined />}
-              style={{}}
-              onClick={() => {
-                setSelectedBranch(undefined); // сброс значения Select
-                setFilters(
-                  [
-                    {
-                      status: {
-                        $in: ["В Складе", "Готов к выдаче"],
-                      },
-                    },
-                  ],
-                  "replace"
-                ); // сброс фильтров
-              }}
-            />
           </Space>
         </Col>
         <Col flex="auto">
@@ -567,7 +550,16 @@ export const RemainingStockProcessingList = () => {
           />
           <Table.Column dataIndex="weight" title="Вес" />
           <Table.Column dataIndex="amount" title="Сумма" />
-          <Table.Column dataIndex="counterparty" title="Тариф" render={(value) => value?.branch?.tarif} />
+          <Table.Column
+            dataIndex="counterparty"
+            title="Тариф клиента"
+            render={(value, record) => {
+              return `${(
+                Number(value?.branch?.tarif || 0) -
+                Number(record?.counterparty?.discount?.discount || 0)
+              ).toFixed(2)}`;
+            }}
+          />
           <Table.Column
             dataIndex="employee_id"
             title="Сотрудник"

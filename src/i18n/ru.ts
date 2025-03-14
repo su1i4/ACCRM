@@ -80,6 +80,7 @@ export const i18nProvider_ru = {
       "receiving-history.titles.list": "История получений",
       "receiving-history-show.titles.show": "Детальная информация",
       "shipment-history-show.titles.show": "Детальная информация",
+      "issue.titles.show": "Просмотр посылки",
     };
     return translations[key] || key;
   },

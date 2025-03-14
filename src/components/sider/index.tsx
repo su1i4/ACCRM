@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   type ITreeMenu,
   CanAccess,
@@ -11,8 +11,8 @@ import {
 } from "@refinedev/core";
 import { Link } from "react-router";
 import { type Sider } from "@refinedev/antd";
-import { Layout as AntdLayout, Menu, Grid, theme, Button } from "antd";
-import { LogoutOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
+import { Layout as AntdLayout, Menu, Grid, theme, Button, Drawer } from "antd";
+import { LogoutOutlined, RightOutlined, LeftOutlined, MenuOutlined } from "@ant-design/icons";
 import { antLayoutSider, antLayoutSiderMobile } from "./styles";
 
 const { useToken } = theme;
@@ -20,6 +20,7 @@ const { useToken } = theme;
 export const CustomSider: typeof Sider = ({ render }) => {
   const { token } = useToken();
   const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState<boolean>(false);
   const isExistAuthentication = useIsExistAuthentication();
   const { warnWhen, setWarnWhen } = useWarnAboutChange();
   const { mutate: mutateLogout } = useLogout();
@@ -30,6 +31,12 @@ export const CustomSider: typeof Sider = ({ render }) => {
 
   const isMobile =
     typeof breakpoint.lg === "undefined" ? false : !breakpoint.lg;
+
+  useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [isMobile]);
 
   const renderTreeView = (tree: ITreeMenu[], selectedKey: string) => {
     return tree.map((item: ITreeMenu) => {
@@ -146,10 +153,71 @@ export const CustomSider: typeof Sider = ({ render }) => {
 
   const { push } = useNavigation();
 
+  if (isMobile) {
+    return (
+      <>
+        <Button 
+          icon={<MenuOutlined style={{color: 'white'}}/>}
+          style={{
+            background: 'linear-gradient(to bottom, #EA653A, #EB2540)',
+            position: 'fixed',
+            top: '16px',
+            left: '16px',
+            zIndex: 999,
+          }}
+          onClick={() => setMobileDrawerVisible(true)}
+        />
+        <Drawer
+          placement="left"
+          closable={true}
+          onClose={() => setMobileDrawerVisible(false)}
+          visible={mobileDrawerVisible}
+          width={250}
+          bodyStyle={{ padding: 0 }}
+        >
+          <div
+            style={{
+              padding: "0 16px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "64px",
+              backgroundColor: token.colorBgElevated,
+              fontSize: "14px",
+            }}
+          >
+            <img
+              style={{
+                width: "110px",
+              }}
+              onClick={() => {
+                push("/accepted-goods");
+                setMobileDrawerVisible(false);
+              }}
+              src="../../public/alfa-china.png"
+            />
+          </div>
+          <Menu
+            defaultOpenKeys={defaultOpenKeys}
+            selectedKeys={[selectedKey]}
+            mode="inline"
+            style={{
+              marginTop: "8px",
+              border: "none",
+            }}
+            onClick={() => setMobileDrawerVisible(false)}
+          >
+            {renderSider()}
+          </Menu>
+        </Drawer>
+      </>
+    );
+  }
+
   return (
     <AntdLayout.Sider
       collapsible
-      collapsedWidth={isMobile ? 0 : 80}
+      collapsedWidth={80}
       collapsed={collapsed}
       breakpoint="lg"
       onCollapse={(collapsed: boolean): void => setCollapsed(collapsed)}
@@ -164,25 +232,23 @@ export const CustomSider: typeof Sider = ({ render }) => {
         overflowY: "auto",
       }}
       trigger={
-        !isMobile && (
-          <Button
-            type="text"
+        <Button
+          type="text"
+          style={{
+            borderRadius: 0,
+            height: "100%",
+            width: "100%",
+            backgroundColor: token.colorBgElevated,
+          }}
+        >
+          <RightOutlined
             style={{
-              borderRadius: 0,
-              height: "100%",
-              width: "100%",
-              backgroundColor: token.colorBgElevated,
+              color: token.colorPrimary,
+              rotate: !collapsed ? "180deg" : "0deg",
+              transition: "transform 2s linear",
             }}
-          >
-            <RightOutlined
-              style={{
-                color: token.colorPrimary,
-                rotate: !collapsed ? "180deg" : "0deg",
-                transition: "transform 2s linear",
-              }}
-            />
-          </Button>
-        )
+          />
+        </Button>
       }
     >
       <div

@@ -83,16 +83,6 @@ export const IssueProcessingListReceived = () => {
           }
         />
         <Table.Column dataIndex="status" title="Статус" />
-        <Table.Column
-          title="Действия"
-          dataIndex="actions"
-          render={(_, record: BaseRecord) => (
-            <Space>
-              <ShowButton hideText size="small" recordItemId={record.id} />
-              <DeleteButton hideText size="small" recordItemId={record.id} />
-            </Space>
-          )}
-        />
       </Table>
     </List>
   );

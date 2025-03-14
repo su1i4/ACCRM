@@ -428,7 +428,7 @@ export const GoogsProcessingList = () => {
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value, record) => {
-            return `${(Number(value?.branch?.tarif) - Number(record?.counterparty?.discount?.discount || 0)).toFixed(2)}`;
+            return `${(Number(value?.branch?.tarif || 0) - Number(record?.counterparty?.discount?.discount || 0)).toFixed(2)}`;
           }}/>
         
         <Table.Column dataIndex="amount" title="Сумма" />

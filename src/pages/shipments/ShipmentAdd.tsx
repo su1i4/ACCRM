@@ -1,31 +1,39 @@
 import { useState, useEffect } from "react";
 import { Edit, useForm, useSelect, useTable, Show } from "@refinedev/antd";
-import { useUpdateMany, useOne, useNavigation } from "@refinedev/core";
+import { useUpdateMany, useOne, useNavigation, useCustom } from "@refinedev/core";
 import { Form, Input, Row, Flex, Select, Col, Table, Button } from "antd";
 import { useParams } from "react-router";
 import { FileAddOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { API_URL } from "../../App";
 
 const ShipmentAdd = () => {
   const { id } = useParams();
-  const { show, push } = useNavigation();
+  const { push } = useNavigation();
 
-  const { tableProps } = useTable({
-    resource: "goods-processing",
-    syncWithLocation: false,
-    initialSorter: [
-      {
-        field: "id",
-        order: "desc",
-      },
-    ],
-    filters: {
-      initial: [
-        {
-          field: "status",
-          operator: "eq",
-          value: "В складе",
-        },
-      ],
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    { status: { $eq: "В складе" } },
+  ]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({ $and: searchFilters }),
+      sort: `${sortField},${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: (currentPage - 1) * pageSize,
+    };
+  };
+
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
     },
   });
 
@@ -80,6 +88,33 @@ const ShipmentAdd = () => {
     } else {
       push(`/shipments/edit/${id}`);
     }
+  };
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+
+    // Обрабатываем сортировку, если она пришла из таблицы
+    if (sorter && sorter.field) {
+      setSortField(
+        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
+      );
+      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+    }
+  };
+
+  const dataSource = data?.data?.data || [];
+
+  // Формируем пропсы для таблицы из данных useCustom
+  const tableProps = {
+    dataSource: dataSource,
+    loading: isLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
   };
 
   return (
@@ -142,7 +177,9 @@ const ShipmentAdd = () => {
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>
-            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+            <p style={{width: "200px"}}>
+              {`${value?.branch?.name},${value?.under_branch?.address || ""}`}
+            </p>
           }
           title="Пункт назначения, Пвз"
         />

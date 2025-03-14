@@ -19,6 +19,7 @@ import {
   Image,
   Flex,
   Dropdown,
+  Typography,
 } from "antd";
 import {
   SearchOutlined,
@@ -75,6 +76,7 @@ export const IssueProcessingList = () => {
   });
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
   const { mutate: updateManyGoods } = useUpdateMany({
     resource: "goods-processing",
     mutationOptions: {
@@ -107,6 +109,7 @@ export const IssueProcessingList = () => {
     info: { type: "all" | "none" | "invert" | "single" | "multiple" }
   ) => {
     setSelectedRowKeys(selectedRowKeys);
+    setSelectedRows(selectedRows);
   };
 
   // Функция фильтрации по трек-коду и диапазону дат
@@ -187,16 +190,15 @@ export const IssueProcessingList = () => {
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
           // Fixed: Use consistent filter format
-          setSearchFilters(
-            [...searchFilters,
-              {
-                created_at: {
-                  $gte: dateStrings[0],
-                  $lte: dateStrings[1],
-                },
+          setSearchFilters([
+            ...searchFilters,
+            {
+              created_at: {
+                $gte: dateStrings[0],
+                $lte: dateStrings[1],
               },
-            ],
-          );
+            },
+          ]);
         }
       }}
     />
@@ -205,7 +207,16 @@ export const IssueProcessingList = () => {
   // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
 
-  const { show } = useNavigation();
+  const totalAmount = selectedRows.reduce(
+    (acc, row) => acc + Number(row?.amount),
+    0
+  );
+
+  const totalWeight = selectedRows.reduce(
+    (acc, row) => acc + Number(row?.weight),
+    0
+  );
+
 
   return (
     <List>
@@ -285,6 +296,30 @@ export const IssueProcessingList = () => {
         <Button type="primary" onClick={() => push("received")}>
           Выданные посылки
         </Button>
+        <div
+          style={{
+            border: "1px dashed gainsboro",
+            padding: "4px 10px",
+            borderRadius: 5,
+            marginBottom: 10,
+            backgroundColor: "#f9f9f9",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            width: "70%",
+            height: 32,
+            boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <Typography.Text>
+            Общая сумма: <strong>{totalAmount}</strong>
+          </Typography.Text>{" "}
+          |
+          <Typography.Text>
+            Общий вес: <strong>{totalWeight} кг</strong>
+          </Typography.Text>
+        </div>
       </Flex>
       <Table
         dataSource={dataSource}
@@ -304,9 +339,9 @@ export const IssueProcessingList = () => {
             setPageSize(pageSize);
           },
         }}
-        onRow={(record) => ({
-          onDoubleClick: () => show("goods-processing", record.id as number),
-        })}
+        // onRow={(record) => ({
+        //   onDoubleClick: () => show("issue", record.id as number),
+        // })}
         scroll={{ x: "max-content" }}
       >
         <Table.Column
@@ -323,7 +358,7 @@ export const IssueProcessingList = () => {
           dataIndex="counterparty"
           title="Код получателя"
           render={(value) => {
-            return `${value?.clientPrefix}-${value?.clientCode}`;
+            return `${value?.clientPrefix || ""}-${value?.clientCode || ""}`;
           }}
         />
         <Table.Column
@@ -333,9 +368,13 @@ export const IssueProcessingList = () => {
         />
         <Table.Column
           dataIndex="counterparty"
-          render={(value) =>
-            `${value?.branch?.name},${value?.under_branch?.address || ""}`
-          }
+          render={(value) => (
+            <p style={{ width: "200px" }}>
+              {`${value?.branch?.name || ""},${
+                value?.under_branch?.address || ""
+              }`}
+            </p>
+          )}
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />

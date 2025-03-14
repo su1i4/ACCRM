@@ -82,6 +82,10 @@ const ReceivingList = () => {
           onClick={() => {
             setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
           }}
+          style={{
+            width: 33,
+            minWidth: 33,
+          }}
         >
           {/* Сортировка по дате */}
         </Button>
