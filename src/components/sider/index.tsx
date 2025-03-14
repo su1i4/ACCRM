@@ -201,7 +201,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
           style={{
             width: collapsed ? "70px" : "110px",
           }}
-          onClick={() => push("/goods-processing")}
+          onClick={() => push("/accepted-goods")}
           src="../../public/alfa-china.png"
         />
       </div>

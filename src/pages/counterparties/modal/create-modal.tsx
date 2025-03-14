@@ -12,7 +12,7 @@ export const MyCreateModal: React.FC<{
   onSuccess?: () => void;
 }> = ({ open, onClose, onSuccess }) => {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  
+
   const { modalProps, formProps, submit } = useModalForm({
     resource: "counterparty",
     action: "create",
@@ -75,9 +75,9 @@ export const MyCreateModal: React.FC<{
             label="Пунк назначения"
             rules={[{ required: true, message: "Введите Пунк назначения" }]}
           >
-            <Select 
-              {...branchSelectProps} 
-              style={{ width: "100%" }} 
+            <Select
+              {...branchSelectProps}
+              style={{ width: "100%" }}
               onChange={handleBranchChange}
             />
           </Form.Item>
@@ -118,7 +118,11 @@ export const MyCreateModal: React.FC<{
             name="phoneNumber"
             rules={[{ required: true, message: "Введите номер телефона" }]}
           >
-            <PhoneInput inputStyle={{ width: "100%", height: 32 }} country={"kg"} />
+            <PhoneInput
+              onlyCountries={["kg", "cn", "kz", "ru"]}
+              inputStyle={{ width: "100%", height: 32 }}
+              country={"kg"}
+            />
           </Form.Item>
           <Form.Item
             style={{ width: "100%" }}

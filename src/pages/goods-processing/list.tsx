@@ -11,6 +11,7 @@ import {
   Form,
   Card,
   Modal,
+  Checkbox,
 } from "antd";
 import {
   SearchOutlined,
@@ -19,6 +20,7 @@ import {
   ArrowDownOutlined,
   FileAddOutlined,
   SettingOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import {
@@ -164,15 +166,6 @@ export const GoogsProcessingList = () => {
   // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
 
-  useEffect(() => {
-    if (dataSource) {
-      const visibleIds = dataSource
-        .filter((item: any) => item.visible)
-        .map((item: any) => item.id);
-      setSelectedRowKeys(visibleIds);
-    }
-  }, [dataSource]);
-
   const rowSelection = {
     selectedRowKeys,
     onChange: (newSelectedKeys: React.Key[]) => {
@@ -182,10 +175,47 @@ export const GoogsProcessingList = () => {
 
   const { mutateAsync: update } = useUpdate();
 
+  const [mainChecked, setMainChecked] = useState(false);
+
+  const clickAll = () => {
+    setMainChecked(!mainChecked);
+    if (!mainChecked) {
+      // Выбираем только те строки, где visible: false
+      const allFalseIds = dataSource
+        .filter((item: any) => !item.visible)
+        .map((item: any) => item.id);
+      setSelectedRowKeys(allFalseIds);
+    } else {
+      // Снимаем все выделения
+      setSelectedRowKeys([]);
+    }
+  };
+
+  console.log(selectedRowKeys)
+
+  const handleCheckboxChange = (record: any) => {
+    // Если запись уже visible: true, не позволяем её изменить
+    if (record.visible) return;
+    
+    const newSelectedKeys = selectedRowKeys.includes(record.id)
+      ? selectedRowKeys.filter((id) => id !== record.id)
+      : [...selectedRowKeys, record.id];
+    setSelectedRowKeys(newSelectedKeys);
+    
+    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
+    const allFalseItems = dataSource.filter((item: any) => !item.visible);
+    const allFalseSelected = allFalseItems.every((item: any) => 
+      newSelectedKeys.includes(item.id)
+    );
+    setMainChecked(allFalseSelected);
+  };
+
   const handleSaveChanges = async () => {
-    const selectedItems = (dataSource || []).map((item: any) => ({
+    const filteredItems = dataSource.filter((item: any) => !item.visible);
+    const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
-      visible: selectedRowKeys.includes(item.id),
+      // Если запись уже visible: true, оставляем её true
+      visible: item.visible ? true : selectedRowKeys.includes(item.id),
     }));
 
     try {
@@ -198,7 +228,10 @@ export const GoogsProcessingList = () => {
           })
         )
       );
-      console.log("Все обновления прошли успешно");
+      refetch();
+      // Сбрасываем выбранные строки
+      setSelectedRowKeys([]);
+      setMainChecked(false);
     } catch (error) {
       console.error("Ошибка при обновлении", error);
     }
@@ -292,7 +325,6 @@ export const GoogsProcessingList = () => {
                 return;
               }
 
-              // Fixed: Use consistent filter format
               setFilters(
                 [
                   {
@@ -346,8 +378,23 @@ export const GoogsProcessingList = () => {
             show("goods-processing", record.id as number);
           },
         })}
-        rowSelection={rowSelection}
       >
+        <Table.Column
+          dataIndex="visible"
+          title={<Checkbox checked={mainChecked} onChange={clickAll} />}
+          render={(value, record) => {
+            if (value) {
+              return <EyeOutlined />;
+            } else {
+              return (
+                <Checkbox 
+                  checked={selectedRowKeys.includes(record.id)}
+                  onChange={() => handleCheckboxChange(record)}
+                />
+              );
+            }
+          }}
+        />
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
@@ -372,19 +419,20 @@ export const GoogsProcessingList = () => {
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>
-            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+            `${value?.branch?.name}, ${value?.under_branch?.address || ""}`
           }
+          width={200}
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value) => {
-            console.log(value)
-            return `${value?.branch?.tarif}`;
+        <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value, record) => {
+            return `${(Number(value?.branch?.tarif) - Number(record?.counterparty?.discount?.discount || 0)).toFixed(2)}`;
           }}/>
         
         <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="discount" title="Скидка" />
-        {/* <Table.Column dataIndex="discount_custom" title="Ручная скидка" /> */}
+        <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
+            return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
+          }} />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"

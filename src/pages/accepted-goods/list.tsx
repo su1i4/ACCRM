@@ -184,7 +184,8 @@ export const AcceptedGoodsList = () => {
   const handleSaveChanges = async () => {
     const selectedItems = (dataSource || []).map((item: any) => ({
       id: item.id,
-      visible: selectedRowKeys.includes(item.id),
+      // Если запись уже visible: true, оставляем её true
+      visible: item.visible ? true : selectedRowKeys.includes(item.id),
     }));
 
     try {
@@ -198,6 +199,7 @@ export const AcceptedGoodsList = () => {
         )
       );
       console.log("Все обновления прошли успешно");
+      refetch();
     } catch (error) {
       console.error("Ошибка при обновлении", error);
     }
@@ -236,9 +238,34 @@ export const AcceptedGoodsList = () => {
   };
 
   const clickAll = () => {
-    tableProps.dataSource.forEach((item: any) => {
-      setSelectedRows((prev) => [...prev, item]);
-    });
+    setMainChecked(!mainChecked);
+    if (!mainChecked) {
+      // Выбираем только те строки, где visible: false
+      const allFalseIds = tableProps.dataSource
+        .filter((item: any) => !item.visible)
+        .map((item: any) => item.id);
+      setSelectedRowKeys(allFalseIds);
+    } else {
+      // Снимаем все выделения
+      setSelectedRowKeys([]);
+    }
+  };
+
+  const handleCheckboxChange = (record: any) => {
+    // Если запись уже visible: true, не позволяем её изменить
+    if (record.visible) return;
+    
+    const newSelectedKeys = selectedRowKeys.includes(record.id)
+      ? selectedRowKeys.filter((id) => id !== record.id)
+      : [...selectedRowKeys, record.id];
+    setSelectedRowKeys(newSelectedKeys);
+    
+    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
+    const allFalseItems = tableProps.dataSource.filter((item: any) => !item.visible);
+    const allFalseSelected = allFalseItems.every((item: any) => 
+      newSelectedKeys.includes(item.id)
+    );
+    setMainChecked(allFalseSelected);
   };
 
   return (
@@ -354,11 +381,16 @@ export const AcceptedGoodsList = () => {
         <Table.Column
           dataIndex="visible"
           title={<Checkbox checked={mainChecked} onChange={clickAll} />}
-          render={(value) => {
+          render={(value, record) => {
             if (value) {
               return <EyeOutlined />;
             } else {
-              return <Checkbox />;
+              return (
+                <Checkbox 
+                  checked={selectedRowKeys.includes(record.id)}
+                  onChange={() => handleCheckboxChange(record)}
+                />
+              );
             }
           }}
         />

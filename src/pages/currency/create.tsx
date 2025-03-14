@@ -11,14 +11,14 @@ import {
 } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
 
-export const DiscountCreate: React.FC = () => {
+export const CurrencyCreate: React.FC = () => {
   const { formProps, saveButtonProps } = useForm();
   const { tableProps } = useTable({
     resource: "counterparty",
     filters: {
       initial: [
         {
-          field: "discount",
+          field: "currency",
           operator: "null",
           value: null,
         },
@@ -26,33 +26,36 @@ export const DiscountCreate: React.FC = () => {
     },
   });
 
+  enum CurrencyType {
+    Usd = "Доллар",
+    Rub = "Рубль",
+    Som = "Сом",
+    Eur = "Евро",
+  }
+
   return (
     <Create saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
         <Form.Item
-          name="counter_party_id"
-          label="Контрагент"
-          rules={[{ required: true, message: "Введите Контрагент" }]}
+          name="name"
+          label="Валюта"
+          rules={[{ required: true, message: "Выберите Валюту" }]}
         >
           <Select
             showSearch
             filterOption={(input, option) =>
-              (option?.label ?? "")
-                .toLowerCase()
-                .includes(input.toLowerCase())
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
             }
-            options={tableProps.dataSource
-              ?.filter((item: any) => item.discount === null)
-              .map((item: any) => ({
-                label: `${item.name} - ${item.clientPrefix}-${String(item.clientCode).padStart(4, '0')}`,
-                value: item.id,
-              }))}
+            options={Object.values(CurrencyType).map((item: any) => ({
+              label: `${item}`,
+              value: item,
+            }))}
           />
         </Form.Item>
         <Form.Item
-          name="discount"
-          label="Скидка"
-          rules={[{ required: true, message: "Введите Скидку" }]}
+          name="rate"
+          label="Курс"
+          rules={[{ required: true, message: "Введите Курс" }]}
         >
           <Input min={0} max={100} type="number" />
         </Form.Item>

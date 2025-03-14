@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useModalForm, useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
-import { DatePicker, Form, Input, Modal, Select, Upload } from "antd";
+import { Col, DatePicker, Form, Input, Modal, Row, Select, Upload } from "antd";
 import dayjs from "dayjs";
 import { PaperClipOutlined } from "@ant-design/icons";
 import { API_URL } from "../../../App";
@@ -111,16 +111,23 @@ export const MyCreateModal: React.FC<{
     }
   }, [open, formProps.form]);
 
+  enum CurrencyType {
+    Usd = "Доллар",
+    Rub = "Рубль",
+    Som = "Сом",
+    Eur = "Евро",
+  }
+
   return (
     <Modal
       {...modalProps}
-      title={<h2 style={{ margin: 0 }}>Добавить приход</h2>}
+      title={<h3 style={{ margin: 0 }}>Добавить приход</h3>}
       onOk={submit}
       open={open}
       onCancel={onClose}
       cancelButtonProps={{ style: { display: "none" } }}
       // okButtonProps={{ style: { backgroundColor: "#52c41a" } }}
-      width={483}
+      width={800}
       okText="Добавить"
       // Пример стилизации "шапки" модалки
     >
@@ -133,118 +140,177 @@ export const MyCreateModal: React.FC<{
           // Не устанавливаем дату здесь, а делаем это через useEffect
         }}
       >
-        <Form.Item
-          label="Дата поступление"
-          name="date"
-          style={{ marginBottom: 5 }}
-        >
-          <DatePicker
-            disabled={true}
-            style={{ width: "100%" }}
-            format="YYYY-MM-DD HH:mm:ss"
-            showTime
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Банк"
-          name={["bank_id"]}
-          rules={[{ required: true, message: "Пожалуйста, выберите Банк" }]}
-          // Настройка отступов между лейблом и инпутом
-          style={{ marginBottom: 5 }}
-        >
-          <Select
-            {...bankSelectProps}
-            placeholder="Выберите код банк"
-            style={{ width: "100%" }}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Вид прихода"
-          name={["type_operation"]}
-          rules={[{ required: false, message: "Пожалуйста, выберите Банк" }]}
-          // Настройка отступов между лейблом и инпутом
-          style={{ marginBottom: 5 }}
-        >
-          <Select
-            options={incomeTypes}
-            placeholder="Выберите вид прихода"
-            style={{ width: "100%" }}
-            mode="tags"
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Код Клиента"
-          name={["counterparty_id"]}
-          rules={[{ required: true, message: "Пожалуйста, выберите клиента" }]}
-          style={{ marginBottom: 5 }}
-        >
-          <Select
-            {...counterpartySelectProps}
-            onChange={handleCounterpartyChange}
-            placeholder="Выберите код клиента"
-            style={{ width: "100%" }}
-            showSearch
-            filterOption={false}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Трек-код"
-          name="name"
-          rules={[{ required: false, message: "Укажите имя" }]}
-          style={{ marginBottom: 5 }}
-        >
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="Вид операции"
-          name="type"
-          rules={[{ required: false, message: "Укажите имя" }]}
-          style={{ marginBottom: 5, display: "none" }}
-        >
-          <Input disabled style={{ backgroundColor: "#f5f5f5" }} />
-        </Form.Item>
-
-        <Form.Item
-          label="Сумма"
-          name="amount"
-          rules={[{ required: true, message: "Укажите сумму" }]}
-          style={{ marginBottom: 5 }}
-        >
-          <Input
-            type="number"
-            min={0}
-            placeholder="Введите сумму прихода"
-            style={{ width: "100%" }}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Комментарий"
-          name="comment"
-          rules={[{ required: false }]}
-          style={{ marginBottom: 5 }}
-        >
-          <Input placeholder="Комментарий" style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item label="Чек">
-          <Form.Item name="photo" noStyle>
-            <Upload.Dragger
-              name="file"
-              action={`${API_URL}/file-upload`}
-              listType="picture"
-              accept=".png,.jpg,.jpeg"
+        <Row gutter={[16, 2]}>
+          <Col span={12}>
+            <Form.Item
+              label="Дата поступление"
+              name="date"
+              style={{ marginBottom: 5 }}
             >
-              <p className="ant-upload-text">
-                <PaperClipOutlined /> Прикрепить чек
-              </p>
-            </Upload.Dragger>
-          </Form.Item>
-        </Form.Item>
+              <DatePicker
+                disabled={true}
+                style={{ width: "100%" }}
+                format="YYYY-MM-DD HH:mm:ss"
+                showTime
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Банк"
+              name={["bank_id"]}
+              rules={[{ required: true, message: "Пожалуйста, выберите Банк" }]}
+              // Настройка отступов между лейблом и инпутом
+              style={{ marginBottom: 5 }}
+            >
+              <Select
+                {...bankSelectProps}
+                placeholder="Выберите код банк"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Вид прихода"
+              name={["type_operation"]}
+              rules={[
+                { required: false, message: "Пожалуйста, выберите Банк" },
+              ]}
+              // Настройка отступов между лейблом и инпутом
+              style={{ marginBottom: 5 }}
+            >
+              <Select
+                options={incomeTypes}
+                placeholder="Выберите вид прихода"
+                style={{ width: "100%" }}
+                mode="tags"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Код Клиента"
+              name={["counterparty_id"]}
+              rules={[
+                { required: true, message: "Пожалуйста, выберите клиента" },
+              ]}
+              style={{ marginBottom: 5 }}
+            >
+              <Select
+                {...counterpartySelectProps}
+                onChange={handleCounterpartyChange}
+                placeholder="Выберите код клиента"
+                style={{ width: "100%" }}
+                showSearch
+                filterOption={false}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              label="Трек-код"
+              name="name"
+              rules={[{ required: false, message: "Укажите имя" }]}
+              style={{ marginBottom: 5 }}
+            >
+              <Input />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              label="Сумма"
+              name="amount"
+              rules={[{ required: true, message: "Укажите сумму" }]}
+              style={{ marginBottom: 5 }}
+            >
+              <Input
+                type="number"
+                min={0}
+                placeholder="Введите сумму прихода"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item
+              name="type_currency"
+              label="Валюта"
+              rules={[{ required: true, message: "Выберите Валюту" }]}
+            >
+              <Select
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
+                }
+                options={Object.values(CurrencyType).map((item: any) => ({
+                  label: `${item}`,
+                  value: item,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Комментарий"
+              name="comment"
+              rules={[{ required: false }]}
+              style={{ marginBottom: 5 }}
+            >
+              <Input
+                placeholder="Комментарий"
+                style={{ width: "100%", height: 63 }}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label="Чек">
+              <Form.Item name="check_file" noStyle>
+                <Upload.Dragger
+                  name="file"
+                  action={`${API_URL}/file-upload`}
+                  listType="picture"
+                  accept=".png,.jpg,.jpeg"
+                  beforeUpload={(file) => {
+                    // Создаем объект FormData для отправки файла
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    // Отправляем запрос на сервер для получения пути к файлу
+                    fetch(`${API_URL}/file-upload`, {
+                      method: 'POST',
+                      body: formData,
+                    })
+                      .then(response => response.json())
+                      .then(data => {
+                        // Предполагаем, что сервер возвращает объект с путем к файлу
+                        const filePath = data.path || data.url || data.filePath;
+                        // Устанавливаем путь к файлу в форму
+                        if (formProps.form) {
+                          formProps.form.setFieldsValue({
+                            check_file: filePath
+                          });
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Ошибка загрузки файла:', error);
+                      });
+                    
+                    // Предотвращаем стандартную загрузку Ant Design
+                    return false;
+                  }}
+                >
+                  <p className="ant-upload-text">
+                    <PaperClipOutlined /> Прикрепить чек
+                  </p>
+                </Upload.Dragger>
+              </Form.Item>
+            </Form.Item>
+          </Col>
+          <Col span={24}></Col>
+        </Row>
       </Form>
     </Modal>
   );

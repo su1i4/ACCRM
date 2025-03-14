@@ -305,6 +305,8 @@ const ShipmentCreate = () => {
                       // Триггер для обновления расчетов
                       form.validateFields(["width", "height"]);
                     }}
+                    type="number"
+                    min={0}
                   />
                 </Form.Item>
 
@@ -322,6 +324,8 @@ const ShipmentCreate = () => {
                       // Триггер для обновления расчетов
                       form.validateFields(["length", "height"]);
                     }}
+                    type="number"
+                    min={0}
                   />
                 </Form.Item>
 
@@ -339,6 +343,8 @@ const ShipmentCreate = () => {
                       // Триггер для обновления расчетов
                       form.validateFields(["length", "width"]);
                     }}
+                    type="number"
+                    min={0}
                   />
                 </Form.Item>
               </Input.Group>

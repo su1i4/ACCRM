@@ -87,7 +87,7 @@ const ReceivingList = () => {
         scroll={{ x: "max-content"}}
       >
         <Table.Column
-          dataIndex="created_at"
+          dataIndex="updated_at"
           title={"Дата получения"}
           width={120}
           render={(value) => {

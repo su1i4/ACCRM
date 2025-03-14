@@ -132,7 +132,7 @@ export const GoodsEdit = () => {
                   <InputNumber style={{ width: "100%" }} />
                 ) : field.type === "enum" ? (
                   <Select
-                    mode="tags"
+                    // mode="tags"
                     options={field?.enumValues?.map((enumValue) => ({
                       label: enumValue,
                       value: enumValue,

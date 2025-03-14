@@ -9,9 +9,14 @@ import {
   DeleteButton,
 } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
-import { Col, Image, Row, Typography, Button, Space } from "antd";
+import { Col, Image, Row, Typography, Button, Space, Tooltip } from "antd";
 import { API_URL } from "../../App";
-import { DownloadOutlined } from "@ant-design/icons";
+import { 
+  DownloadOutlined, 
+  WhatsAppOutlined, 
+  MessageOutlined,
+  WechatOutlined 
+} from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -63,6 +68,39 @@ export const GoodsShow: React.FC = () => {
         console.error("Error downloading photo:", error);
         // You could add notification here if desired
       }
+    }
+  };
+
+  // Функции для шаринга через мессенджеры
+  const shareViaWhatsApp = () => {
+    if (record?.photo) {
+      const photoUrl = `${API_URL}/${record.photo}`;
+      const encodedUrl = encodeURIComponent(photoUrl);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedUrl}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  };
+
+  const shareViaTelegram = () => {
+    if (record?.photo) {
+      const photoUrl = `${API_URL}/${record.photo}`;
+      const encodedUrl = encodeURIComponent(photoUrl);
+      const telegramUrl = `https://t.me/share/url?url=${encodedUrl}`;
+      window.open(telegramUrl, '_blank');
+    }
+  };
+
+  const shareViaWeChat = () => {
+    if (record?.photo) {
+      const photoUrl = `${API_URL}/${record.photo}`;
+      alert('Скопируйте ссылку для отправки в WeChat: ' + photoUrl);
+      navigator.clipboard.writeText(photoUrl)
+        .then(() => {
+          alert('Ссылка скопирована в буфер обмена');
+        })
+        .catch(err => {
+          console.error('Не удалось скопировать ссылку: ', err);
+        });
     }
   };
 
@@ -172,13 +210,39 @@ export const GoodsShow: React.FC = () => {
                 height={300}
                 src={API_URL + "/" + record?.photo}
               />
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadPhoto}
-              >
-                Скачать фото
-              </Button>
+              <Space direction="horizontal">
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadPhoto}
+                >
+                  Скачать фото
+                </Button>
+                <Tooltip title="Поделиться в WhatsApp">
+                  <Button 
+                    type="primary" 
+                    icon={<WhatsAppOutlined />} 
+                    onClick={shareViaWhatsApp}
+                    style={{ backgroundColor: '#25D366', borderColor: '#25D366' }}
+                  />
+                </Tooltip>
+                <Tooltip title="Поделиться в Telegram">
+                  <Button 
+                    type="primary" 
+                    icon={<MessageOutlined />} 
+                    onClick={shareViaTelegram}
+                    style={{ backgroundColor: '#0088cc', borderColor: '#0088cc' }}
+                  />
+                </Tooltip>
+                <Tooltip title="Поделиться в WeChat">
+                  <Button 
+                    type="primary" 
+                    icon={<WechatOutlined />} 
+                    onClick={shareViaWeChat}
+                    style={{ backgroundColor: '#07C160', borderColor: '#07C160' }}
+                  />
+                </Tooltip>
+              </Space>
             </Space>
           ) : (
             <TextField value="Нет фото" />

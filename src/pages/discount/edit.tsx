@@ -36,10 +36,16 @@ export const DiscountEdit: React.FC = () => {
           rules={[{ required: true, message: "Введите Контрагент" }]}
         >
           <Select
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? "")
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
             options={tableProps.dataSource
               ?.filter((item: any) => item.discount === null)
               .map((item: any) => ({
-                label: item.name,
+                label: `${item.name} - ${item.clientPrefix}-${String(item.clientCode).padStart(4, '0')}`,
                 value: item.id,
               }))}
           />

@@ -110,6 +110,12 @@ import { DiscountEdit } from "./pages/discount/edit";
 import { IssueProcessingListReceived } from "./pages/Issue/listReceived";
 import "./styles/global.css";
 import ShipmentAdd from "./pages/shipments/ShipmentAdd";
+import { CurrencyCreate } from "./pages/currency/create";
+import { CurrencyList } from "./pages/currency/list";
+import { CurrencyShow } from "./pages/currency/show";
+import { CurrencyEdit } from "./pages/currency/edit";
+import { TriggersList } from "./pages/triggers/list";
+import { TriggersCreate } from "./pages/triggers/create";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -187,16 +193,16 @@ function App() {
                     label: "Настройки",
                   },
                 },
-                {
-                  name: "accepted-goods",
-                  list: "/accepted-goods",
-                  show: "/accepted-goods/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Принятые товары",
-                    parent: "Продукты",
-                  },
-                },
+                // {
+                //   name: "accepted-goods",
+                //   list: "/accepted-goods",
+                //   show: "/accepted-goods/show/:id",
+                //   meta: {
+                //     canDelete: true,
+                //     label: "Принятые товары",
+                //     parent: "Продукты",
+                //   },
+                // },
                 {
                   name: "shipments",
                   list: "/shipments",
@@ -392,6 +398,18 @@ function App() {
                   },
                 },
                 {
+                  name: "currency",
+                  list: "/currency",
+                  create: "/currency/create",
+                  edit: "/currency/edit/:id",
+                  show: "/currency/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Валюта",
+                    parent: "Касса",
+                  },
+                },
+                {
                   name: "exception-code",
                   list: "/exception-code",
                   create: "/exception-code/create",
@@ -434,6 +452,18 @@ function App() {
                   meta: {
                     canDelete: true,
                     label: "История чат-бота",
+                    parent: "Автоматизация",
+                  },
+                },
+                {
+                  name: "triggers",
+                  list: "/triggers",
+                  create: "/triggers/create",
+                  edit: "/triggers/:id",
+                  show: "/triggers/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Триггеры",
                     parent: "Автоматизация",
                   },
                 },
@@ -584,6 +614,12 @@ function App() {
                     <Route path="edit/:id" element={<ChatbotEdit />} />
                   </Route>
 
+                  <Route path="/triggers">
+                    <Route index element={<TriggersList />} />
+                    <Route path="create" element={<TriggersCreate />} />
+                    
+                  </Route>
+
                   <Route path="/bank">
                     <Route index element={<BankList />} />
                     <Route path="create" element={<BankCreate />} />
@@ -603,6 +639,13 @@ function App() {
                     {/*<Route path="create" element={<BankCreate />} />*/}
                     {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
                     {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                  </Route>
+
+                  <Route path="/currency">
+                    <Route index element={<CurrencyList />} />
+                    <Route path="create" element={<CurrencyCreate />} />
+                    <Route path="show/:id" element={<CurrencyShow />} />
+                    <Route path="edit/:id" element={<CurrencyEdit />} />
                   </Route>
 
                   <Route path="/remaining-stock">

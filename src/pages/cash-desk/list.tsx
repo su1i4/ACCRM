@@ -11,6 +11,7 @@ import {
   Dropdown,
   Select,
   Card,
+  Image,
 } from "antd";
 import { useCustom } from "@refinedev/core";
 import { MyCreateModal } from "./modal/create-modal";
@@ -19,6 +20,7 @@ import {
   SearchOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
@@ -137,6 +139,42 @@ export const CashDeskList: React.FC = () => {
       total: data?.data?.total || 0,
     },
     onChange: handleTableChange,
+  };
+
+  const handleDownloadPhoto = async (photo: string) => {
+    if (photo) {
+      try {
+        const photoUrl = `${API_URL}/${photo}`;
+
+        // Fetch the image as a blob
+        const response = await fetch(photoUrl);
+        const blob = await response.blob();
+
+        // Create object URL from blob
+        const objectUrl = URL.createObjectURL(blob);
+
+        // Create a link element
+        const link = document.createElement("a");
+        link.href = objectUrl;
+
+        // Extract filename from path
+        const filename = photo.split("/").pop() || "photo.jpg";
+        link.download = filename;
+
+        // Append to the document, click and then remove
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectUrl);
+        }, 100);
+      } catch (error) {
+        console.error("Error downloading photo:", error);
+        // You could add notification here if desired
+      }
+    }
   };
 
   // @ts-ignore
@@ -271,6 +309,36 @@ export const CashDeskList: React.FC = () => {
         <Table.Column dataIndex="type_currency" title="валюта" />
 
         <Table.Column dataIndex="comment" title="Комментарий" />
+        <Table.Column
+          dataIndex="check_file"
+          title="Чек"
+          render={(check_file) => {
+            const downloadUrl = `http://192.168.5.158:5001/${check_file}`;
+            return (
+              <Space direction="vertical" align="center">
+                <Image
+                  style={{ objectFit: "cover" }}
+                  width={50}
+                  height={50}
+                  src={downloadUrl}
+                  preview={{
+                    src: downloadUrl,
+                  }}
+                />
+                {check_file && (
+                  <Button 
+                    type="link" 
+                    icon={<DownloadOutlined />} 
+                    onClick={() => handleDownloadPhoto(check_file)}
+                    size="small"
+                  >
+                    Скачать
+                  </Button>
+                )}
+              </Space>
+            );
+          }}
+        />
       </Table>
     </List>
   );

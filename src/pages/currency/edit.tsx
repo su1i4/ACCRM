@@ -6,19 +6,20 @@ import {
   ShowButton,
   DeleteButton,
   useSelect,
-  Create,
   useForm,
+  Edit,
 } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
 
-export const DiscountCreate: React.FC = () => {
+export const CurrencyEdit: React.FC = () => {
   const { formProps, saveButtonProps } = useForm();
+
   const { tableProps } = useTable({
     resource: "counterparty",
     filters: {
       initial: [
         {
-          field: "discount",
+          field: "currency",
           operator: "null",
           value: null,
         },
@@ -27,12 +28,12 @@ export const DiscountCreate: React.FC = () => {
   });
 
   return (
-    <Create saveButtonProps={saveButtonProps}>
+    <Edit headerButtons={() => false} saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">
         <Form.Item
-          name="counter_party_id"
-          label="Контрагент"
-          rules={[{ required: true, message: "Введите Контрагент" }]}
+          name="name"
+          label="Валюта"
+          rules={[{ required: true, message: "Выберите Валюту" }]}
         >
           <Select
             showSearch
@@ -42,7 +43,7 @@ export const DiscountCreate: React.FC = () => {
                 .includes(input.toLowerCase())
             }
             options={tableProps.dataSource
-              ?.filter((item: any) => item.discount === null)
+              ?.filter((item: any) => item.currency === null)
               .map((item: any) => ({
                 label: `${item.name} - ${item.clientPrefix}-${String(item.clientCode).padStart(4, '0')}`,
                 value: item.id,
@@ -50,13 +51,13 @@ export const DiscountCreate: React.FC = () => {
           />
         </Form.Item>
         <Form.Item
-          name="discount"
-          label="Скидка"
-          rules={[{ required: true, message: "Введите Скидку" }]}
+          name="rate"
+          label="Курс"
+          rules={[{ required: true, message: "Введите Курс" }]}
         >
           <Input min={0} max={100} type="number" />
         </Form.Item>
       </Form>
-    </Create>
+    </Edit>
   );
 };

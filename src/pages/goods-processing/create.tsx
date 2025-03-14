@@ -67,8 +67,72 @@ export const entityFields = [
   { name: "comments", label: "Комментарии", type: "text", required: false },
 ];
 
+// Интерфейс для значений формы
+interface GoodsFormValues {
+  trackCode?: string;
+  cargoType?: string[];
+  packageType?: string[];
+  pricePackageType?: number;
+  weight?: number;
+  comments?: string;
+  counterparty_id?: string | number;
+  discount_custom?: number;
+  photo?: {
+    file?: {
+      response?: {
+        filePath?: string;
+        [key: string]: any;
+      };
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 export const GoodsCreate = () => {
-  const { formProps, saveButtonProps } = useForm({});
+  const { formProps, saveButtonProps, form } = useForm<GoodsFormValues>();
+
+  const modifiedSaveButtonProps = {
+    ...saveButtonProps,
+    onClick: async (e: React.MouseEvent<HTMLElement>) => {
+      // Перехватываем нажатие на кнопку сохранения
+      e.preventDefault();
+      
+      try {
+        // Получаем текущие значения формы
+        const values = await form.validateFields() as GoodsFormValues;
+      
+
+        // Форматируем поле photo перед отправкой, если оно существует
+        if (values.photo && values.photo.file && values.photo.file.response) {
+          values.photo = {
+            file: {
+              response: {
+                filePath: values.photo.file.response.filePath
+              }
+            }
+          };
+        }
+        
+        console.log(values);
+        // Сохраняем модифицированные значения
+        form.setFieldsValue(values);
+        
+        // Вызываем исходный обработчик если он существует
+        if (saveButtonProps.onClick) {
+          await saveButtonProps.onClick(e);
+        } else {
+          await form.submit();
+        }
+
+        console.log("values", values);
+
+      } catch (error) {
+        console.error("Ошибка валидации формы:", error);
+      }
+    }
+  };
 
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
@@ -107,7 +171,7 @@ export const GoodsCreate = () => {
   });
 
   return (
-    <Create saveButtonProps={saveButtonProps}>
+    <Create saveButtonProps={modifiedSaveButtonProps}>
       <Form {...formProps} layout="horizontal">
         <Row gutter={16}>
           {" "}
@@ -192,6 +256,15 @@ export const GoodsCreate = () => {
                   action={`${API_URL}/file-upload`}
                   listType="picture"
                   accept=".png,.jpg,.jpeg"
+                  onChange={(info) => {
+                      if (info.file.status === "done") {
+                      form.setFieldsValue({
+                        photo: {
+                          file: { response: { filePath: info.file.response.filePath } },
+                        },
+                      });
+                    }
+                  }}
                 >
                   <p className="ant-upload-text">Загрузите Фото</p>
                 </Upload.Dragger>

@@ -70,6 +70,12 @@ export const i18nProvider_ru = {
       "accepted-goods.titles.show": "Просмотр принятого товара",
       "pages.login.errors.validEmail": "Неверный формат электронной почты",
       "shipment.titles.show": "Подбор товаров",
+      "currency.titles.list": "Валюта",
+      "currency.titles.create": "Создать валюту",
+      "currency.titles.show": "Просмотр валюты",
+      "currency.titles.edit": "Редактирование валюты",
+      "triggers.titles.list": "Триггеры",
+      "triggers.titles.create": "Создать триггер",
     };
     return translations[key] || key;
   },

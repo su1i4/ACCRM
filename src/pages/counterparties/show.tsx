@@ -51,8 +51,11 @@ export const CounterpartyShow: React.FC = () => {
       <Title level={5}>Email</Title>
       <TextField value={record?.email || "-"} />
 
+      <Title level={5}>Тариф клиента</Title>
+      <TextField value={Number(record?.branch?.tarif) - Number(record?.discount?.discount) || "-"} />
+
       <Title level={5}>Скидка</Title>
-      <TextField value={record?.discount || "0"} />
+      <TextField value={record?.discount?.discount || "0"} />
 
       <Title level={5}>Сумма заказов кг</Title>
       <TextField value={totalWeight} />

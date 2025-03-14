@@ -567,7 +567,7 @@ export const RemainingStockProcessingList = () => {
           />
           <Table.Column dataIndex="weight" title="Вес" />
           <Table.Column dataIndex="amount" title="Сумма" />
-          <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
+          <Table.Column dataIndex="counterparty" title="Тариф" render={(value) => value?.branch?.tarif} />
           <Table.Column
             dataIndex="employee_id"
             title="Сотрудник"
