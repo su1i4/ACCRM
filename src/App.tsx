@@ -197,16 +197,16 @@ function App() {
                     label: "Настройки",
                   },
                 },
-                // {
-                //   name: "accepted-goods",
-                //   list: "/accepted-goods",
-                //   show: "/accepted-goods/show/:id",
-                //   meta: {
-                //     canDelete: true,
-                //     label: "Принятые товары",
-                //     parent: "Продукты",
-                //   },
-                // },
+                {
+                  name: "accepted-goods",
+                  list: "/accepted-goods",
+                  show: "/accepted-goods/show/:id",
+                  meta: {
+                    canDelete: true,
+                    label: "Принятые товары",
+                    parent: "Продукты",
+                  },
+                },
                 {
                   name: "shipments",
                   list: "/shipments",

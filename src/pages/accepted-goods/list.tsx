@@ -23,15 +23,19 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
+import {
+  useCustom,
+  useNavigation,
+  useUpdate,
+} from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
+
 
 export const AcceptedGoodsList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
-    { status: { $eq: "В складе" } },
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,7 +43,7 @@ export const AcceptedGoodsList = () => {
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters }),
+      s: JSON.stringify({ $and: searchFilters, status: { $eq: "В складе" } }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -59,7 +63,6 @@ export const AcceptedGoodsList = () => {
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Fixed: Update filters function that properly formats filters
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -69,11 +72,8 @@ export const AcceptedGoodsList = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
-
-    // We'll refetch in useEffect after state updates
   };
 
-  // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
     refetch();
   }, [searchFilters, sortDirection, currentPage, pageSize]);
@@ -84,7 +84,6 @@ export const AcceptedGoodsList = () => {
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
-          // Fixed: Use consistent filter format
           setFilters(
             [
               {
@@ -157,20 +156,9 @@ export const AcceptedGoodsList = () => {
   };
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [mainChecked, setMainChecked] = useState(false);
 
   // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
-
-  useEffect(() => {
-    if (dataSource) {
-      const visibleIds = dataSource
-        .filter((item: any) => item.visible)
-        .map((item: any) => item.id);
-      setSelectedRowKeys(visibleIds);
-    }
-  }, [dataSource]);
 
   const rowSelection = {
     selectedRowKeys,
@@ -181,8 +169,44 @@ export const AcceptedGoodsList = () => {
 
   const { mutateAsync: update } = useUpdate();
 
+  const [mainChecked, setMainChecked] = useState(false);
+
+  const clickAll = () => {
+    setMainChecked(!mainChecked);
+    if (!mainChecked) {
+      // Выбираем только те строки, где visible: false
+      const allFalseIds = dataSource
+        .filter((item: any) => !item.visible)
+        .map((item: any) => item.id);
+      setSelectedRowKeys(allFalseIds);
+    } else {
+      // Снимаем все выделения
+      setSelectedRowKeys([]);
+    }
+  };
+
+  console.log(selectedRowKeys)
+
+  const handleCheckboxChange = (record: any) => {
+    // Если запись уже visible: true, не позволяем её изменить
+    if (record.visible) return;
+    
+    const newSelectedKeys = selectedRowKeys.includes(record.id)
+      ? selectedRowKeys.filter((id) => id !== record.id)
+      : [...selectedRowKeys, record.id];
+    setSelectedRowKeys(newSelectedKeys);
+    
+    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
+    const allFalseItems = dataSource.filter((item: any) => !item.visible);
+    const allFalseSelected = allFalseItems.every((item: any) => 
+      newSelectedKeys.includes(item.id)
+    );
+    setMainChecked(allFalseSelected);
+  };
+
   const handleSaveChanges = async () => {
-    const selectedItems = (dataSource || []).map((item: any) => ({
+    const filteredItems = dataSource.filter((item: any) => !item.visible && selectedRowKeys.includes(item.id));
+    const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
       // Если запись уже visible: true, оставляем её true
       visible: item.visible ? true : selectedRowKeys.includes(item.id),
@@ -198,8 +222,10 @@ export const AcceptedGoodsList = () => {
           })
         )
       );
-      console.log("Все обновления прошли успешно");
       refetch();
+      // Сбрасываем выбранные строки
+      setSelectedRowKeys([]);
+      setMainChecked(false);
     } catch (error) {
       console.error("Ошибка при обновлении", error);
     }
@@ -213,10 +239,12 @@ export const AcceptedGoodsList = () => {
 
   const { show, push } = useNavigation();
 
+  // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
+    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -237,47 +265,16 @@ export const AcceptedGoodsList = () => {
     onChange: handleTableChange,
   };
 
-  const clickAll = () => {
-    setMainChecked(!mainChecked);
-    if (!mainChecked) {
-      // Выбираем только те строки, где visible: false
-      const allFalseIds = tableProps.dataSource
-        .filter((item: any) => !item.visible)
-        .map((item: any) => item.id);
-      setSelectedRowKeys(allFalseIds);
-    } else {
-      // Снимаем все выделения
-      setSelectedRowKeys([]);
-    }
-  };
-
-  const handleCheckboxChange = (record: any) => {
-    // Если запись уже visible: true, не позволяем её изменить
-    if (record.visible) return;
-    
-    const newSelectedKeys = selectedRowKeys.includes(record.id)
-      ? selectedRowKeys.filter((id) => id !== record.id)
-      : [...selectedRowKeys, record.id];
-    setSelectedRowKeys(newSelectedKeys);
-    
-    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
-    const allFalseItems = tableProps.dataSource.filter((item: any) => !item.visible);
-    const allFalseSelected = allFalseItems.every((item: any) => 
-      newSelectedKeys.includes(item.id)
-    );
-    setMainChecked(allFalseSelected);
-  };
-
   return (
     <List headerButtons={() => false}>
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            {/* <Button
+            <Button
               icon={<FileAddOutlined />}
               style={{}}
-              onClick={() => push("/accepted-goods/create")}
-            /> */}
+              onClick={() => push("/goods-processing/create")}
+            />
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -295,7 +292,8 @@ export const AcceptedGoodsList = () => {
                     <ArrowDownOutlined />
                   )
                 }
-              ></Button>
+              >
+              </Button>
             </Dropdown>
             <Dropdown
               overlay={checkboxContent}
@@ -317,11 +315,10 @@ export const AcceptedGoodsList = () => {
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
-                setFilters([{ status: { $eq: "В складе" } }], "replace");
+                setFilters([{ trackCode: { $contL: "" } }], "replace");
                 return;
               }
 
-              // Fixed: Use consistent filter format
               setFilters(
                 [
                   {
@@ -331,7 +328,6 @@ export const AcceptedGoodsList = () => {
                       { "counterparty.name": { $contL: value } },
                     ],
                   },
-                  { status: { $eq: "В складе" } },
                 ],
                 "replace"
               );
@@ -373,10 +369,9 @@ export const AcceptedGoodsList = () => {
         scroll={{ x: "max-content" }}
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("accepted-goods", record.id as number);
+            show("goods-processing", record.id as number);
           },
         })}
-        // rowSelection={rowSelection}
       >
         <Table.Column
           dataIndex="visible"
@@ -417,18 +412,23 @@ export const AcceptedGoodsList = () => {
         />
         <Table.Column
           dataIndex="counterparty"
-          render={(value) => `${value?.branch?.name}`}
-          title="Пункт назначения"
+          render={(value) =>
+            <p style={{width: "200px", textOverflow: "ellipsis", overflow: "hidden"}}>
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
+            </p>
+          }
+          title="Пункт назначения, Пвз"
+
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column
-          dataIndex="counterparty"
-          title="Тариф клиента"
-          render={(value) => {
-            console.log(value);
-            return `${value?.branch?.tarif}`;
-          }}
-        />
+        <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value, record) => {
+            return `${(Number(value?.branch?.tarif || 0) - Number(record?.counterparty?.discount?.discount || 0)).toFixed(2)}`;
+          }}/>
+        
+        <Table.Column dataIndex="amount" title="Сумма" />
+        <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
+            return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
+          }} />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"
