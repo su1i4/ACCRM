@@ -401,7 +401,7 @@ export const IssueProcessingList = () => {
               <Image
                 width={30}
                 height={30}
-                src={API_URL.replace("/api", "") + "/" + photo}
+                src={API_URL + "/" + photo}
               />
             ) : null
           }

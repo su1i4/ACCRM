@@ -48,7 +48,7 @@ const CountryTime: React.FC = () => {
 
   return (
     <Flex gap="large" style={{ marginRight: "24px" }}>
-      {/* <Flex vertical style={{ textAlign: "center", minWidth: 100 }}>
+      <Flex vertical style={{ textAlign: "center", minWidth: 100 }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>Бишкек</Text>
         <Text>{time.bishkek}</Text>
       </Flex>
@@ -71,8 +71,7 @@ const CountryTime: React.FC = () => {
       <Flex vertical style={{ textAlign: "center", minWidth: 100 }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>Красноярск</Text>
         <Text>{time.krasnoyarsk}</Text>
-      </Flex> */}
-      <></>
+      </Flex>
     </Flex>
   );
 };

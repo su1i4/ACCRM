@@ -67,7 +67,7 @@ export const GoodsShow: React.FC = () => {
                         <Image
                             width={200}
                             height={300}
-                            src={API_URL.replace('/api', '') + '/' + record?.photo}
+                            src={API_URL + '/' + record?.photo}
                         />
                     ) : (
                         <TextField value="Нет фото" />
