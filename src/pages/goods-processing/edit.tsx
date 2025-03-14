@@ -25,7 +25,7 @@ import dayjs from "dayjs";
 import { entityFields } from "./create";
 
 export const GoodsEdit = () => {
-  const { formProps, saveButtonProps, id, queryResult } = useForm();
+  const { formProps, saveButtonProps, id, queryResult, form } = useForm();
   const [fileList, setFileList] = useState<any>([]);
 
   const record = queryResult?.data?.data;
@@ -132,11 +132,18 @@ export const GoodsEdit = () => {
                   <InputNumber style={{ width: "100%" }} />
                 ) : field.type === "enum" ? (
                   <Select
-                    // mode="tags"
+                    mode="tags"
                     options={field?.enumValues?.map((enumValue) => ({
                       label: enumValue,
                       value: enumValue,
                     }))}
+                    onChange={(value) => {
+                      // Ограничиваем выбор только одним значением
+                      if (Array.isArray(value) && value.length > 1) {
+                        // Берем только последнее выбранное значение
+                        form.setFieldValue(field.name, [value[value.length - 1]]);
+                      }
+                    }}
                   />
                 ) : field.type === "date" || field.type === "timestamp" ? (
                   <DatePicker

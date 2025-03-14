@@ -81,58 +81,28 @@ interface GoodsFormValues {
     file?: {
       response?: {
         filePath?: string;
-        [key: string]: any;
       };
-      [key: string]: any;
     };
-    [key: string]: any;
   };
-  [key: string]: any;
 }
 
 export const GoodsCreate = () => {
-  const { formProps, saveButtonProps, form } = useForm<GoodsFormValues>();
-
-  const modifiedSaveButtonProps = {
-    ...saveButtonProps,
-    onClick: async (e: React.MouseEvent<HTMLElement>) => {
-      // Перехватываем нажатие на кнопку сохранения
-      e.preventDefault();
-      
-      try {
-        // Получаем текущие значения формы
-        const values = await form.validateFields() as GoodsFormValues;
-      
-
-        // Форматируем поле photo перед отправкой, если оно существует
-        if (values.photo && values.photo.file && values.photo.file.response) {
-          values.photo = {
-            file: {
-              response: {
-                filePath: values.photo.file.response.filePath
-              }
+  const { formProps, saveButtonProps, form } = useForm<GoodsFormValues>({
+    onMutationSuccess: (data, variables: GoodsFormValues, context) => {
+      // При успешной отправке, проверяем данные перед их отправкой на сервер
+      if (variables.photo) {
+        // Убедимся, что структура photo соответствует ожидаемой
+        const cleanedPhoto = {
+          file: {
+            response: {
+              filePath: variables.photo.file?.response?.filePath
             }
-          };
-        }
-        
-        console.log(values);
-        // Сохраняем модифицированные значения
-        form.setFieldsValue(values);
-        
-        // Вызываем исходный обработчик если он существует
-        if (saveButtonProps.onClick) {
-          await saveButtonProps.onClick(e);
-        } else {
-          await form.submit();
-        }
-
-        console.log("values", values);
-
-      } catch (error) {
-        console.error("Ошибка валидации формы:", error);
+          }
+        };
+        variables.photo = cleanedPhoto;
       }
     }
-  };
+  });
 
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
@@ -171,8 +141,31 @@ export const GoodsCreate = () => {
   });
 
   return (
-    <Create saveButtonProps={modifiedSaveButtonProps}>
-      <Form {...formProps} layout="horizontal">
+    <Create saveButtonProps={saveButtonProps}>
+      <Form 
+        {...formProps} 
+        layout="horizontal"
+        onFinish={(values: any) => {
+          // Создаем копию всех значений
+          const submitValues: GoodsFormValues = { ...values };
+          
+          // Если есть фото, гарантируем точную структуру
+          if (submitValues.photo) {
+            submitValues.photo = {
+              file: {
+                response: {
+                  filePath: submitValues.photo.file?.response?.filePath
+                }
+              }
+            };
+          }
+          
+          // Вызываем оригинальный обработчик formProps.onFinish
+          if (formProps.onFinish) {
+            formProps.onFinish(submitValues);
+          }
+        }}
+      >
         <Row gutter={16}>
           {" "}
           {/* Добавляем отступы между колонками */}
@@ -192,11 +185,19 @@ export const GoodsCreate = () => {
                 ) : field.type === "enum" ? (
                   <Select
                     mode="tags"
+                    style={{ width: "100%" }}
                     // @ts-ignore
                     options={field?.enumValues.map((enumValue) => ({
                       label: enumValue,
                       value: enumValue,
                     }))}
+                    onChange={(value) => {
+                      // Ограничиваем выбор только одним значением
+                      if (Array.isArray(value) && value.length > 1) {
+                        // Берем только последнее выбранное значение
+                        form.setFieldValue(field.name, [value[value.length - 1]]);
+                      }
+                    }}
                   />
                 ) : field.type === "date" || field.type === "timestamp" ? (
                   <DatePicker
@@ -257,11 +258,17 @@ export const GoodsCreate = () => {
                   listType="picture"
                   accept=".png,.jpg,.jpeg"
                   onChange={(info) => {
-                      if (info.file.status === "done") {
+                    if (info.file.status === "done") {
+                      // Формируем только нужную структуру без лишних ключей
+                      const photoValue = {
+                        file: {
+                          response: {
+                            filePath: info.file.response.filePath
+                          }
+                        }
+                      };
                       form.setFieldsValue({
-                        photo: {
-                          file: { response: { filePath: info.file.response.filePath } },
-                        },
+                        photo: photoValue
                       });
                     }
                   }}

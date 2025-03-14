@@ -1,11 +1,11 @@
 import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from "@ant-design/icons";
-import { CreateButton, List, useTable } from "@refinedev/antd";
+import { List, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Flex, Input, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 
-const ShipmentList = () => {
+export const ShipmentHistory = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -17,7 +17,7 @@ const ShipmentList = () => {
     page: current - 1,
     limit: pageSize,
     offset: (current - 1) * pageSize,
-    s: JSON.stringify({ $and: [...filters, { status: { $eq: "В пути" } }] }),
+    s: JSON.stringify({ $and: [...filters, { status: { $eq: "Выгрузили" } }] }),
   });
 
   const { data, isLoading, refetch } = useCustom<any>({
@@ -51,24 +51,11 @@ const ShipmentList = () => {
     },
   };
 
-  const { push } = useNavigation();
+  const {push} = useNavigation();
 
   return (
-    <List
-      headerButtons={(createButtonProps) => {
-        return (
-          <>
-            <Button onClick={() => push("/shipments/history")}>
-              История отправлений
-            </Button>
-            {createButtonProps && (
-              <CreateButton {...createButtonProps} meta={{ foo: "bar" }} />
-            )}
-          </>
-        );
-      }}
-    >
-      <Flex gap={10} style={{ width: "100%" }}>
+    <List headerButtons={() => false}>
+      <Flex gap={10} style={{ width: "100%", marginBottom: 10 }}>
         <Button
           icon={
             sortDirection === "ASC" ? (
@@ -80,7 +67,6 @@ const ShipmentList = () => {
           onClick={() => {
             setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
           }}
-          style={{ height: 33, width: 33, minWidth: 33 }}
         >
           {/* {sortField === "id" ? "Дата" : "Имя"} */}
         </Button>
@@ -105,53 +91,16 @@ const ShipmentList = () => {
             ]);
           }}
         />
-        <div
-          style={{
-            border: "1px dashed gainsboro",
-            padding: "4px 10px",
-            borderRadius: 5,
-            marginBottom: 10,
-            backgroundColor: "#f9f9f9",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "wrap",
-            width: "70%",
-            height: 33,
-            boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
-          }}
-        >
-          {false ? (
-            <Typography.Title level={5} style={{ fontWeight: 400, margin: 0 }}>
-              Загрузка итогов...
-            </Typography.Title>
-          ) : (
-            <>
-              <Typography.Text style={{ fontSize: 14 }}>
-                Общий вес: <strong>20 кг</strong>
-              </Typography.Text>
-              <Typography.Text style={{ fontSize: 14 }}>
-                {/* @ts-ignore */}
-                Количество рейсов:{" "}
-                <strong>{tableProps.pagination?.total}</strong>
-              </Typography.Text>
-              <Typography.Text style={{ fontSize: 14 }}>
-                Количество посылок: <strong>20</strong>
-              </Typography.Text>
-            </>
-          )}
-        </div>
       </Flex>
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("shipments", record.id as number);
+            push(`/shipments/history/show/${record.id}`);
           },
         })}
         {...tableProps}
         rowKey="id"
-        scroll={{ x: 1500 }}
+        scroll={{ x: "max-content" }}
       >
         <Table.Column
           dataIndex="created_at"
@@ -199,5 +148,3 @@ const ShipmentList = () => {
     </List>
   );
 };
-
-export default ShipmentList;

@@ -7,9 +7,18 @@ import {
   useSelect,
   useTable,
 } from "@refinedev/antd";
-import { type BaseRecord, useMany, useNavigation, useCustom } from "@refinedev/core";
-import { Button, Space, Table, Flex, Typography } from "antd";
-import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
+import {
+  type BaseRecord,
+  useMany,
+  useNavigation,
+  useCustom,
+} from "@refinedev/core";
+import { Button, Space, Table, Flex, Typography, Input } from "antd";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import dayjs from "dayjs";
@@ -18,12 +27,14 @@ const ReceivingList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState<any[]>([]);
 
   const buildQueryParams = () => ({
     sort: `id,${sortDirection}`,
     page: current - 1,
     limit: pageSize,
     offset: (current - 1) * pageSize,
+    s: JSON.stringify({ $and: [...filters, { status: { $eq: "В пути" } }] }),
   });
 
   const { data, isLoading, refetch } = useCustom<any>({
@@ -55,7 +66,7 @@ const ReceivingList = () => {
     },
   };
 
-  const { show } = useNavigation();
+  const { push, show } = useNavigation();
 
   return (
     <List headerButtons={() => false}>
@@ -74,6 +85,29 @@ const ReceivingList = () => {
         >
           {/* Сортировка по дате */}
         </Button>
+        <Input
+          placeholder="Поиск по номеру рейса, коду коробки"
+          prefix={<SearchOutlined />}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (!value) {
+              setFilters([]);
+              return;
+            }
+
+            setFilters([
+              {
+                $or: [
+                  { id: { $contL: value } },
+                  { boxCode: { $contL: value } },
+                ],
+              },
+            ]);
+          }}
+        />
+        <Button onClick={() => push("/receiving/history")}>
+          История получений
+        </Button>
       </Flex>
       <Table
         onRow={(record) => ({
@@ -84,7 +118,7 @@ const ReceivingList = () => {
         })}
         {...tableProps}
         rowKey="id"
-        scroll={{ x: "max-content"}}
+        scroll={{ x: "max-content" }}
       >
         <Table.Column
           dataIndex="updated_at"

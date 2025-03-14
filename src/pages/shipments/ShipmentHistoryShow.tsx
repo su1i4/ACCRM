@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   DeleteButton,
   EditButton,
@@ -6,27 +6,21 @@ import {
   TextField,
   useTable,
 } from "@refinedev/antd";
-import { useUpdateMany, useParsed, useShow, useNavigation} from "@refinedev/core";
-import { Typography, Row, Col, Table, Button, Space } from "antd";
+import { useMany, useShow } from "@refinedev/core";
+import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
 
 const { Title } = Typography;
 
-const ReceivingShow = () => {
-  // Получаем ID из URL (например, /shipments/show/123)
+export const ShipmentHistoryShow = () => {
   const { id } = useParams();
-
-  // Запрашиваем данные о конкретном рейсе (shipment) по ID
-  const { queryResult } = useShow({
-    resource: "shipments",
-    id,
-  });
+  const { queryResult } = useShow({ resource: "shipments", id });
   const { data, isLoading } = queryResult;
   const record = data?.data;
 
-  // Получаем список товаров (goods-processing),
-  // отфильтрованных по текущему shipment_id
+  console.log(Number(id));
+
   const { tableProps } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
@@ -44,56 +38,38 @@ const ReceivingShow = () => {
           value: Number(id),
         },
         {
-          field: "status",
-          operator: "eq",
-          value: "В пути",
+          operator: "or",
+          value: [
+            {
+              field: "status",
+              operator: "eq",
+              value: "Выдали",
+            },
+            {
+              field: "status",
+              operator: "eq",
+              value: "Готов к выдаче",
+            },
+          ],
         },
       ],
     },
   });
 
-  // -----------------------
-  // 1. Состояние для выделенных строк
-  // -----------------------
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  // Настройка антовского rowSelection
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedKeys);
-    },
-  };
-
-  // -----------------------
-  // 2. Массовое обновление
-  // -----------------------
-  const { mutate, isLoading: isUpdating } = useUpdateMany();
-
-  const handleSetReadyToIssue = () => {
-    mutate(
-      {
-        resource: "goods-processing",
-        // @ts-ignore
-        ids: selectedRowKeys,
-        values: { status: "Готов к выдаче" },
-      },
-      {
-        onSuccess: () => {
-          setSelectedRowKeys([]);
-        },
-      }
-    );
-  };
-
-  const {push} = useNavigation()
-
   return (
     <Show
-      headerButtons={() => false}
+      headerButtons={({ deleteButtonProps, editButtonProps }) => (
+        <>
+          {editButtonProps && (
+            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {deleteButtonProps && (
+            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
+          )}
+        </>
+      )}
       isLoading={isLoading}
     >
-      {/* Данные о текущем рейсе */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Номер рейса</Title>
@@ -131,7 +107,7 @@ const ReceivingShow = () => {
           <Title level={5}>Размеры (Д × Ш × В)</Title>
           <TextField
             value={`${record?.length}_x 
-               _${record?.width}_x_${record?.height}`}
+          _${record?.width}_x_${record?.height}`}
           />
         </Col>
         <Col xs={24} md={6}>
@@ -164,39 +140,46 @@ const ReceivingShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField
-            value={record?.status}
-          />
+          <TextField value={record?.status} />
         </Col>
       </Row>
 
       <Title level={4} style={{ marginTop: 24 }}>
         Товары в этом рейсе
       </Title>
-
-      {/* Кнопки массового изменения статуса */}
-      <Space style={{ marginBottom: 16 }}>
-        <Button
-          onClick={handleSetReadyToIssue}
-          disabled={selectedRowKeys.length === 0 || isUpdating}
-        >
-          Принять
-        </Button>
-      </Space>
-
-      {/* Таблица со списком товаров и чекбоксами */}
-      <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
-        <Table.Column dataIndex="receptionDate" title="Дата" />
+      <Table {...tableProps} rowKey="id">
+        {/* <Table.Column dataIndex="id" title="id" /> */}
+        <Table.Column
+          dataIndex="created_at"
+          title="Дата"
+          render={(value) => {
+            return `${value?.split("T")[0]} ${value
+              ?.split("T")[1]
+              ?.slice(0, 5)}`;
+          }}
+        />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
-        <Table.Column dataIndex="clientCode" title="Код Клиента" />
-        <Table.Column dataIndex="recipient" title="Получатель" />
-        <Table.Column dataIndex="city" title="Город" />
-        <Table.Column dataIndex="weight" title="Вес" />
+
+        <Table.Column
+          dataIndex="counterparty"
+          title="Код получателя"
+          render={(value) => {
+            return value?.clientPrefix + "-" + value?.clientCode;
+          }}
+        />
+
         <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="counterparty"
+          render={(value) =>
+            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+          }
+          title="Пункт назначения, Пвз"
+        />
+        <Table.Column dataIndex="weight" title="Вес" />
+        {/* Добавьте остальные необходимые колонки */}
       </Table>
     </Show>
   );
 };
-
-export default ReceivingShow;

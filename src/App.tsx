@@ -116,6 +116,10 @@ import { CurrencyShow } from "./pages/currency/show";
 import { CurrencyEdit } from "./pages/currency/edit";
 import { TriggersList } from "./pages/triggers/list";
 import { TriggersCreate } from "./pages/triggers/create";
+import { ShipmentHistory } from "./pages/shipments/ShipmentHistory";
+import { ReceivingHistory } from "./pages/receiving/ReceivingHistory";
+import { ReceivingHistoryShow } from "./pages/receiving/ReceivingHistoryShow";
+import { ShipmentHistoryShow } from "./pages/shipments/ShipmentHistoryShow";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -211,7 +215,7 @@ function App() {
                   show: "/shipments/show/:id",
                   meta: {
                     canDelete: true,
-                    label: "Отправка ",
+                    label: "Отправка",
                     parent: "Продукты",
                   },
                 },
@@ -221,6 +225,24 @@ function App() {
                   meta: {
                     parent: "shipments",
                     label: "Подбор товаров",
+                    hide: true,
+                  },
+                },
+                {
+                  name: "shipment-history",
+                  list: "/shipments/history",
+                  meta: {
+                    parent: "shipments",
+                    label: "История отправлений",
+                    hide: true,
+                  },
+                },
+                {
+                  name: "shipment-history-show",
+                  list: "/shipments/history/show/:id",
+                  meta: {
+                    parent: "shipment-history",
+                    label: "Детальная информация",
                     hide: true,
                   },
                 },
@@ -242,6 +264,24 @@ function App() {
                   meta: {
                     parent: "receiving",
                     label: "Выгруженные товары",
+                    hide: true,
+                  },
+                },
+                {
+                  name: "receiving-history",
+                  list: "/receiving/history",
+                  meta: {
+                    parent: "receiving",
+                    label: "История получений",
+                    hide: true,
+                  },
+                },
+                {
+                  name: "receiving-history-show",
+                  list: "/receiving/history/show/:id",
+                  meta: {
+                    parent: "receiving-history",
+                    label: "Детальная информация",
                     hide: true,
                   },
                 },
@@ -547,6 +587,14 @@ function App() {
                       path="show/:id/adding"
                       element={<ShipmentAdd />}
                     />
+                    <Route
+                      path="history"
+                      element={<ShipmentHistory />}
+                    />
+                    <Route
+                      path="history/show/:id"
+                      element={<ShipmentHistoryShow />}
+                    />
                   </Route>
 
                   <Route path="/counterparty">
@@ -565,6 +613,8 @@ function App() {
                       element={<ReceivingShowReceived />}
                     />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
+                    <Route path="history" element={<ReceivingHistory />} />
+                    <Route path="history/show/:id" element={<ReceivingHistoryShow />} />
                   </Route>
 
                   <Route path="/cash-back">

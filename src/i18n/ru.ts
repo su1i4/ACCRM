@@ -76,6 +76,10 @@ export const i18nProvider_ru = {
       "currency.titles.edit": "Редактирование валюты",
       "triggers.titles.list": "Триггеры",
       "triggers.titles.create": "Создать триггер",
+      "shipment-history.titles.list": "История отправлений",
+      "receiving-history.titles.list": "История получений",
+      "receiving-history-show.titles.show": "Детальная информация",
+      "shipment-history-show.titles.show": "Детальная информация",
     };
     return translations[key] || key;
   },

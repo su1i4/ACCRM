@@ -13,7 +13,7 @@ import { useParams } from "react-router";
 
 const { Title } = Typography;
 
-const ReceivingShow = () => {
+export const ReceivingHistoryShow = () => {
   // Получаем ID из URL (например, /shipments/show/123)
   const { id } = useParams();
 
@@ -90,7 +90,17 @@ const ReceivingShow = () => {
 
   return (
     <Show
-      headerButtons={() => false}
+      headerButtons={({ deleteButtonProps, editButtonProps }) => (
+        <>
+          <Button onClick={() => push(`/receiving/show/${id}/received`)} >Выгруженные товары</Button>
+          {editButtonProps && (
+            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {deleteButtonProps && (
+            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
+          )}
+        </>
+      )}
       isLoading={isLoading}
     >
       {/* Данные о текущем рейсе */}
@@ -170,22 +180,22 @@ const ReceivingShow = () => {
         </Col>
       </Row>
 
-      <Title level={4} style={{ marginTop: 24 }}>
+      {/* <Title level={4} style={{ marginTop: 24 }}>
         Товары в этом рейсе
-      </Title>
+      </Title> */}
 
       {/* Кнопки массового изменения статуса */}
-      <Space style={{ marginBottom: 16 }}>
+      {/* <Space style={{ marginBottom: 16 }}>
         <Button
           onClick={handleSetReadyToIssue}
           disabled={selectedRowKeys.length === 0 || isUpdating}
         >
           Принять
         </Button>
-      </Space>
+      </Space> */}
 
       {/* Таблица со списком товаров и чекбоксами */}
-      <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
+      {/* <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
         <Table.Column dataIndex="receptionDate" title="Дата" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
@@ -194,9 +204,7 @@ const ReceivingShow = () => {
         <Table.Column dataIndex="city" title="Город" />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="status" title="Статус" />
-      </Table>
+      </Table> */}
     </Show>
   );
 };
-
-export default ReceivingShow;

@@ -340,19 +340,19 @@ export const IssueProcessingList = () => {
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
-        <Table.Column
+        {/* <Table.Column dataIndex="paymentMethod" title="Способ оплаты" /> */}
+        {/* <Table.Column
           dataIndex="employee"
           title="Сотрудник"
           render={(value) => {
             return `${value?.firstName || ""}-${value?.lastName || ""}`;
           }}
-        />
-        <Table.Column
+        /> */}
+        {/* <Table.Column
           dataIndex="employee"
           title="Филиал"
           render={(value) => value?.branch?.name}
-        />
+        /> */}
         <Table.Column dataIndex="comments" title="Комментарий" />
         <Table.Column
           dataIndex="photo"

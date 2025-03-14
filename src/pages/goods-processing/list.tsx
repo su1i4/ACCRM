@@ -211,7 +211,7 @@ export const GoogsProcessingList = () => {
   };
 
   const handleSaveChanges = async () => {
-    const filteredItems = dataSource.filter((item: any) => !item.visible);
+    const filteredItems = dataSource.filter((item: any) => !item.visible && selectedRowKeys.includes(item.id));
     const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
       // Если запись уже visible: true, оставляем её true
@@ -419,10 +419,12 @@ export const GoogsProcessingList = () => {
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>
-            `${value?.branch?.name}, ${value?.under_branch?.address || ""}`
+            <p style={{width: "200px", textOverflow: "ellipsis", overflow: "hidden"}}>
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
+            </p>
           }
-          width={200}
           title="Пункт назначения, Пвз"
+
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value, record) => {
