@@ -11,11 +11,11 @@ import {
 import { useShow } from "@refinedev/core";
 import { Col, Image, Row, Typography, Button, Space, Tooltip } from "antd";
 import { API_URL } from "../../App";
-import { 
-  DownloadOutlined, 
-  WhatsAppOutlined, 
+import {
+  DownloadOutlined,
+  WhatsAppOutlined,
   MessageOutlined,
-  WechatOutlined 
+  WechatOutlined,
 } from "@ant-design/icons";
 
 const { Title } = Typography;
@@ -27,13 +27,12 @@ export const GoodsShow: React.FC = () => {
   // Предполагается, что data.data содержит объект записи, а связанные данные (branch, counterparty) подгружаются через joins
   const record = data?.data;
 
-  const PHOTO_URL = API_URL.replace('api', '') + record?.photo
+  const PHOTO_URL = API_URL + "/" + record?.photo;
 
   // Function to handle photo download
   const handleDownloadPhoto = async () => {
     if (record?.photo) {
       try {
-
         const response = await fetch(PHOTO_URL);
         const blob = await response.blob();
 
@@ -66,7 +65,7 @@ export const GoodsShow: React.FC = () => {
       const photoUrl = `${API_URL}/${record.photo}`;
       const encodedUrl = encodeURIComponent(photoUrl);
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedUrl}`;
-      window.open(whatsappUrl, '_blank');
+      window.open(whatsappUrl, "_blank");
     }
   };
 
@@ -75,20 +74,21 @@ export const GoodsShow: React.FC = () => {
       const photoUrl = `${API_URL}/${record.photo}`;
       const encodedUrl = encodeURIComponent(photoUrl);
       const telegramUrl = `https://t.me/share/url?url=${encodedUrl}`;
-      window.open(telegramUrl, '_blank');
+      window.open(telegramUrl, "_blank");
     }
   };
 
   const shareViaWeChat = () => {
     if (record?.photo) {
       const photoUrl = `${API_URL}/${record.photo}`;
-      alert('Скопируйте ссылку для отправки в WeChat: ' + photoUrl);
-      navigator.clipboard.writeText(photoUrl)
+      alert("Скопируйте ссылку для отправки в WeChat: " + photoUrl);
+      navigator.clipboard
+        .writeText(photoUrl)
         .then(() => {
-          alert('Ссылка скопирована в буфер обмена');
+          alert("Ссылка скопирована в буфер обмена");
         })
-        .catch(err => {
-          console.error('Не удалось скопировать ссылку: ', err);
+        .catch((err) => {
+          console.error("Не удалось скопировать ссылку: ", err);
         });
     }
   };
@@ -176,13 +176,17 @@ export const GoodsShow: React.FC = () => {
 
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначение</Title>
-          <TextField value={`${record?.counterparty?.branch?.name}, ${record?.counterparty?.under_branch?.address || ''}`} />
+          <TextField
+            value={`${record?.counterparty?.branch?.name}, ${
+              record?.counterparty?.under_branch?.address || ""
+            }`}
+          />
         </Col>
 
-          <Col xs={24} md={6}>
-            <Title level={5}>Скидка</Title>
-            <TextField value={record?.discount} />
-          </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Скидка</Title>
+          <TextField value={record?.discount} />
+        </Col>
 
         <Col xs={24} md={6}>
           <Title level={5}>Ручная скидка</Title>
