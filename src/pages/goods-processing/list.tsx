@@ -25,13 +25,21 @@ import {
 import { useEffect, useState } from "react";
 import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
+import { CustomTooltip, operationStatus } from "../../shared";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const GoogsProcessingList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [sortField, setSortField] = useState<
+    "id" | "counterparty.name" | "operation_id"
+  >("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
     { trackCode: { $contL: "" } },
   ]);
@@ -154,6 +162,21 @@ export const GoogsProcessingList = () => {
         >
           По фио{" "}
           {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "operation_id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("operation_id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По статусу оплаты{" "}
+          {sortField === "operation_id" &&
             (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
       </div>
@@ -286,41 +309,47 @@ export const GoogsProcessingList = () => {
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => push("/goods-processing/create")}
-            />
-            <Dropdown
-              overlay={sortContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={sorterVisible}
-              onOpenChange={(visible) => {
-                setSorterVisible(visible);
-              }}
-            >
+            <CustomTooltip title="Создать">
               <Button
-                icon={
-                  sortDirection === "ASC" ? (
-                    <ArrowUpOutlined />
-                  ) : (
-                    <ArrowDownOutlined />
-                  )
-                }
-              ></Button>
-            </Dropdown>
-            <Dropdown
-              overlay={checkboxContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={settingVisible}
-              onOpenChange={(visible) => {
-                setSettingVisible(visible);
-              }}
-            >
-              <Button icon={<SettingOutlined />} />
-            </Dropdown>
+                icon={<FileAddOutlined />}
+                style={{}}
+                onClick={() => push("/goods-processing/create")}
+              />
+            </CustomTooltip>
+            <CustomTooltip title="Сортировка">
+              <Dropdown
+                overlay={sortContent}
+                trigger={["click"]}
+                placement="bottomLeft"
+                open={sorterVisible}
+                onOpenChange={(visible) => {
+                  setSorterVisible(visible);
+                }}
+              >
+                <Button
+                  icon={
+                    sortDirection === "ASC" ? (
+                      <ArrowUpOutlined />
+                    ) : (
+                      <ArrowDownOutlined />
+                    )
+                  }
+                ></Button>
+              </Dropdown>
+            </CustomTooltip>
+            <CustomTooltip title="Показать клиентам">
+              <Dropdown
+                overlay={checkboxContent}
+                trigger={["click"]}
+                placement="bottomLeft"
+                open={settingVisible}
+                onOpenChange={(visible) => {
+                  setSettingVisible(visible);
+                }}
+              >
+                <Button icon={<SettingOutlined />} />
+              </Dropdown>
+            </CustomTooltip>
           </Space>
         </Col>
         <Col flex="auto">
@@ -408,7 +437,7 @@ export const GoogsProcessingList = () => {
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
+            value ? dayjs(value).utc().format("DD.MM.YYYY HH:mm") : ""
           }
         />
         <Table.Column dataIndex="trackCode" title="Трек-код" />
@@ -471,6 +500,7 @@ export const GoogsProcessingList = () => {
           }}
         />
         <Table.Column dataIndex="status" title="Статус" />
+        {operationStatus()}
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

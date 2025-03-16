@@ -163,7 +163,7 @@ export const CustomSider: typeof Sider = ({ render }) => {
             position: 'fixed',
             top: '16px',
             left: '16px',
-            zIndex: 999999,
+            zIndex: 50,
           }}
           onClick={() => setMobileDrawerVisible(true)}
         />

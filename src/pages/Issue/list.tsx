@@ -39,6 +39,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { API_URL } from "../../App";
 import type { Key } from "react";
+import { CustomTooltip, operationStatus } from "../../shared";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -314,7 +315,6 @@ export const IssueProcessingList = () => {
 
   return (
     <List>
-      {/* Форма фильтрации сверху */}
       <Modal
         open={printOpen}
         onCancel={handleClose}
@@ -322,7 +322,6 @@ export const IssueProcessingList = () => {
         onOk={() => handlePrint()}
         okText="Распечатать"
         cancelText="Отменить"
-        // style={{ width: 800, maxWidth: 800 }}
       >
         <div ref={contentRef} style={{ padding: 10 }}>
           <Flex justify="center" style={{ width: "100%" }}>
@@ -373,18 +372,20 @@ export const IssueProcessingList = () => {
       <Row style={{ marginBottom: 16 }}>
         <Col span={24}>
           <Form layout="inline" onFinish={handleFilter}>
-            <Dropdown overlay={sortContent} trigger={["click"]}>
-              <Button
-                style={{ marginRight: 8 }}
-                icon={
-                  sortDirection === "ASC" ? (
-                    <ArrowUpOutlined />
-                  ) : (
-                    <ArrowDownOutlined />
-                  )
-                }
-              ></Button>
-            </Dropdown>
+            <CustomTooltip title="Сортировка">
+              <Dropdown overlay={sortContent} trigger={["click"]}>
+                <Button
+                  style={{ marginRight: 8 }}
+                  icon={
+                    sortDirection === "ASC" ? (
+                      <ArrowUpOutlined />
+                    ) : (
+                      <ArrowDownOutlined />
+                    )
+                  }
+                ></Button>
+              </Dropdown>
+            </CustomTooltip>
             <Form.Item name="trackCode">
               <Input
                 style={{ width: 500 }}
@@ -490,7 +491,7 @@ export const IssueProcessingList = () => {
         // onRow={(record) => ({
         //   onDoubleClick: () => show("issue", record.id as number),
         // })}
-        scroll={{ x: "max-content" }}
+        scroll={{ x: 2000 }}
       >
         <Table.Column
           dataIndex="created_at"
@@ -559,6 +560,7 @@ export const IssueProcessingList = () => {
           }
         />
         <Table.Column dataIndex="status" title="Статус" />
+        {operationStatus()}
         {/* <Table.Column
           title="Действия"
           dataIndex="actions"

@@ -28,6 +28,7 @@ import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
+import { CustomTooltip, operationStatus } from "../../shared";
 
 export const AcceptedGoodsList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
@@ -282,41 +283,47 @@ export const AcceptedGoodsList = () => {
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => push("/goods-processing/create")}
-            />
-            <Dropdown
-              overlay={sortContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={sorterVisible}
-              onOpenChange={(visible) => {
-                setSorterVisible(visible);
-              }}
-            >
+            <CustomTooltip title="Создать">
               <Button
-                icon={
-                  sortDirection === "ASC" ? (
-                    <ArrowUpOutlined />
-                  ) : (
-                    <ArrowDownOutlined />
-                  )
-                }
-              ></Button>
-            </Dropdown>
-            <Dropdown
-              overlay={checkboxContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={settingVisible}
-              onOpenChange={(visible) => {
-                setSettingVisible(visible);
-              }}
-            >
-              <Button icon={<SettingOutlined />} />
-            </Dropdown>
+                icon={<FileAddOutlined />}
+                style={{}}
+                onClick={() => push("/goods-processing/create")}
+              />
+            </CustomTooltip>
+            <CustomTooltip title="Сортировка">
+              <Dropdown
+                overlay={sortContent}
+                trigger={["click"]}
+                placement="bottomLeft"
+                open={sorterVisible}
+                onOpenChange={(visible) => {
+                  setSorterVisible(visible);
+                }}
+              >
+                <Button
+                  icon={
+                    sortDirection === "ASC" ? (
+                      <ArrowUpOutlined />
+                    ) : (
+                      <ArrowDownOutlined />
+                    )
+                  }
+                ></Button>
+              </Dropdown>
+            </CustomTooltip>
+            <CustomTooltip title="Показать клиентам">
+              <Dropdown
+                overlay={checkboxContent}
+                trigger={["click"]}
+                placement="bottomLeft"
+                open={settingVisible}
+                onOpenChange={(visible) => {
+                  setSettingVisible(visible);
+                }}
+              >
+                <Button icon={<SettingOutlined />} />
+              </Dropdown>
+            </CustomTooltip>
           </Space>
         </Col>
         <Col flex="auto">
@@ -467,6 +474,7 @@ export const AcceptedGoodsList = () => {
             return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
           }} /> */}
         <Table.Column dataIndex="status" title="Статус" />
+        {operationStatus()}
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

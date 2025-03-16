@@ -136,6 +136,7 @@ const ReceivingList = () => {
         />
         <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
+        <Table.Column dataIndex="truck_number" title={"Номер фуры"} />
         <Table.Column
           dataIndex="employee"
           title={"Место погрузки"}

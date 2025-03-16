@@ -26,6 +26,7 @@ import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
+import { operationStatus } from "../../shared";
 
 export const NotPaidGoodsList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
@@ -469,6 +470,7 @@ export const NotPaidGoodsList = () => {
           }}
         />
         <Table.Column dataIndex="status" title="Статус" />
+        {operationStatus()}
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

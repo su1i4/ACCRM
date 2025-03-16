@@ -6,7 +6,12 @@ import {
   TextField,
   useTable,
 } from "@refinedev/antd";
-import { useUpdateMany, useParsed, useShow, useNavigation} from "@refinedev/core";
+import {
+  useUpdateMany,
+  useParsed,
+  useShow,
+  useNavigation,
+} from "@refinedev/core";
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
@@ -86,13 +91,10 @@ const ReceivingShow = () => {
     );
   };
 
-  const {push} = useNavigation()
+  const { push } = useNavigation();
 
   return (
-    <Show
-      headerButtons={() => false}
-      isLoading={isLoading}
-    >
+    <Show headerButtons={() => false} isLoading={isLoading}>
       {/* Данные о текущем рейсе */}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
@@ -106,6 +108,10 @@ const ReceivingShow = () => {
         <Col xs={24} md={6}>
           <Title level={5}> Код коробки</Title>
           <TextField value={record?.boxCode} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Номер фуры</Title>
+          <TextField value={record?.truck_number} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначения</Title>
@@ -164,9 +170,7 @@ const ReceivingShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField
-            value={record?.status}
-          />
+          <TextField value={record?.status} />
         </Col>
       </Row>
 

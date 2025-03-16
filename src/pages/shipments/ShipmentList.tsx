@@ -8,6 +8,7 @@ import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Flex, Input, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
+import { CustomTooltip } from "../../shared";
 
 const ShipmentList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -71,21 +72,21 @@ const ShipmentList = () => {
       }}
     >
       <Flex gap={10} style={{ width: "100%" }}>
-        <Button
-          icon={
-            sortDirection === "ASC" ? (
-              <ArrowUpOutlined />
-            ) : (
-              <ArrowDownOutlined />
-            )
-          }
-          onClick={() => {
-            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
-          }}
-          style={{ height: 33, width: 33, minWidth: 33 }}
-        >
-          {/* {sortField === "id" ? "Дата" : "Имя"} */}
-        </Button>
+        <CustomTooltip title="Сортировка">
+          <Button
+            icon={
+              sortDirection === "ASC" ? (
+                <ArrowUpOutlined />
+              ) : (
+                <ArrowDownOutlined />
+              )
+            }
+            onClick={() => {
+              setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+            }}
+            style={{ height: 33, width: 33, minWidth: 33 }}
+          />
+        </CustomTooltip>
         <Input
           placeholder="Поиск по номеру рейса, коду коробки"
           prefix={<SearchOutlined />}

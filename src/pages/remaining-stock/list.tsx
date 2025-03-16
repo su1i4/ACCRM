@@ -51,6 +51,7 @@ import { API_URL } from "../../App";
 import dayjs from "dayjs";
 import { MyCreateModal } from "../counterparties/modal/create-modal";
 import { divider } from "@uiw/react-md-editor";
+import { operationStatus } from "../../shared";
 
 export const RemainingStockProcessingList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -592,7 +593,7 @@ export const RemainingStockProcessingList = () => {
           />
 
           <Table.Column dataIndex="status" title="Статус" />
-
+          {operationStatus()}
           <Table.Column
             title="Переместить"
             dataIndex="actions"

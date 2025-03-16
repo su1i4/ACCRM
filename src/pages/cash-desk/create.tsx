@@ -1,33 +1,80 @@
 import React, { Key, useEffect, useState } from "react";
 import { Create, useSelect, useForm } from "@refinedev/antd";
-import { BaseRecord, useCustom, useOne } from "@refinedev/core";
 import {
-  Checkbox,
+  BaseRecord,
+  useCustom,
+  useNavigation,
+  useOne,
+  useUpdateMany,
+} from "@refinedev/core";
+import {
+  Button,
+  Card,
   Col,
   DatePicker,
+  Dropdown,
   Form,
   Input,
-  Modal,
   Row,
   Select,
+  Space,
   Table,
   Upload,
 } from "antd";
 import dayjs from "dayjs";
-import { PaperClipOutlined } from "@ant-design/icons";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CalendarOutlined,
+  PaperClipOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { API_URL } from "../../App";
+import TextArea from "antd/lib/input/TextArea";
 
 export const CashDeskCreate: React.FC = () => {
-  const { formProps, saveButtonProps, form } = useForm();
-
-  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const { push } = useNavigation();
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
+
+  const { mutate: updateManyGoods } = useUpdateMany({
+    resource: "goods-processing",
+    mutationOptions: {
+      onSuccess: async (data: any, variables, context) => {
+        refetch();
+        push("/income");
+      },
+    },
+  });
+
+  const { formProps, saveButtonProps, form } = useForm({
+    onMutationSuccess(data, variables, context, isAutoSave) {
+      const id = data?.data?.id;
+      if (selectedRowKeys.length > 0) {
+        updateManyGoods({
+          ids: selectedRowKeys,
+          values: {
+            operation_id: id,
+          },
+        });
+      }
+      console.log("row");
+      console.log(selectedRowKeys);
+      if (selectedRowKeys.length === 0) push("/income");
+    },
+    resource: "cash-desk",
+    redirect: "list",
+  });
+
+  const [isAgent, setIsAgent] = useState(false);
+  const [sorterVisible, setSorterVisible] = useState(false);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [filters, setFilters] = useState<any>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading } = useCustom<any>({
+  const { data, isLoading, refetch } = useCustom<any>({
     url: `${API_URL}/goods-processing`,
     method: "get",
     config: {
@@ -38,7 +85,11 @@ export const CashDeskCreate: React.FC = () => {
               "counterparty.id": {
                 $eq: form?.getFieldValue("counterparty_id"),
               },
+              operation_id: {
+                $eq: null,
+              },
             },
+            ...filters,
           ],
         }),
         sort: `${sortField},${sortDirection}`,
@@ -80,12 +131,44 @@ export const CashDeskCreate: React.FC = () => {
     ],
   });
 
+  useEffect(() => {
+    if (formProps.form) {
+      if (isAgent) {
+        const totalAmount = selectedRows.reduce(
+          (acc, row) => acc + Number(row.amount),
+          0
+        );
+        formProps.form.setFieldsValue({ amount: totalAmount });
+      } else {
+        const currentValues: any = formProps.form.getFieldsValue();
+
+        // Keep only `income` and `type_operation`, reset others
+        const resetValues = Object.keys(currentValues).reduce(
+          (acc: any, key: any) => {
+            if (
+              key === "income" ||
+              key === "type_operation" ||
+              key === "date"
+            ) {
+              acc[key] = currentValues[key]; // Keep existing values
+            } else {
+              acc[key] = undefined; // Reset other fields
+            }
+            return acc;
+          },
+          {}
+        );
+
+        formProps.form.setFieldsValue(resetValues);
+      }
+    }
+  }, [isAgent, selectedRows]);
+
   const { selectProps: bankSelectProps } = useSelect({
     resource: "bank",
     optionLabel: "name",
   });
 
-  // Получаем данные клиента по выбранному id с помощью useOne
   const {
     data: counterpartyData,
     isLoading: isCounterpartyLoading,
@@ -94,47 +177,45 @@ export const CashDeskCreate: React.FC = () => {
     resource: "counterparty",
     id: selectedCounterpartyId ?? "",
     queryOptions: {
-      enabled: !!selectedCounterpartyId, // Хук активен только если выбран id
+      enabled: !!selectedCounterpartyId,
     },
   });
-
-  // При получении данных обновляем поле "Имя" в форме
-  useEffect(() => {
-    if (counterpartyData && counterpartyData.data) {
-      // @ts-ignore
-      formProps.form.setFieldsValue({
-        name: counterpartyData.data.name, // Предполагается, что данные клиента содержат поле name
-      });
-    }
-  }, [counterpartyData, formProps.form]);
-
-  // Обработчик выбора клиента в Select
-  const handleCounterpartyChange = (value: any) => {
-    setSelectedCounterpartyId(value);
-  };
-
-  const expenseTypes = [
-    { value: "supplier_payment", label: "Оплата поставщику" },
-    { value: "repair_payment", label: "Оплата за ремонт" },
-    { value: "salary_payment", label: "Выплата заработной платы работнику" },
-    { value: "advance_payment", label: "Выдача подотчет" },
-  ];
-
-  const incomeTypes = [
-    "Оплата наличными",
-    "Оплата переводом",
-    "Оплата перечислением",
-  ];
 
   const currentDateDayjs = dayjs();
 
   useEffect(() => {
+    if (counterpartyData && counterpartyData.data) {
+      // @ts-ignore
+      formProps.form.setFieldsValue({
+        name: counterpartyData.data.name,
+      });
+    }
     if (formProps.form) {
       formProps.form.setFieldsValue({
         date: currentDateDayjs,
       });
     }
-  }, [formProps.form]);
+  }, [counterpartyData, formProps.form]);
+
+  useEffect(() => {
+    if (formProps.form) {
+      formProps.form.setFieldsValue({
+        type_operation: "Извне",
+      });
+    }
+  }, []);
+
+  const handleCounterpartyChange = (value: any) => {
+    setSelectedCounterpartyId(value);
+  };
+
+  const paymentTypes = [
+    "Оплата наличными",
+    "Оплата переводом",
+    "Оплата перечислением",
+  ];
+
+  const incomeTypes = ["Извне", "Контрагент"];
 
   enum CurrencyType {
     Usd = "Доллар",
@@ -173,9 +254,76 @@ export const CashDeskCreate: React.FC = () => {
     selectedRows: BaseRecord[],
     info: { type: "all" | "none" | "invert" | "single" | "multiple" }
   ) => {
-    setSelectedRowKeys(selectedRowKeys);
+    setSelectedRowKeys(selectedRowKeys as number[]);
     setSelectedRows(selectedRows);
   };
+
+  const datePickerContent = (
+    <DatePicker.RangePicker
+      style={{ width: "280px" }}
+      placeholder={["Начальная дата", "Конечная дата"]}
+      onChange={(dates, dateStrings) => {
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          // Fixed: Use consistent filter format
+          setFilters([
+            {
+              created_at: {
+                $gte: dateStrings[0],
+                $lte: dateStrings[1],
+              },
+            },
+          ]);
+        }
+      }}
+    />
+  );
+
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
+        </div>
+        {/* Сортировка по дате создания */}
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По фио{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
 
   return (
     <Create
@@ -192,7 +340,7 @@ export const CashDeskCreate: React.FC = () => {
         }}
       >
         <Row gutter={[16, 2]}>
-          <Col span={12}>
+          <Col span={6}>
             <Form.Item
               label="Дата поступление"
               name="date"
@@ -206,7 +354,7 @@ export const CashDeskCreate: React.FC = () => {
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={6}>
             <Form.Item
               label="Банк"
               name={["bank_id"]}
@@ -221,14 +369,16 @@ export const CashDeskCreate: React.FC = () => {
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={6}>
             <Form.Item
               label="Вид прихода"
-              name={["type_operation"]}
+              name="type_operation"
               rules={[
-                { required: false, message: "Пожалуйста, выберите Банк" },
+                {
+                  required: true,
+                  message: "Пожалуйста, выберите вид прихода",
+                },
               ]}
-              // Настройка отступов между лейблом и инпутом
               style={{ marginBottom: 5 }}
             >
               <Select
@@ -238,54 +388,69 @@ export const CashDeskCreate: React.FC = () => {
                 }))}
                 placeholder="Выберите вид прихода"
                 style={{ width: "100%" }}
+                onChange={(e) => {
+                  setIsAgent(e === "Контрагент" ? true : false);
+                }}
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={6}>
             <Form.Item
-              label="Код Клиента"
-              name={["counterparty_id"]}
+              label="Метод оплаты"
+              name="method_payment"
               rules={[
-                { required: true, message: "Пожалуйста, выберите клиента" },
+                {
+                  required: true,
+                  message: "Пожалуйста, выберите метод оплаты",
+                },
               ]}
+              // Настройка отступов между лейблом и инпутом
               style={{ marginBottom: 5 }}
             >
               <Select
-                {...counterpartySelectProps}
-                onChange={handleCounterpartyChange}
-                placeholder="Выберите код клиента"
-                style={{ width: "100%" }}
-                showSearch
-                filterOption={false}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item
-              label="Трек-код"
-              name="name"
-              rules={[{ required: false, message: "Укажите имя" }]}
-              style={{ marginBottom: 5 }}
-            >
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item
-              label="Сумма"
-              name="amount"
-              rules={[{ required: true, message: "Укажите сумму" }]}
-              style={{ marginBottom: 5 }}
-            >
-              <Input
-                type="number"
-                min={0}
-                placeholder="Введите сумму прихода"
+                options={paymentTypes.map((enumValue) => ({
+                  label: enumValue,
+                  value: enumValue,
+                }))}
+                placeholder="Выберите вид прихода"
                 style={{ width: "100%" }}
               />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          {isAgent && (
+            <>
+              <Col span={10}>
+                <Form.Item
+                  label="Код Клиента"
+                  name="counterparty_id"
+                  rules={[
+                    { required: true, message: "Пожалуйста, выберите клиента" },
+                  ]}
+                  style={{ marginBottom: 5 }}
+                >
+                  <Select
+                    {...counterpartySelectProps}
+                    onChange={handleCounterpartyChange}
+                    placeholder="Выберите код клиента"
+                    style={{ width: "100%" }}
+                    showSearch
+                    filterOption={false}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={isAgent ? 6 : 8}>
+                <Form.Item
+                  label="Трек-код"
+                  name="trackCode"
+                  rules={[{ required: false, message: "Укажите имя" }]}
+                  style={{ marginBottom: 5 }}
+                >
+                  <Input />
+                </Form.Item>
+              </Col>
+            </>
+          )}
+          <Col span={isAgent ? 4 : 12}>
             <Form.Item
               name="type_currency"
               label="Валюта"
@@ -305,6 +470,22 @@ export const CashDeskCreate: React.FC = () => {
               />
             </Form.Item>
           </Col>
+          <Col span={isAgent ? 4 : 12}>
+            <Form.Item
+              label="Сумма"
+              name="amount"
+              rules={[{ required: true, message: "Укажите сумму" }]}
+              style={{ marginBottom: 5 }}
+            >
+              <Input
+                type="number"
+                disabled={isAgent}
+                min={0}
+                placeholder="Введите сумму прихода"
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </Col>
           <Col span={12}>
             <Form.Item
               label="Комментарий"
@@ -312,7 +493,7 @@ export const CashDeskCreate: React.FC = () => {
               rules={[{ required: false }]}
               style={{ marginBottom: 5 }}
             >
-              <Input
+              <TextArea
                 placeholder="Комментарий"
                 style={{ width: "100%", height: 63 }}
               />
@@ -364,84 +545,154 @@ export const CashDeskCreate: React.FC = () => {
           </Col>
         </Row>
       </Form>
-      <Table
-        {...tableProps}
-        rowKey="id"
-        scroll={{ x: "max-content" }}
-        rowSelection={{
-          type: "checkbox",
-          selectedRowKeys,
-          onChange: handleRowSelectionChange,
-        }}
-      >
-        <Table.Column
-          dataIndex="created_at"
-          title="Дата приемки"
-          render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
-          }
-        />
-        <Table.Column dataIndex="trackCode" title="Трек-код" />
-        <Table.Column dataIndex="cargoType" title="Тип груза" />
-        <Table.Column
-          dataIndex="counterparty"
-          title="Код получателя"
-          render={(value) => {
-            return value?.clientPrefix + "-" + value?.clientCode;
-          }}
-        />
-        <Table.Column
-          dataIndex="counterparty"
-          title="ФИО получателя"
-          render={(value) => value?.name}
-        />
-        <Table.Column
-          dataIndex="counterparty"
-          render={(value) => (
-            <p
-              style={{
-                width: "200px",
-                textOverflow: "ellipsis",
-                overflow: "hidden",
-              }}
-            >
-              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
-            </p>
-          )}
-          title="Пункт назначения, Пвз"
-        />
-        <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column
-          dataIndex="counterparty"
-          title="Тариф клиента"
-          render={(value, record) => {
-            return `${(
-              Number(value?.branch?.tarif || 0) -
-              Number(record?.counterparty?.discount?.discount || 0)
-            ).toFixed(2)}`;
-          }}
-        />
 
-        <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column
-          dataIndex="discount"
-          title="Скидка"
-          render={(value, record) => {
-            return `${(Number(value) + Number(record?.discount_custom)).toFixed(
-              2
-            )}`;
+      {isAgent && (
+        <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+          <Col>
+            <Space size="middle">
+              <Dropdown
+                overlay={sortContent}
+                trigger={["click"]}
+                placement="bottomLeft"
+                open={sorterVisible}
+                onOpenChange={(visible) => {
+                  setSorterVisible(visible);
+                }}
+              >
+                <Button
+                  icon={
+                    sortDirection === "ASC" ? (
+                      <ArrowUpOutlined />
+                    ) : (
+                      <ArrowDownOutlined />
+                    )
+                  }
+                ></Button>
+              </Dropdown>
+            </Space>
+          </Col>
+          <Col flex="auto">
+            <Input
+              placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
+              prefix={<SearchOutlined />}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (!value) {
+                  setFilters([{ trackCode: { $contL: "" } }]);
+                  return;
+                }
+
+                setFilters([
+                  {
+                    $or: [
+                      { trackCode: { $contL: value } },
+                      { "counterparty.clientCode": { $contL: value } },
+                      { "counterparty.name": { $contL: value } },
+                    ],
+                  },
+                ]);
+              }}
+            />
+          </Col>
+          <Col>
+            <Dropdown
+              overlay={datePickerContent}
+              trigger={["click"]}
+              placement="bottomRight"
+            >
+              <Button
+                icon={<CalendarOutlined />}
+                className="date-picker-button"
+              >
+                Дата
+              </Button>
+            </Dropdown>
+          </Col>
+        </Row>
+      )}
+
+      {isAgent && (
+        <Table
+          {...tableProps}
+          rowKey="id"
+          scroll={{ x: "max-content" }}
+          rowSelection={{
+            type: "checkbox",
+            selectedRowKeys,
+            onChange: handleRowSelectionChange,
           }}
-        />
-        <Table.Column dataIndex="status" title="Статус" />
-        <Table.Column
-          dataIndex="employee"
-          title="Сотрудник"
-          render={(value) => {
-            return `${value?.firstName}-${value?.lastName}`;
-          }}
-        />
-        <Table.Column dataIndex="comments" title="Комментарий" />
-      </Table>
+        >
+          <Table.Column
+            dataIndex="created_at"
+            title="Дата приемки"
+            render={(value) =>
+              value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
+            }
+          />
+          <Table.Column dataIndex="trackCode" title="Трек-код" />
+          <Table.Column dataIndex="cargoType" title="Тип груза" />
+          <Table.Column
+            dataIndex="counterparty"
+            title="Код получателя"
+            render={(value) => {
+              return value?.clientPrefix + "-" + value?.clientCode;
+            }}
+          />
+          <Table.Column
+            dataIndex="counterparty"
+            title="ФИО получателя"
+            render={(value) => value?.name}
+          />
+          <Table.Column
+            dataIndex="counterparty"
+            render={(value) => (
+              <p
+                style={{
+                  width: "200px",
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                }}
+              >
+                {`${value?.branch?.name}, ${
+                  value?.under_branch?.address || ""
+                }`}
+              </p>
+            )}
+            title="Пункт назначения, Пвз"
+          />
+          <Table.Column dataIndex="weight" title="Вес" />
+          <Table.Column
+            dataIndex="counterparty"
+            title="Тариф клиента"
+            render={(value, record) => {
+              return `${(
+                Number(value?.branch?.tarif || 0) -
+                Number(record?.counterparty?.discount?.discount || 0)
+              ).toFixed(2)}`;
+            }}
+          />
+
+          <Table.Column dataIndex="amount" title="Сумма" />
+          <Table.Column
+            dataIndex="discount"
+            title="Скидка"
+            render={(value, record) => {
+              return `${(
+                Number(value) + Number(record?.discount_custom)
+              ).toFixed(2)}`;
+            }}
+          />
+          <Table.Column dataIndex="status" title="Статус" />
+          <Table.Column
+            dataIndex="employee"
+            title="Сотрудник"
+            render={(value) => {
+              return `${value?.firstName}-${value?.lastName}`;
+            }}
+          />
+          <Table.Column dataIndex="comments" title="Комментарий" />
+        </Table>
+      )}
     </Create>
   );
 };
