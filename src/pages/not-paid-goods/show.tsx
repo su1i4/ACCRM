@@ -11,30 +11,41 @@ import {
 import { useShow } from "@refinedev/core";
 import { Col, Image, Row, Typography, Button, Space, Tooltip } from "antd";
 import { API_URL } from "../../App";
-import { 
-  DownloadOutlined, 
-  WhatsAppOutlined, 
+import {
+  DownloadOutlined,
+  WhatsAppOutlined,
   MessageOutlined,
-  WechatOutlined 
+  WechatOutlined,
 } from "@ant-design/icons";
+import { useParams } from "react-router";
 
 const { Title } = Typography;
 
-export const GoodsShow: React.FC = () => {
-  const { queryResult } = useShow();
-  const { data } = queryResult;
+export const NotPaidGoodsShow: React.FC = () => {
+  const { id } = useParams();
+  const { queryResult } = useShow({
+    resource: "goods-processing",
+    id: Number(id),
+  });
+  const { data, isLoading } = queryResult;
 
-  // Предполагается, что data.data содержит объект записи, а связанные данные (branch, counterparty) подгружаются через joins
   const record = data?.data;
+  const { queryResult: dataBranch } = useShow({
+    resource: "branch",
+    id: record?.counterparty.branch_id,
+  });
+  const { data: branch } = dataBranch;
 
-  const PHOTO_URL = API_URL.replace('api', '') + record?.photo
+  console.log(API_URL + "/" + record?.photo, "this is lox");
 
   // Function to handle photo download
   const handleDownloadPhoto = async () => {
     if (record?.photo) {
       try {
+        const photoUrl = `${API_URL}/${record.photo}`;
 
-        const response = await fetch(PHOTO_URL);
+        // Fetch the image as a blob
+        const response = await fetch(photoUrl);
         const blob = await response.blob();
 
         // Create object URL from blob
@@ -44,18 +55,22 @@ export const GoodsShow: React.FC = () => {
         const link = document.createElement("a");
         link.href = objectUrl;
 
-        const filename = record?.trackCode || "photo.jpg";
+        // Extract filename from path
+        const filename = record.photo.split("/").pop() || "photo.jpg";
         link.download = filename;
 
+        // Append to the document, click and then remove
         document.body.appendChild(link);
         link.click();
 
+        // Clean up
         setTimeout(() => {
           document.body.removeChild(link);
           URL.revokeObjectURL(objectUrl);
         }, 100);
       } catch (error) {
         console.error("Error downloading photo:", error);
+        // You could add notification here if desired
       }
     }
   };
@@ -66,7 +81,7 @@ export const GoodsShow: React.FC = () => {
       const photoUrl = `${API_URL}/${record.photo}`;
       const encodedUrl = encodeURIComponent(photoUrl);
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedUrl}`;
-      window.open(whatsappUrl, '_blank');
+      window.open(whatsappUrl, "_blank");
     }
   };
 
@@ -75,38 +90,28 @@ export const GoodsShow: React.FC = () => {
       const photoUrl = `${API_URL}/${record.photo}`;
       const encodedUrl = encodeURIComponent(photoUrl);
       const telegramUrl = `https://t.me/share/url?url=${encodedUrl}`;
-      window.open(telegramUrl, '_blank');
+      window.open(telegramUrl, "_blank");
     }
   };
 
   const shareViaWeChat = () => {
     if (record?.photo) {
       const photoUrl = `${API_URL}/${record.photo}`;
-      alert('Скопируйте ссылку для отправки в WeChat: ' + photoUrl);
-      navigator.clipboard.writeText(photoUrl)
+      alert("Скопируйте ссылку для отправки в WeChat: " + photoUrl);
+      navigator.clipboard
+        .writeText(photoUrl)
         .then(() => {
-          alert('Ссылка скопирована в буфер обмена');
+          alert("Ссылка скопирована в буфер обмена");
         })
-        .catch(err => {
-          console.error('Не удалось скопировать ссылку: ', err);
+        .catch((err) => {
+          console.error("Не удалось скопировать ссылку: ", err);
         });
     }
   };
 
   // @ts-ignore
   return (
-    <Show
-      headerButtons={({ deleteButtonProps, editButtonProps }) => (
-        <>
-          {editButtonProps && (
-            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
-          )}
-          {deleteButtonProps && (
-            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
-          )}
-        </>
-      )}
-    >
+    <Show headerButtons={() => false}>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Трек-код</Title>
@@ -176,13 +181,17 @@ export const GoodsShow: React.FC = () => {
 
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначение</Title>
-          <TextField value={`${record?.counterparty?.branch?.name}, ${record?.counterparty?.under_branch?.address || ''}`} />
+          <TextField
+            value={`${record?.counterparty?.branch?.name}, ${
+              record?.counterparty?.under_branch?.address || ""
+            }`}
+          />
         </Col>
 
-          <Col xs={24} md={6}>
-            <Title level={5}>Скидка</Title>
-            <TextField value={record?.discount} />
-          </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Скидка</Title>
+          <TextField value={record?.discount} />
+        </Col>
 
         <Col xs={24} md={6}>
           <Title level={5}>Ручная скидка</Title>
@@ -197,7 +206,7 @@ export const GoodsShow: React.FC = () => {
                 style={{ objectFit: "cover" }}
                 width={300}
                 height={300}
-                src={PHOTO_URL}
+                src={API_URL + "/" + record?.photo}
               />
               <Space direction="horizontal">
                 <Button
@@ -207,6 +216,39 @@ export const GoodsShow: React.FC = () => {
                 >
                   Скачать фото
                 </Button>
+                <Tooltip title="Поделиться в WhatsApp">
+                  <Button
+                    type="primary"
+                    icon={<WhatsAppOutlined />}
+                    onClick={shareViaWhatsApp}
+                    style={{
+                      backgroundColor: "#25D366",
+                      borderColor: "#25D366",
+                    }}
+                  />
+                </Tooltip>
+                <Tooltip title="Поделиться в Telegram">
+                  <Button
+                    type="primary"
+                    icon={<MessageOutlined />}
+                    onClick={shareViaTelegram}
+                    style={{
+                      backgroundColor: "#0088cc",
+                      borderColor: "#0088cc",
+                    }}
+                  />
+                </Tooltip>
+                <Tooltip title="Поделиться в WeChat">
+                  <Button
+                    type="primary"
+                    icon={<WechatOutlined />}
+                    onClick={shareViaWeChat}
+                    style={{
+                      backgroundColor: "#07C160",
+                      borderColor: "#07C160",
+                    }}
+                  />
+                </Tooltip>
               </Space>
             </Space>
           ) : (

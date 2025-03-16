@@ -1,30 +1,18 @@
 import { List } from "@refinedev/antd";
 import {
-  Space,
   Table,
-  Input,
   Button,
-  Row,
-  Col,
   DatePicker,
   Dropdown,
-  Form,
   Card,
-  Modal,
 } from "antd";
 import {
-  SearchOutlined,
   CalendarOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  FileAddOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
+import { useCustom, useNavigation } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../../App";
-
-const { RangePicker } = DatePicker;
 
 export const CargoReceivedReport = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -146,19 +134,9 @@ export const CargoReceivedReport = () => {
     </Card>
   );
 
-  const handleOk = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-
-  // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
 
-  const { show, push } = useNavigation();
+  const { show } = useNavigation();
 
   // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
@@ -187,64 +165,10 @@ export const CargoReceivedReport = () => {
   };
 
   return (
-    <List title="Отчет по принятым грузам">
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => push("/goods-processing/create")}
-            />
-            <Dropdown
-              overlay={sortContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={sorterVisible}
-              onOpenChange={(visible) => {
-                setSorterVisible(visible);
-              }}
-            >
-              <Button
-                icon={
-                  sortDirection === "ASC" ? (
-                    <ArrowUpOutlined />
-                  ) : (
-                    <ArrowDownOutlined />
-                  )
-                }
-              ></Button>
-            </Dropdown>
-          </Space>
-        </Col>
-        <Col flex="auto">
-          <Input
-            placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
-            prefix={<SearchOutlined />}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (!value) {
-                setFilters([{ trackCode: { $contL: "" } }], "replace");
-                return;
-              }
-
-              // Fixed: Use consistent filter format
-              setFilters(
-                [
-                  {
-                    $or: [
-                      { trackCode: { $contL: value } },
-                      { "counterparty.clientCode": { $contL: value } },
-                      { "counterparty.name": { $contL: value } },
-                    ],
-                  },
-                ],
-                "replace"
-              );
-            }}
-          />
-        </Col>
-        <Col>
+    <List
+      title="Отчет по принятым грузам"
+      headerButtons={() => {
+        return (
           <Dropdown
             overlay={datePickerContent}
             trigger={["click"]}
@@ -254,25 +178,9 @@ export const CargoReceivedReport = () => {
               Дата
             </Button>
           </Dropdown>
-        </Col>
-      </Row>
-
-      <Modal
-        title="Новая спецификация"
-        open={isModalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Form layout="vertical">
-          <Form.Item label="Треккод">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Тип груза">
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-
+        );
+      }}
+    >
       <Table
         {...tableProps}
         rowKey="id"

@@ -142,7 +142,21 @@ const ReceivingList = () => {
           render={(value) => value?.branch?.name}
         />
         <Table.Column dataIndex="count" title={"Количество посылок"} />
-        <Table.Column dataIndex="weight" title={"Вес"} />
+        <Table.Column
+          dataIndex="weight"
+          title={"Вес"}
+          render={(value) => (
+            <p
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {value} кг
+            </p>
+          )}
+        />
         <Table.Column
           dataIndex="Dimensions"
           title={"Размеры (Д × Ш × В)"}

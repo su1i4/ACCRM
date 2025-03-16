@@ -9,8 +9,6 @@ export const UnderBranchCreate = () => {
   });
   const { formProps, saveButtonProps } = useForm({});
 
-  console.log(branchSelectProps);
-
   return (
     <Create saveButtonProps={saveButtonProps}>
       <Form {...formProps} layout="vertical">

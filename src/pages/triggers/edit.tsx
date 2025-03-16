@@ -1,11 +1,11 @@
-import { Create, useForm } from "@refinedev/antd";
+import { Edit, useForm } from "@refinedev/antd";
 import { Form, Input, Button, Popover } from "antd";
 import TextArea from "antd/lib/input/TextArea";
 import { useState, useEffect } from "react";
-import EmojiPicker from "emoji-picker-react";
-import type { EmojiClickData } from "emoji-picker-react";
+import EmojiPicker from 'emoji-picker-react';
+import type { EmojiClickData } from 'emoji-picker-react';
 
-export const NotificationsCreate = () => {
+export const TriggersEdit = () => {
   const { formProps, saveButtonProps, form } = useForm();
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
   const [text, setText] = useState("");
@@ -13,12 +13,12 @@ export const NotificationsCreate = () => {
   // Синхронизация текста с формой
   useEffect(() => {
     form.setFieldsValue({
-      notification: text,
+      description: text
     });
   }, [text, form]);
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
-    setText((prev) => prev + emojiData?.emoji);
+    setText(prev => prev + emojiData?.emoji);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -26,7 +26,7 @@ export const NotificationsCreate = () => {
   };
 
   return (
-    <Create saveButtonProps={saveButtonProps}>
+    <Edit saveButtonProps={saveButtonProps}>
       <Form {...formProps}>
         <Form.Item
           rules={[
@@ -34,13 +34,24 @@ export const NotificationsCreate = () => {
               required: true,
             },
           ]}
-          label="Сообщение"
-          name="notification"
+          label="Триггер"
+          name="name"
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          rules={[
+            {
+              required: true,
+            },
+          ]}
+          label="Описание"
+          name="description"
         >
           <TextArea
             value={text}
             onChange={handleTextChange}
-            placeholder="Введите сообщение"
+            placeholder="Введите описание"
           />
           <Popover
             content={<EmojiPicker onEmojiClick={handleEmojiClick} />}
@@ -48,10 +59,12 @@ export const NotificationsCreate = () => {
             visible={isEmojiPickerVisible}
             onVisibleChange={setIsEmojiPickerVisible}
           >
-            <Button type="link">😀</Button>
+            <Button type="link">
+              😀
+            </Button>
           </Popover>
         </Form.Item>
       </Form>
-    </Create>
+    </Edit>
   );
 };

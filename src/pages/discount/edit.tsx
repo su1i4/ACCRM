@@ -25,6 +25,9 @@ export const DiscountEdit: React.FC = () => {
         },
       ],
     },
+    pagination: {
+      mode: 'off'
+    }
   });
 
   return (

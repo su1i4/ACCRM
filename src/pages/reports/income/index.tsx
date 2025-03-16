@@ -119,7 +119,6 @@ export const IncomeReport = () => {
 
   const exportToExcel = () => {
     // Логика экспорта в Excel
-    console.log("Экспорт в Excel");
   };
 
   const printReport = () => {

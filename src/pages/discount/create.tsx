@@ -24,6 +24,9 @@ export const DiscountCreate: React.FC = () => {
         },
       ],
     },
+    pagination: {
+      mode: 'off'
+    }
   });
 
   return (

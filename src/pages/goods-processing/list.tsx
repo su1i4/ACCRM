@@ -23,16 +23,13 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import {
-  useCustom,
-  useNavigation,
-  useUpdate,
-} from "@refinedev/core";
+import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
-
+import { useSearchParams } from "react-router";
 
 export const GoogsProcessingList = () => {
+  const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
@@ -80,6 +77,16 @@ export const GoogsProcessingList = () => {
 
   // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
     refetch();
   }, [searchFilters, sortDirection, currentPage, pageSize]);
 
@@ -191,27 +198,27 @@ export const GoogsProcessingList = () => {
     }
   };
 
-  console.log(selectedRowKeys)
-
   const handleCheckboxChange = (record: any) => {
     // Если запись уже visible: true, не позволяем её изменить
     if (record.visible) return;
-    
+
     const newSelectedKeys = selectedRowKeys.includes(record.id)
       ? selectedRowKeys.filter((id) => id !== record.id)
       : [...selectedRowKeys, record.id];
     setSelectedRowKeys(newSelectedKeys);
-    
+
     // Обновляем mainChecked в зависимости от состояния всех чекбоксов
     const allFalseItems = dataSource.filter((item: any) => !item.visible);
-    const allFalseSelected = allFalseItems.every((item: any) => 
+    const allFalseSelected = allFalseItems.every((item: any) =>
       newSelectedKeys.includes(item.id)
     );
     setMainChecked(allFalseSelected);
   };
 
   const handleSaveChanges = async () => {
-    const filteredItems = dataSource.filter((item: any) => !item.visible && selectedRowKeys.includes(item.id));
+    const filteredItems = dataSource.filter(
+      (item: any) => !item.visible && selectedRowKeys.includes(item.id)
+    );
     const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
       // Если запись уже visible: true, оставляем её true
@@ -247,6 +254,9 @@ export const GoogsProcessingList = () => {
 
   // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
@@ -298,8 +308,7 @@ export const GoogsProcessingList = () => {
                     <ArrowDownOutlined />
                   )
                 }
-              >
-              </Button>
+              ></Button>
             </Dropdown>
             <Dropdown
               overlay={checkboxContent}
@@ -387,7 +396,7 @@ export const GoogsProcessingList = () => {
               return <EyeOutlined />;
             } else {
               return (
-                <Checkbox 
+                <Checkbox
                   checked={selectedRowKeys.includes(record.id)}
                   onChange={() => handleCheckboxChange(record)}
                 />
@@ -418,23 +427,49 @@ export const GoogsProcessingList = () => {
         />
         <Table.Column
           dataIndex="counterparty"
-          render={(value) =>
-            <p style={{width: "200px", textOverflow: "ellipsis", overflow: "hidden"}}>
+          render={(value) => (
+            <p
+              style={{
+                width: "200px",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
               {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
             </p>
-          }
+          )}
           title="Пункт назначения, Пвз"
-
         />
-        <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="counterparty" title="Тариф клиента" render={(value, record) => {
-            return `${(Number(value?.branch?.tarif || 0) - Number(record?.counterparty?.discount?.discount || 0)).toFixed(2)}`;
-          }}/>
-        
-        <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
-            return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
-          }} />
+        <Table.Column
+          dataIndex="weight"
+          title="Вес"
+          render={(value) => value + " кг"}
+        />
+        <Table.Column
+          dataIndex="counterparty"
+          title="Тариф клиента"
+          render={(value, record) => {
+            return `${(
+              Number(value?.branch?.tarif || 0) -
+              Number(record?.counterparty?.discount?.discount || 0)
+            ).toFixed(2)}`;
+          }}
+        />
+
+        <Table.Column
+          dataIndex="amount"
+          title="Сумма"
+          render={(value) => value + " $"}
+        />
+        <Table.Column
+          dataIndex="discount"
+          title="Скидка"
+          render={(value, record) => {
+            return `${(Number(value) + Number(record?.discount_custom)).toFixed(
+              2
+            )}`;
+          }}
+        />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"

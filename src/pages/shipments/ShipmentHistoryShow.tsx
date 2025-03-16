@@ -19,8 +19,6 @@ export const ShipmentHistoryShow = () => {
   const { data, isLoading } = queryResult;
   const record = data?.data;
 
-  console.log(Number(id));
-
   const { tableProps } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,

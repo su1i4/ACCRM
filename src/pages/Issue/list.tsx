@@ -1,10 +1,14 @@
-import { List, DeleteButton, ShowButton } from "@refinedev/antd";
+import { useRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import { List } from "@refinedev/antd";
 import {
   BaseRecord,
   useNavigation,
   useUpdateMany,
   useCustom,
   useShow,
+  useMany,
+  useDataProvider,
 } from "@refinedev/core";
 import {
   Space,
@@ -20,6 +24,7 @@ import {
   Flex,
   Dropdown,
   Typography,
+  Modal,
 } from "antd";
 import {
   SearchOutlined,
@@ -30,8 +35,13 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { API_URL } from "../../App";
 import type { Key } from "react";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface Filter {
   status?: { $eq: string };
@@ -47,8 +57,21 @@ interface Filter {
 }
 
 export const IssueProcessingList = () => {
-  const firstName = localStorage.getItem("firstName");
-  const lastName = localStorage.getItem("lastName");
+  const [printData, setPrintData] = useState([]);
+  const [printOpen, setPrintOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    //@ts-ignore
+    contentRef,
+    documentTitle: `Выдача накладная ${dayjs().format("DD.MM.YYYY HH:MM")}`,
+    onPrintError: (error) => console.error("Print Error:", error),
+  });
+
+  const handleClose = () => {
+    setPrintOpen(false);
+    setPrintData([]);
+  };
+
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<Filter[]>([
@@ -77,10 +100,46 @@ export const IssueProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
+
+  const filteredByIds = async (ids: number[]) => {
+    const token = localStorage.getItem("access_token");
+
+    const filter = {
+      $and: [{ id: { $in: ids } }],
+    };
+
+    const queryString = new URLSearchParams({
+      sort: "id,DESC",
+      s: JSON.stringify(filter),
+    }).toString();
+
+    const response = await fetch(`${API_URL}/goods-processing?${queryString}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const result = await response.json();
+    console.log(result, "result");
+    return result;
+  };
+
   const { mutate: updateManyGoods } = useUpdateMany({
     resource: "goods-processing",
     mutationOptions: {
-      onSuccess: (data, variables, context) => {
+      onSuccess: async (data: any, variables, context) => {
+        const ids = data?.data.map((item: any) => item.id);
+        if (ids?.length) {
+          try {
+            const result = await filteredByIds(ids);
+            setPrintData(result);
+            setPrintOpen(true);
+          } catch (error) {
+            console.error("Error fetching goods-processing data:", error);
+          }
+        }
         refetch();
         setSelectedRowKeys([]);
       },
@@ -217,10 +276,100 @@ export const IssueProcessingList = () => {
     0
   );
 
+  const totalAmountPrint = printData.reduce(
+    (acc, row: any) => acc + Number(row?.amount),
+    0
+  );
+
+  const totalWeightPrint = printData.reduce(
+    (acc, row: any) => acc + Number(row?.weight),
+    0
+  );
+
+  const columns = [
+    {
+      title: "Дата выдачи",
+      dataIndex: "tracking_status",
+      key: "tracking_status",
+      render: (value: any) => {
+        const new_value = value[3]?.createdAt;
+        return dayjs(new_value).utc().format("DD.MM.YYYY HH:mm");
+      },
+    },
+    {
+      title: "Код клиента",
+      dataIndex: "render",
+      key: "render",
+      render: (value: any, record: any) =>
+        `${record?.counterparty?.clientPrefix || ""}-${
+          record?.counterparty?.clientCode || ""
+        }`,
+    },
+    {
+      title: "Трек-код",
+      dataIndex: "trackCode",
+      key: "trackCode",
+    },
+  ];
 
   return (
     <List>
       {/* Форма фильтрации сверху */}
+      <Modal
+        open={printOpen}
+        onCancel={handleClose}
+        onClose={handleClose}
+        onOk={() => handlePrint()}
+        okText="Распечатать"
+        cancelText="Отменить"
+        // style={{ width: 800, maxWidth: 800 }}
+      >
+        <div ref={contentRef} style={{ padding: 10 }}>
+          <Flex justify="center" style={{ width: "100%" }}>
+            <img
+              style={{
+                width: "70px",
+              }}
+              src="../../public/alfa-china.png"
+            />
+          </Flex>
+          <Typography.Title level={5}>Выдачи</Typography.Title>{" "}
+          <Table
+            columns={columns}
+            dataSource={printData || []}
+            pagination={false}
+            rowKey="id"
+          />
+          <div
+            style={{
+              border: "1px dashed gainsboro",
+              padding: "4px 10px",
+              borderRadius: 5,
+              marginTop: 10,
+              backgroundColor: "#f9f9f9",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              flexWrap: "wrap",
+              width: "100%",
+              height: 32,
+              boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Typography.Text>
+              Общая сумма: <strong>{totalAmountPrint} $</strong>
+            </Typography.Text>{" "}
+            |
+            <Typography.Text>
+              Общий вес: <strong>{totalWeightPrint} кг</strong>
+            </Typography.Text>
+            |
+            <Typography.Text>
+              Общее кол-во: <strong>{printData.length} шт</strong>
+            </Typography.Text>
+          </div>
+        </div>
+      </Modal>
       <Row style={{ marginBottom: 16 }}>
         <Col span={24}>
           <Form layout="inline" onFinish={handleFilter}>
@@ -274,11 +423,6 @@ export const IssueProcessingList = () => {
                 </Button>
               </Dropdown>
             </Form.Item>
-            {/* <Form.Item>
-              <Button type="primary" htmlType="submit">
-                Применить
-              </Button>
-            </Form.Item> */}
           </Form>
         </Col>
       </Row>
@@ -313,11 +457,15 @@ export const IssueProcessingList = () => {
           }}
         >
           <Typography.Text>
-            Общая сумма: <strong>{totalAmount}</strong>
+            Общая сумма: <strong>{totalAmount} $</strong>
           </Typography.Text>{" "}
           |
           <Typography.Text>
             Общий вес: <strong>{totalWeight} кг</strong>
+          </Typography.Text>
+          |
+          <Typography.Text>
+            Общее кол-во: <strong>{selectedRowKeys.length} шт</strong>
           </Typography.Text>
         </div>
       </Flex>
@@ -377,8 +525,16 @@ export const IssueProcessingList = () => {
           )}
           title="Пункт назначения, Пвз"
         />
-        <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="amount" title="Сумма" />
+        <Table.Column
+          dataIndex="weight"
+          title="Вес"
+          render={(value) => value + " кг"}
+        />
+        <Table.Column
+          dataIndex="amount"
+          title="Сумма"
+          render={(value) => value + " $"}
+        />
         {/* <Table.Column dataIndex="paymentMethod" title="Способ оплаты" /> */}
         {/* <Table.Column
           dataIndex="employee"
@@ -398,11 +554,7 @@ export const IssueProcessingList = () => {
           title="Фото"
           render={(photo) =>
             photo ? (
-              <Image
-                width={30}
-                height={30}
-                src={API_URL + "/" + photo}
-              />
+              <Image width={30} height={30} src={API_URL + "/" + photo} />
             ) : null
           }
         />

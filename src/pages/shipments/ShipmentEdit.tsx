@@ -293,6 +293,13 @@ const ShipmentEdit = () => {
             </Form.Item>
             <Form.Item
               style={{ width: 250 }}
+              label="Номер фуры"
+              name="truck_number"
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              style={{ width: 250 }}
               name="branch_id"
               label="Пункт назначения"
               rules={[{ required: true, message: "Введите Пунк назначения" }]}

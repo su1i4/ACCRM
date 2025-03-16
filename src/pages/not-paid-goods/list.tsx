@@ -12,14 +12,12 @@ import {
   Card,
   Modal,
   Checkbox,
-  Typography,
 } from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  FileAddOutlined,
   SettingOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
@@ -29,18 +27,22 @@ import dayjs from "dayjs";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
 
-export const AcceptedGoodsList = () => {
+export const NotPaidGoodsList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    { trackCode: { $contL: "" } },
+  ]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters, status: { $eq: "В складе" } }),
+      s: JSON.stringify({
+        $and: [...searchFilters, { operation_id: { $eq: null } }],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -60,6 +62,7 @@ export const AcceptedGoodsList = () => {
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // Fixed: Update filters function that properly formats filters
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -69,8 +72,11 @@ export const AcceptedGoodsList = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
+
+    // We'll refetch in useEffect after state updates
   };
 
+  // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
       searchparams.set("page", String(currentPage));
@@ -91,6 +97,7 @@ export const AcceptedGoodsList = () => {
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
+          // Fixed: Use consistent filter format
           setFilters(
             [
               {
@@ -282,11 +289,6 @@ export const AcceptedGoodsList = () => {
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => push("/goods-processing/create")}
-            />
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -356,12 +358,6 @@ export const AcceptedGoodsList = () => {
             </Button>
           </Dropdown>
         </Col>
-        <Col>
-          <Typography.Text>
-            Общее кол-во:{" "}
-            <strong>{tableProps?.pagination?.total || 0} шт</strong>
-          </Typography.Text>
-        </Col>
       </Row>
 
       <Modal
@@ -385,12 +381,12 @@ export const AcceptedGoodsList = () => {
         rowKey="id"
         scroll={{ x: "max-content" }}
         onRow={(record) => ({
-          onDoubleClick: () => {
-            show("goods-processing", record.id as number);
+          onClick: () => {
+            push("/not-paid-goods/show/" + record.id);
           },
         })}
       >
-        <Table.Column
+        {/* <Table.Column
           dataIndex="visible"
           title={<Checkbox checked={mainChecked} onChange={clickAll} />}
           render={(value, record) => {
@@ -398,14 +394,14 @@ export const AcceptedGoodsList = () => {
               return <EyeOutlined />;
             } else {
               return (
-                <Checkbox
+                <Checkbox 
                   checked={selectedRowKeys.includes(record.id)}
                   onChange={() => handleCheckboxChange(record)}
                 />
               );
             }
           }}
-        />
+        /> */}
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
@@ -437,10 +433,10 @@ export const AcceptedGoodsList = () => {
                 overflow: "hidden",
               }}
             >
-              {`${value?.branch?.name}`}
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
             </p>
           )}
-          title="Пункт назначения"
+          title="Пункт назначения, Пвз"
         />
         <Table.Column
           dataIndex="weight"
@@ -463,9 +459,15 @@ export const AcceptedGoodsList = () => {
           title="Сумма"
           render={(value) => value + " $"}
         />
-        {/* <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
-            return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
-          }} /> */}
+        <Table.Column
+          dataIndex="discount"
+          title="Скидка"
+          render={(value, record) => {
+            return `${(Number(value) + Number(record?.discount_custom)).toFixed(
+              2
+            )}`;
+          }}
+        />
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="employee"

@@ -35,8 +35,6 @@ export const ShipmentHistory = () => {
   const dataSource = data?.data?.data || [];
   const total = data?.data?.total || 0;
 
-  console.log(data);
-
   const tableProps = {
     dataSource,
     loading: isLoading,

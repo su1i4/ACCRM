@@ -309,7 +309,6 @@ export const MyCreateModal: React.FC<{
               </Form.Item>
             </Form.Item>
           </Col>
-          <Col span={24}></Col>
         </Row>
       </Form>
     </Modal>

@@ -222,8 +222,6 @@ const ShipmentCreate = () => {
   ];
 
   //@ts-ignore
-  console.log(formProps.form?.getFieldsValue()?.branch_id);
-
   return (
     //@ts-ignore
     <Create saveButtonProps={saveButtonProps}>
@@ -254,6 +252,13 @@ const ShipmentCreate = () => {
               label="Код коробки"
               name="boxCode"
               rules={[{ required: true }]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              style={{ width: 250 }}
+              label="Номер фуры"
+              name="truck_number"
             >
               <Input />
             </Form.Item>

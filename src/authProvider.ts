@@ -24,7 +24,9 @@ const authProvider: AuthProvider = {
             }
 
             const data = await response.json();
+            console.log(data, 'data')
             localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token)
             localStorage.setItem("email", data.email);
             localStorage.setItem("role", data.role);
             localStorage.setItem("firstName", data.firstName);
@@ -48,6 +50,7 @@ const authProvider: AuthProvider = {
 
     logout: async () => {
         localStorage.removeItem("access_token");
+        localStorage.removeItem('refresh_token')
         localStorage.removeItem("email");
         localStorage.removeItem("role");
         localStorage.removeItem("firstName");

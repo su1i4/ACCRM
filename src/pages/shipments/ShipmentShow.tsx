@@ -19,8 +19,6 @@ const ShipmentShow = () => {
   const { id } = useParams();
   const record = data?.data;
 
-  console.log(Number(id));
-
   const { tableProps } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
@@ -68,10 +66,7 @@ const ShipmentShow = () => {
 
   return (
     <Show
-      headerButtons={({
-        deleteButtonProps,
-        editButtonProps,
-      }) => (
+      headerButtons={({ deleteButtonProps, editButtonProps }) => (
         <>
           {editButtonProps && (
             <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
@@ -154,6 +149,10 @@ const ShipmentShow = () => {
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
           <TextField value={record?.status} />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Статус</Title>
+          <TextField value={record?.truck_number} />
         </Col>
       </Row>
 

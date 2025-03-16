@@ -1,4 +1,8 @@
-import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { CreateButton, List, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Flex, Input, Table, Typography } from "antd";
@@ -34,8 +38,6 @@ const ShipmentList = () => {
 
   const dataSource = data?.data?.data || [];
   const total = data?.data?.total || 0;
-
-  console.log(data);
 
   const tableProps = {
     dataSource,
@@ -165,13 +167,28 @@ const ShipmentList = () => {
         />
         <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
+        <Table.Column dataIndex="truck_number" title={"Номер фуры"} />
         <Table.Column
           dataIndex="employee"
           title={"Место погрузки"}
           render={(value) => value?.branch?.name}
         />
         <Table.Column dataIndex="count" title={"Количество посылок"} />
-        <Table.Column dataIndex="weight" title={"Вес"} />
+        <Table.Column
+          dataIndex="weight"
+          title={"Вес"}
+          render={(value) => (
+            <p
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {value} кг
+            </p>
+          )}
+        />
         <Table.Column
           dataIndex="Dimensions"
           title={"Размеры (Д × Ш × В)"}

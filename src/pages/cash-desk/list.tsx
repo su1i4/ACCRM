@@ -13,7 +13,7 @@ import {
   Card,
   Image,
 } from "antd";
-import { useCustom } from "@refinedev/core";
+import { useCustom, useNavigation } from "@refinedev/core";
 import { MyCreateModal } from "./modal/create-modal";
 import {
   FileAddOutlined,
@@ -177,10 +177,12 @@ export const CashDeskList: React.FC = () => {
     }
   };
 
+  const { push } = useNavigation();
+
   // @ts-ignore
   return (
     <List headerButtons={() => null}>
-      <MyCreateModal open={open} onClose={() => setOpen(false)} />
+      {/* <MyCreateModal open={open} onClose={() => setOpen(false)} /> */}
 
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
@@ -188,7 +190,7 @@ export const CashDeskList: React.FC = () => {
             <Button
               icon={<FileAddOutlined />}
               style={{}}
-              onClick={() => setOpen(true)}
+              onClick={() => push("create")}
             />
             <Dropdown
               overlay={sortContent}
@@ -326,9 +328,9 @@ export const CashDeskList: React.FC = () => {
                   }}
                 />
                 {check_file && (
-                  <Button 
-                    type="link" 
-                    icon={<DownloadOutlined />} 
+                  <Button
+                    type="link"
+                    icon={<DownloadOutlined />}
                     onClick={() => handleDownloadPhoto(check_file)}
                     size="small"
                   >

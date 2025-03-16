@@ -20,7 +20,7 @@ import routerBindings, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 
-import { App as AntdApp, Flex } from "antd";
+import { App as AntdApp } from "antd";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
 import { Header } from "./components/header";
 import { CustomSider } from "./components/sider";
@@ -31,10 +31,7 @@ import {
   GoogsProcessingList,
   GoodsEdit,
 } from "./pages/goods-processing";
-import {
-  AcceptedGoodsList,
-  AcceptedGoodsShow,
-} from "./pages/accepted-goods";
+import { AcceptedGoodsList, AcceptedGoodsShow } from "./pages/accepted-goods";
 import {
   BranchCreate,
   BranchEdit,
@@ -53,18 +50,11 @@ import ReceivingList from "./pages/receiving/ReceivingList";
 import ReceivingCreate from "./pages/receiving/ReceivingCreate";
 import ReceivingShow from "./pages/receiving/ReceivingShow";
 import ReceivingEdit from "./pages/receiving/ReceivingEdit";
-import {
-  ShoppingCartOutlined,
-  WalletOutlined,
-  UsergroupAddOutlined,
-  SettingOutlined,
-  RobotOutlined,
-} from "@ant-design/icons";
 import { i18nProvider_ru } from "./i18n/ru";
 import { IssueProcessingList } from "./pages/Issue";
 import { CashBackList } from "./pages/cash-back";
 import { BankCreate, BankList, BankShow } from "./pages/bank";
-import { CashDeskList } from "./pages/cash-desk";
+import { CashDeskCreate, CashDeskList } from "./pages/cash-desk";
 import { CashDeskOutcomeList } from "./pages/cash-desk/outcome";
 import { RemainingStockProcessingList } from "./pages/remaining-stock";
 import { ExeptionCodeCreate, ExeptionCodeList } from "./pages/exception-code";
@@ -88,14 +78,8 @@ import {
   BranchesReport,
   CashOperationsReport,
   IncomingFundsReport,
-  ExpenseFinanceReport
+  ExpenseFinanceReport,
 } from "./pages/reports";
-import {
-  NotificationsCreate,
-  NotificationsEdit,
-  NotificationsList,
-  NotificationsShow,
-} from "./pages/notifications";
 import {
   ChatbotCreate,
   ChatbotEdit,
@@ -120,6 +104,13 @@ import { ShipmentHistory } from "./pages/shipments/ShipmentHistory";
 import { ReceivingHistory } from "./pages/receiving/ReceivingHistory";
 import { ReceivingHistoryShow } from "./pages/receiving/ReceivingHistoryShow";
 import { ShipmentHistoryShow } from "./pages/shipments/ShipmentHistoryShow";
+import { NotPaidGoodsList } from "./pages/not-paid-goods/list";
+import { NotPaidGoodsShow } from "./pages/not-paid-goods/show";
+import { routes } from "./lib/routes";
+import { TriggersEdit } from "./pages/triggers/edit";
+import { TriggersShow } from "./pages/triggers/show";
+import { NotificationsList } from "./pages/notifications/list";
+import { NotificationsCreate } from "./pages/notifications/create";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -131,7 +122,59 @@ function App() {
       }
       return config;
     },
-    (error) => {
+    (error) => Promise.reject(error)
+  );
+
+  // Функция обновления токена
+  const refreshToken = async () => {
+    try {
+      const refresh_token = localStorage.getItem("refresh_token");
+      if (!refresh_token) throw new Error("No refresh token available");
+
+      const response = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refresh_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh token");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("access_token", data.accessToken);
+      localStorage.setItem("refresh_token", data.refreshToken);
+      return data.accessToken;
+    } catch (error) {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.href = "/login";
+      return null;
+    }
+  };
+
+  // Перехватываем 401 и обновляем токен
+  axiosInstance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response && error.response.status === 401) {
+        const originalRequest = error.config;
+        if (!originalRequest._retry) {
+          originalRequest._retry = true;
+          const newAccessToken = await refreshToken();
+          if (newAccessToken) {
+            axiosInstance.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${newAccessToken}`;
+            originalRequest.headers[
+              "Authorization"
+            ] = `Bearer ${newAccessToken}`;
+            return axiosInstance(originalRequest);
+          }
+        }
+      }
       return Promise.reject(error);
     }
   );
@@ -161,353 +204,7 @@ function App() {
                   return { can: true };
                 },
               }}
-              resources={[
-                {
-                  name: "Продукты",
-                  icon: <ShoppingCartOutlined />,
-                  meta: {
-                    label: "Продукты",
-                  },
-                },
-                {
-                  name: "Контрагенты",
-                  icon: <UsergroupAddOutlined />,
-                  meta: {
-                    label: "Контрагенты",
-                  },
-                },
-                {
-                  name: "Касса",
-                  icon: <WalletOutlined />,
-                  meta: {
-                    label: "Касса",
-                  },
-                },
-                {
-                  name: "Автоматизация",
-                  icon: <RobotOutlined />,
-                  meta: {
-                    label: "Автоматизация",
-                  },
-                },
-                {
-                  name: "Настройки",
-                  icon: <SettingOutlined />,
-                  meta: {
-                    label: "Настройки",
-                  },
-                },
-                {
-                  name: "accepted-goods",
-                  list: "/accepted-goods",
-                  show: "/accepted-goods/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Принятые товары",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "shipments",
-                  list: "/shipments",
-                  create: "/shipments/create",
-                  edit: "/shipments/edit/:id",
-                  show: "/shipments/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Отправка",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "shipment",
-                  list: "/shipments/show/:id/adding",
-                  meta: {
-                    parent: "shipments",
-                    label: "Подбор товаров",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "shipment-history",
-                  list: "/shipments/history",
-                  meta: {
-                    parent: "shipments",
-                    label: "История отправлений",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "shipment-history-show",
-                  list: "/shipments/history/show/:id",
-                  meta: {
-                    parent: "shipment-history",
-                    label: "Детальная информация",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "receiving",
-                  list: "/receiving",
-                  create: "/receiving/create",
-                  edit: "/receiving/edit/:id",
-                  show: "/receiving/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Получение",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "received",
-                  list: "/receiving/show/:id/received",
-                  meta: {
-                    parent: "receiving",
-                    label: "Выгруженные товары",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "receiving-history",
-                  list: "/receiving/history",
-                  meta: {
-                    parent: "receiving",
-                    label: "История получений",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "receiving-history-show",
-                  list: "/receiving/history/show/:id",
-                  meta: {
-                    parent: "receiving-history",
-                    label: "Детальная информация",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "issue",
-                  list: "/issue",
-                  show: "/issue/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Выдача",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "issued",
-                  list: "/issue/received",
-                  meta: {
-                    parent: "issue",
-                    label: "Выданные посылки",
-                    hide: true,
-                  },
-                },
-                {
-                  name: "remaining-stock",
-                  list: "/remaining-stock",
-                  show: "/remaining-stock/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Остатки на складе",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "goods-processing",
-                  list: "/goods-processing",
-                  create: "/goods-processing/create",
-                  edit: "/goods-processing/edit/:id",
-                  show: "/goods-processing/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Спецификация",
-                    parent: "Продукты",
-                  },
-                },
-                {
-                  name: "branch",
-                  list: "/branch",
-                  create: "/branch/create",
-                  edit: "/branch/edit/:id",
-                  show: "/branch/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Филиал",
-                    parent: "Настройки",
-                  },
-                },
-                {
-                  name: "under-branch",
-                  list: "/under-branch",
-                  create: "/under-branch/create",
-                  edit: "/under-branch/edit/:id",
-                  show: "/under-branch/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Пвз",
-                    parent: "Настройки",
-                  },
-                },
-                {
-                  name: "users",
-                  list: "/users",
-                  create: "/users/create",
-                  edit: "/users/edit/:id",
-                  show: "/users/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Пользователи",
-                    parent: "Настройки",
-                  },
-                },
-                {
-                  name: "counterparty",
-                  list: "/counterparty",
-                  create: "/counterparty/create",
-                  edit: "/counterparty/edit/:id",
-                  show: "/counterparty/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Контрагент",
-                    parent: "Контрагенты",
-                  },
-                },
-                {
-                  name: "cash-back",
-                  list: "/cash-back",
-                  create: "/cash-back/create",
-                  edit: "/cash-back/edit/:id",
-                  show: "/cash-back/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Кешбек",
-                    parent: "Контрагенты",
-                  },
-                },
-
-                {
-                  name: "discount",
-                  list: "/discount",
-                  create: "/discount/create",
-                  edit: "/discount/edit/:id",
-                  show: "/discount/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Скидки",
-                    parent: "Контрагенты",
-                  },
-                },
-                {
-                  name: "bank",
-                  list: "/bank",
-                  create: "/bank/create",
-                  edit: "/bank/edit/:id",
-                  show: "/bank/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Банк",
-                    parent: "Касса",
-                  },
-                },
-
-                {
-                  name: "income",
-                  list: "/income",
-                  create: "/income/create",
-                  edit: "/income/edit/:id",
-                  show: "/income/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Приход",
-                    parent: "Касса",
-                  },
-                },
-
-                {
-                  name: "outcome",
-                  list: "/outcome",
-                  create: "/bank/outcome",
-                  edit: "/bank/outcome/:id",
-                  show: "/bank/outcome/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Расход",
-                    parent: "Касса",
-                  },
-                },
-                {
-                  name: "currency",
-                  list: "/currency",
-                  create: "/currency/create",
-                  edit: "/currency/edit/:id",
-                  show: "/currency/show/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Валюта",
-                    parent: "Касса",
-                  },
-                },
-                {
-                  name: "exception-code",
-                  list: "/exception-code",
-                  create: "/exception-code/create",
-                  meta: {
-                    canDelete: true,
-                    label: "Исключение",
-                    parent: "Настройки",
-                  },
-                },
-                {
-                  name: "reports",
-                  list: "/reports",
-                  create: "/reports/create",
-                  edit: "/reports/:id",
-                  show: "/reports/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Отчеты",
-                    parent: "Автоматизация",
-                  },
-                },
-                {
-                  name: "notifications",
-                  list: "/notifications",
-                  create: "/notifications/create",
-                  edit: "/notifications/:id",
-                  show: "/notifications/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Уведомления",
-                    parent: "Автоматизация",
-                  },
-                },
-                {
-                  name: "chatbot-history",
-                  list: "/chatbot-history",
-                  create: "/chatbot-history/create",
-                  edit: "/chatbot-history/:id",
-                  show: "/chatbot-history/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "История чат-бота",
-                    parent: "Автоматизация",
-                  },
-                },
-                {
-                  name: "triggers",
-                  list: "/triggers",
-                  create: "/triggers/create",
-                  edit: "/triggers/:id",
-                  show: "/triggers/:id",
-                  meta: {
-                    canDelete: true,
-                    label: "Триггеры",
-                    parent: "Автоматизация",
-                  },
-                },
-              ]}
+              resources={routes}
               options={{
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
@@ -522,7 +219,6 @@ function App() {
                       fallback={<CatchAllNavigate to="/login" />}
                     >
                       <ThemedLayoutV2
-                      
                         Header={() => <Header sticky />}
                         Sider={(props) => <CustomSider {...props} />}
                       >
@@ -546,6 +242,11 @@ function App() {
                   <Route path="/accepted-goods">
                     <Route index element={<AcceptedGoodsList />} />
                     <Route path="show/:id" element={<AcceptedGoodsShow />} />
+                  </Route>
+
+                  <Route path="/not-paid-goods">
+                    <Route index element={<NotPaidGoodsList />} />
+                    <Route path="show/:id" element={<NotPaidGoodsShow />} />
                   </Route>
 
                   <Route path="/issue">
@@ -583,14 +284,8 @@ function App() {
                     <Route path="create" element={<Create />} />
                     <Route path="show/:id" element={<Show />} />
                     <Route path="edit/:id" element={<Edit />} />
-                    <Route
-                      path="show/:id/adding"
-                      element={<ShipmentAdd />}
-                    />
-                    <Route
-                      path="history"
-                      element={<ShipmentHistory />}
-                    />
+                    <Route path="show/:id/adding" element={<ShipmentAdd />} />
+                    <Route path="history" element={<ShipmentHistory />} />
                     <Route
                       path="history/show/:id"
                       element={<ShipmentHistoryShow />}
@@ -614,7 +309,10 @@ function App() {
                     />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                     <Route path="history" element={<ReceivingHistory />} />
-                    <Route path="history/show/:id" element={<ReceivingHistoryShow />} />
+                    <Route
+                      path="history/show/:id"
+                      element={<ReceivingHistoryShow />}
+                    />
                   </Route>
 
                   <Route path="/cash-back">
@@ -636,25 +334,35 @@ function App() {
                     <Route path="create" element={<ReportCreate />} />
                     <Route path="show/:id" element={<ReportShow />} />
                     <Route path="edit/:id" element={<ReportEdit />} />
-                    
+
                     {/* Маршруты для отдельных отчетов */}
-                    <Route path="cargo-received" element={<CargoReceivedReport />} />
+                    <Route
+                      path="cargo-received"
+                      element={<CargoReceivedReport />}
+                    />
                     <Route path="cash-book" element={<CashBookReport />} />
                     <Route path="cargo-types" element={<CargoTypesReport />} />
                     <Route path="income" element={<IncomeReport />} />
                     <Route path="expense" element={<ExpenseReport />} />
                     <Route path="employees" element={<EmployeesReport />} />
                     <Route path="branches" element={<BranchesReport />} />
-                    <Route path="cash-operations" element={<CashOperationsReport />} />
-                    <Route path="incoming-funds" element={<IncomingFundsReport />} />
-                    <Route path="expense-finance" element={<ExpenseFinanceReport />} />
+                    <Route
+                      path="cash-operations"
+                      element={<CashOperationsReport />}
+                    />
+                    <Route
+                      path="incoming-funds"
+                      element={<IncomingFundsReport />}
+                    />
+                    <Route
+                      path="expense-finance"
+                      element={<ExpenseFinanceReport />}
+                    />
                   </Route>
 
-                  <Route path="/notifications">
+                  <Route path="/notification">
                     <Route index element={<NotificationsList />} />
                     <Route path="create" element={<NotificationsCreate />} />
-                    <Route path="show/:id" element={<NotificationsShow />} />
-                    <Route path="edit/:id" element={<NotificationsEdit />} />
                   </Route>
 
                   <Route path="/chatbot-history">
@@ -664,10 +372,11 @@ function App() {
                     <Route path="edit/:id" element={<ChatbotEdit />} />
                   </Route>
 
-                  <Route path="/triggers">
+                  <Route path="/answer-ready">
                     <Route index element={<TriggersList />} />
                     <Route path="create" element={<TriggersCreate />} />
-                    
+                    <Route path="edit/:id" element={<TriggersEdit />} />
+                    <Route path="show/:id" element={<TriggersShow />} />
                   </Route>
 
                   <Route path="/bank">
@@ -679,14 +388,14 @@ function App() {
 
                   <Route path="/income">
                     <Route index element={<CashDeskList />} />
-                    {/*<Route path="create" element={<BankCreate />} />*/}
+                    <Route path="create" element={<CashDeskCreate />} />
                     {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
                     {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
                   </Route>
 
                   <Route path="/outcome">
                     <Route index element={<CashDeskOutcomeList />} />
-                    {/*<Route path="create" element={<BankCreate />} />*/}
+                    <Route path="create" element={<CashDeskCreate />} />
                     {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
                     {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
                   </Route>
