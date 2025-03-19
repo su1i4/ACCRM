@@ -1,9 +1,6 @@
+import { useState, useEffect } from "react";
 import {
   List,
-  CreateButton,
-  DeleteButton,
-  EditButton,
-  ShowButton,
   useSelect,
 } from "@refinedev/antd";
 import { BaseRecord, useGo, useUpdate, useCustom } from "@refinedev/core";
@@ -26,32 +23,22 @@ import {
 } from "antd";
 import {
   SearchOutlined,
-  FilterOutlined,
   CalendarOutlined,
   SwapOutlined,
   HistoryOutlined,
-  VerticalAlignTopOutlined,
-  VerticalAlignBottomOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  PlusOutlined,
-  FileAddFilled,
-  FileAddOutlined,
-  DownOutlined,
 } from "@ant-design/icons";
-import {
-  FileOutlined,
-  EditOutlined,
-  UnorderedListOutlined,
-  SyncOutlined,
-} from "@ant-design/icons";
-import React, { useState, useEffect } from "react";
 import { useMany, useNavigation, useUpdateMany } from "@refinedev/core";
 import { API_URL } from "../../App";
 import dayjs from "dayjs";
-import { MyCreateModal } from "../counterparties/modal/create-modal";
-import { divider } from "@uiw/react-md-editor";
 import { operationStatus } from "../../shared";
+
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const RemainingStockProcessingList = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -518,7 +505,7 @@ export const RemainingStockProcessingList = () => {
             dataIndex="created_at"
             title="Дата"
             render={(value) =>
-              value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
+              value ? dayjs(value).utc().format("DD.MM.YYYY HH:mm") : ""
             }
           />
           <Table.Column dataIndex="trackCode" title="Трек-код" />

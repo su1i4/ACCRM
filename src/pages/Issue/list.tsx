@@ -40,6 +40,7 @@ import timezone from "dayjs/plugin/timezone";
 import { API_URL } from "../../App";
 import type { Key } from "react";
 import { CustomTooltip, operationStatus } from "../../shared";
+import { useSearchParams } from "react-router";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -58,6 +59,7 @@ interface Filter {
 }
 
 export const IssueProcessingList = () => {
+  const [searchparams, setSearchParams] = useSearchParams();
   const [printData, setPrintData] = useState([]);
   const [printOpen, setPrintOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -75,7 +77,7 @@ export const IssueProcessingList = () => {
 
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
-  const [searchFilters, setSearchFilters] = useState<Filter[]>([
+  const [searchFilters, setSearchFilters] = useState<any[]>([
     { status: { $eq: "Готов к выдаче" } },
   ]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,6 +103,20 @@ export const IssueProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
+
+  useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
+    refetch();
+  }, [sortDirection, currentPage, pageSize]);
 
   const filteredByIds = async (ids: number[]) => {
     const token = localStorage.getItem("access_token");

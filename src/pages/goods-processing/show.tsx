@@ -9,14 +9,16 @@ import {
   DeleteButton,
 } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
-import { Col, Image, Row, Typography, Button, Space, Tooltip } from "antd";
+import { Col, Image, Row, Typography, Button, Space } from "antd";
 import { API_URL } from "../../App";
-import {
-  DownloadOutlined,
-  WhatsAppOutlined,
-  MessageOutlined,
-  WechatOutlined,
-} from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title } = Typography;
 
@@ -166,14 +168,14 @@ export const GoodsShow: React.FC = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата приёма</Title>
-          <DateField value={record?.created_at} format="YYYY-MM-DD HH:mm:ss" />
+          <TextField
+            value={dayjs(record?.created_at).utc().format("DD.MM.YYYY HH:mm")}
+          />
         </Col>
-
         <Col xs={24} md={6}>
           <Title level={5}>Место погрузки</Title>
           <TextField value={record?.employee?.branch?.name} />
         </Col>
-
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначение</Title>
           <TextField
@@ -182,7 +184,6 @@ export const GoodsShow: React.FC = () => {
             }`}
           />
         </Col>
-
         <Col xs={24} md={6}>
           <Title level={5}>Скидка</Title>
           <TextField value={record?.discount} />

@@ -25,11 +25,11 @@ import {
 import { useEffect, useState } from "react";
 import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
 import { CustomTooltip, operationStatus } from "../../shared";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -53,7 +53,7 @@ export const GoogsProcessingList = () => {
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: currentPage * pageSize,
     };
   };
 
@@ -362,6 +362,10 @@ export const GoogsProcessingList = () => {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
                 return;
               }
+
+              searchparams.set("page", '1');
+              searchparams.set("size", '10');
+              setSearchParams(searchparams);
 
               setFilters(
                 [

@@ -28,6 +28,12 @@ import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
 import { operationStatus } from "../../shared";
 
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const NotPaidGoodsList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -333,6 +339,10 @@ export const NotPaidGoodsList = () => {
                 return;
               }
 
+              searchparams.set("page", '1');
+              searchparams.set("size", '10');
+              setSearchParams(searchparams);
+
               setFilters(
                 [
                   {
@@ -407,7 +417,7 @@ export const NotPaidGoodsList = () => {
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
+            value ? dayjs(value).utc().format("DD.MM.YYYY HH:mm") : ""
           }
         />
         <Table.Column dataIndex="trackCode" title="Трек-код" />

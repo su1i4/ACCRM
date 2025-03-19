@@ -9,19 +9,22 @@ import { Button, Flex, Input, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import { CustomTooltip } from "../../shared";
+import { catchDateTable } from "../../lib/utils";
+import { useSearchParams } from "react-router";
 
 const ShipmentList = () => {
+  const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [current, setCurrent] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<any[]>([]);
   const { show } = useNavigation();
 
   const buildQueryParams = () => ({
     sort: `id,${sortDirection}`,
-    page: current - 1,
+    page: currentPage,
     limit: pageSize,
-    offset: (current - 1) * pageSize,
+    offset: currentPage * pageSize,
     s: JSON.stringify({ $and: [...filters, { status: { $eq: "В пути" } }] }),
   });
 
@@ -34,24 +37,38 @@ const ShipmentList = () => {
   });
 
   useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
     refetch();
-  }, [sortDirection, current, pageSize]);
+  }, [filters, sortDirection, currentPage, pageSize]);
 
   const dataSource = data?.data?.data || [];
-  const total = data?.data?.total || 0;
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  };
 
   const tableProps = {
-    dataSource,
+    dataSource: dataSource,
     loading: isLoading,
     pagination: {
-      current,
-      pageSize,
-      total,
-      onChange: (page: number, size: number) => {
-        setCurrent(page);
-        setPageSize(size);
-      },
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
     },
+    onChange: handleTableChange,
   };
 
   const { push } = useNavigation();
@@ -88,21 +105,25 @@ const ShipmentList = () => {
           />
         </CustomTooltip>
         <Input
-          placeholder="Поиск по номеру рейса, коду коробки"
+          placeholder="Поиск по номеру рейса, коду коробки и по номеру фуры"
           prefix={<SearchOutlined />}
-          style={{ width: "40%", height: 33 }}
+          style={{ width: "50%", height: 33 }}
           onChange={(e) => {
             const value = e.target.value;
             if (!value) {
               setFilters([]);
               return;
             }
+            setCurrentPage(1);
+            searchparams.set("page", "1");
+            setSearchParams(searchparams);
 
             setFilters([
               {
                 $or: [
                   { id: { $contL: value } },
                   { boxCode: { $contL: value } },
+                  { truck_number: { $contL: value } },
                 ],
               },
             ]);
@@ -120,7 +141,7 @@ const ShipmentList = () => {
             alignItems: "center",
             gap: 10,
             flexWrap: "wrap",
-            width: "70%",
+            width: "50%",
             height: 33,
             boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
           }}
@@ -156,16 +177,7 @@ const ShipmentList = () => {
         rowKey="id"
         scroll={{ x: 1500 }}
       >
-        <Table.Column
-          dataIndex="created_at"
-          title={"Дата отправки"}
-          width={120}
-          render={(value) => {
-            return `${value?.split("T")[0]} ${value
-              ?.split("T")[1]
-              ?.slice(0, 5)}`;
-          }}
-        />
+        {catchDateTable("Дата приемки", "В складе")}
         <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column dataIndex="truck_number" title={"Номер фуры"} />

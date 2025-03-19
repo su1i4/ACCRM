@@ -18,6 +18,13 @@ import {
   WechatOutlined,
 } from "@ant-design/icons";
 import { useParams } from "react-router";
+import dayjs from "dayjs";
+
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title } = Typography;
 
@@ -171,7 +178,9 @@ export const NotPaidGoodsShow: React.FC = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата приёма</Title>
-          <DateField value={record?.created_at} format="YYYY-MM-DD HH:mm:ss" />
+          <TextField
+            value={dayjs(record?.created_at).utc().format("DD.MM.YYYY HH:mm")}
+          />
         </Col>
 
         <Col xs={24} md={6}>

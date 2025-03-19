@@ -86,6 +86,7 @@ export const i18nProvider_ru = {
       "income.titles.create": "Cоздать приход",
       "notification.titles.list": "Уведомления",
       "notification.titles.create": "Создать уведомление",
+      "notifications.editSuccess": "Успешно обновлено"
     };
     return translations[key] || key;
   },

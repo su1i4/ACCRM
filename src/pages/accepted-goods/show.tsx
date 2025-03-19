@@ -12,6 +12,13 @@ import { useParsed, useShow } from "@refinedev/core";
 import { Col, Image, Row, Typography, Button, Space } from "antd";
 import { API_URL } from "../../App";
 import { DownloadOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title } = Typography;
 
@@ -138,7 +145,9 @@ export const AcceptedGoodsShow: React.FC = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата приёма</Title>
-          <DateField value={record?.created_at} format="YYYY-MM-DD HH:mm:ss" />
+          <TextField
+            value={dayjs(record?.created_at).utc().format("DD.MM.YYYY HH:mm")}
+          />
         </Col>
 
         <Col xs={24} md={6}>

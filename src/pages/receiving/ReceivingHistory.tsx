@@ -18,18 +18,20 @@ import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from "@ant-design/
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import dayjs from "dayjs";
+import { useSearchParams } from "react-router";
 
 export const ReceivingHistory = () => {
+  const [searchparams, setSearchParams] = useSearchParams()
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [current, setCurrent] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<any[]>([]);
 
   const buildQueryParams = () => ({
     sort: `id,${sortDirection}`,
-    page: current - 1,
+    page: currentPage,
     limit: pageSize,
-    offset: (current - 1) * pageSize,
+    offset: currentPage * pageSize,
     s: JSON.stringify({ $and: [...filters, { status: { $eq: "Выгрузили" } }] }),
   });
 
@@ -42,24 +44,37 @@ export const ReceivingHistory = () => {
   });
 
   useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
     refetch();
-  }, [sortDirection, current, pageSize]);
+  }, [filters, sortDirection, currentPage, pageSize]);
 
   const dataSource = data?.data?.data || [];
-  const total = data?.data?.total || 0;
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  };
 
   const tableProps = {
-    dataSource,
+    dataSource: dataSource,
     loading: isLoading,
     pagination: {
-      current,
-      pageSize,
-      total,
-      onChange: (page: number, size: number) => {
-        setCurrent(page);
-        setPageSize(size);
-      },
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
     },
+    onChange: handleTableChange,
   };
 
   const { push } = useNavigation();
@@ -90,6 +105,10 @@ export const ReceivingHistory = () => {
               setFilters([]);
               return;
             }
+
+            setCurrentPage(1);
+            searchparams.set("page", "1");
+            setSearchParams(searchparams);
 
             setFilters([
               {
