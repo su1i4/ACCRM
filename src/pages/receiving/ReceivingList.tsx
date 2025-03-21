@@ -1,19 +1,11 @@
 import {
-  DateField,
-  DeleteButton,
-  EditButton,
   List,
-  ShowButton,
-  useSelect,
-  useTable,
 } from "@refinedev/antd";
 import {
-  type BaseRecord,
-  useMany,
   useNavigation,
   useCustom,
 } from "@refinedev/core";
-import { Button, Space, Table, Flex, Typography, Input } from "antd";
+import { Button, Table, Flex, Input } from "antd";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -21,7 +13,6 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
-import dayjs from "dayjs";
 import { operationStatus } from "../../shared";
 import { useSearchParams } from "react-router";
 
@@ -137,7 +128,6 @@ const ReceivingList = () => {
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            // Переход в детальный вид по идентификатору записи
             show("receiving", record.id as number);
           },
         })}

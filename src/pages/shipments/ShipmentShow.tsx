@@ -159,7 +159,7 @@ const ShipmentShow = () => {
       <Title level={4} style={{ marginTop: 24 }}>
         Товары в этом рейсе
       </Title>
-      <Table {...tableProps} rowKey="id">
+      <Table {...tableProps} rowKey="id" scroll={{x: 1000}} >
         {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"
@@ -190,6 +190,7 @@ const ShipmentShow = () => {
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
+        <Table.Column dataIndex="comments" title="Комментарий" />
         {/* Добавьте остальные необходимые колонки */}
       </Table>
     </Show>

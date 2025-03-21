@@ -1,15 +1,38 @@
 import { useState, useEffect } from "react";
-import { Edit, useForm, useSelect, useTable, Show } from "@refinedev/antd";
-import { useUpdateMany, useOne, useNavigation, useCustom } from "@refinedev/core";
-import { Form, Input, Row, Flex, Select, Col, Table, Button } from "antd";
-import { useParams } from "react-router";
-import { FileAddOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { useForm, Show } from "@refinedev/antd";
+import {
+  useUpdateMany,
+  useNavigation,
+  useCustom,
+} from "@refinedev/core";
+import {
+  Input,
+  Row,
+  Flex,
+  Table,
+  Button,
+  Dropdown,
+  DatePicker,
+  Card,
+} from "antd";
+import { useParams, useSearchParams } from "react-router";
+import {
+  FileAddOutlined,
+  ArrowLeftOutlined,
+  CalendarOutlined,
+  ArrowUpOutlined,
+  SearchOutlined,
+  ArrowDownOutlined,
+} from "@ant-design/icons";
 import { API_URL } from "../../App";
+import { CustomTooltip } from "../../shared";
 
 const ShipmentAdd = () => {
   const { id } = useParams();
   const { push } = useNavigation();
 
+  const [searchparams, setSearchParams] = useSearchParams();
+  const [sorterVisible, setSorterVisible] = useState(false);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([
@@ -55,7 +78,6 @@ const ShipmentAdd = () => {
     id,
     redirect: false,
     onMutationSuccess: async (updatedShipment) => {
-      // Обновляем выбранные товары (устанавливаем статус "В складе")
       if (selectedRowKeys.length > 0) {
         await updateManyGoods({
           ids: selectedRowKeys,
@@ -90,11 +112,107 @@ const ShipmentAdd = () => {
     }
   };
 
+  useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
+    refetch();
+  }, [searchFilters, sortDirection, currentPage, pageSize]);
+
+  const setFilters = (
+    filters: any[],
+    mode: "replace" | "append" = "append"
+  ) => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+  };
+
+  const datePickerContent = (
+    <DatePicker.RangePicker
+      style={{ width: "280px" }}
+      placeholder={["Начальная дата", "Конечная дата"]}
+      onChange={(dates, dateStrings) => {
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          setFilters(
+            [
+              {
+                created_at: {
+                  $gte: dateStrings[0],
+                  $lte: dateStrings[1],
+                },
+              },
+            ],
+            "replace"
+          );
+        }
+      }}
+    />
+  );
+
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
+        </div>
+        {/* Сортировка по дате создания */}
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По фио{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
+
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
-    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -133,6 +251,73 @@ const ShipmentAdd = () => {
         </Flex>
       )}
     >
+      <Flex gap={10} style={{ marginBottom: 10 }}>
+        <CustomTooltip title="Создать">
+          <Button
+            icon={<FileAddOutlined />}
+            onClick={() => push(`/shipments/show/${id}/adding`)}
+          />
+        </CustomTooltip>
+        <CustomTooltip title="Сортировка">
+          <Dropdown
+            overlay={sortContent}
+            trigger={["click"]}
+            placement="bottomLeft"
+            open={sorterVisible}
+            onOpenChange={(visible) => {
+              setSorterVisible(visible);
+            }}
+          >
+            <Button
+              icon={
+                sortDirection === "ASC" ? (
+                  <ArrowUpOutlined />
+                ) : (
+                  <ArrowDownOutlined />
+                )
+              }
+            ></Button>
+          </Dropdown>
+        </CustomTooltip>
+        <Input
+          style={{ width: "90%" }}
+          placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
+          prefix={<SearchOutlined />}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (!value) {
+              setFilters([{ trackCode: { $contL: "" } }], "replace");
+              return;
+            }
+
+            searchparams.set("page", "1");
+            searchparams.set("size", "10");
+            setSearchParams(searchparams);
+
+            setFilters(
+              [
+                {
+                  $or: [
+                    { trackCode: { $contL: value } },
+                    { "counterparty.clientCode": { $contL: value } },
+                    { "counterparty.name": { $contL: value } },
+                  ],
+                },
+              ],
+              "replace"
+            );
+          }}
+        />
+        <Dropdown
+          overlay={datePickerContent}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button icon={<CalendarOutlined />} className="date-picker-button">
+            Дата
+          </Button>
+        </Dropdown>
+      </Flex>
       <Table
         {...tableProps}
         rowKey="id"
@@ -176,14 +361,15 @@ const ShipmentAdd = () => {
         <Table.Column dataIndex="status" title="Статус" />
         <Table.Column
           dataIndex="counterparty"
-          render={(value) =>
-            <p style={{width: "200px"}}>
+          render={(value) => (
+            <p style={{ width: "200px" }}>
               {`${value?.branch?.name},${value?.under_branch?.address || ""}`}
             </p>
-          }
+          )}
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
+        <Table.Column dataIndex="comments" title="Комментарий" />
       </Table>
     </Show>
   );

@@ -44,6 +44,7 @@ export const NotPaidGoodsList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('')
 
   const buildQueryParams = () => {
     return {
@@ -279,6 +280,25 @@ export const NotPaidGoodsList = () => {
     }
   };
 
+  useEffect(() => {
+    const value = searchparams.get('value')
+    if (value) {
+      setFilters(
+        [
+          {
+            $or: [
+              { trackCode: { $contL: value } },
+              { "counterparty.clientCode": { $contL: value } },
+              { "counterparty.name": { $contL: value } },
+            ],
+          },
+        ],
+        "replace"
+      );
+    }
+    setSearch(value || '')
+  }, [])
+
   // Формируем пропсы для таблицы из данных useCustom
   const tableProps = {
     dataSource: dataSource,
@@ -315,34 +335,28 @@ export const NotPaidGoodsList = () => {
                 }
               ></Button>
             </Dropdown>
-            <Dropdown
-              overlay={checkboxContent}
-              trigger={["click"]}
-              placement="bottomLeft"
-              open={settingVisible}
-              onOpenChange={(visible) => {
-                setSettingVisible(visible);
-              }}
-            >
-              <Button icon={<SettingOutlined />} />
-            </Dropdown>
           </Space>
         </Col>
         <Col flex="auto">
           <Input
             placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
             prefix={<SearchOutlined />}
+            value={search}
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
+                setSearch("");
+                searchparams.set('value', '');
+                setSearchParams(searchparams);
                 return;
               }
 
-              searchparams.set("page", '1');
-              searchparams.set("size", '10');
+              searchparams.set("page", "1");
+              searchparams.set("size", "10");
+              searchparams.set("value", value);
               setSearchParams(searchparams);
-
+              setSearch(value);
               setFilters(
                 [
                   {

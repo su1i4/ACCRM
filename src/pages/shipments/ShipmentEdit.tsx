@@ -1,33 +1,101 @@
 import { useState, useEffect } from "react";
 import { Edit, useForm, useSelect, useTable } from "@refinedev/antd";
-import { useUpdateMany, useOne, useNavigation } from "@refinedev/core";
-import { Form, Input, Row, Flex, Select, Col, Table, Button } from "antd";
-import { useParams } from "react-router";
-import { FileAddOutlined } from "@ant-design/icons";
+import {
+  useUpdateMany,
+  useOne,
+  useNavigation,
+  useCustom,
+} from "@refinedev/core";
+import {
+  Form,
+  Input,
+  Row,
+  Flex,
+  Select,
+  Col,
+  Table,
+  Button,
+  Space,
+  Dropdown,
+  Card,
+  DatePicker,
+} from "antd";
+import { useParams, useSearchParams } from "react-router";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CalendarOutlined,
+  FileAddOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { API_URL } from "../../App";
+import { CustomTooltip } from "../../shared";
+
+// const { tableProps, refetch: refetchGoods } = useTable({
+//   resource: "goods-processing",
+//   syncWithLocation: false,
+//   filters: {
+//     permanent: [
+//       {
+//         field: "shipment_id",
+//         operator: "eq",
+//         value: Number(id),
+//       },
+//       {
+//         field: "status",
+//         operator: "eq",
+//         value: "В пути",
+//       },
+//     ],
+//   },
+// });
 
 const ShipmentEdit = () => {
   const { id } = useParams();
   const { push } = useNavigation();
-  //@ts-ignore
-  const { tableProps, refetch: refetchGoods } = useTable({
-    resource: "goods-processing",
-    syncWithLocation: false,
-    filters: {
-      permanent: [
-        {
-          field: "shipment_id",
-          operator: "eq",
-          value: Number(id),
-        },
-        {
-          field: "status",
-          operator: "eq",
-          value: "В пути",
-        },
-      ],
+
+  const [searchparams, setSearchParams] = useSearchParams();
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortField, setSortField] = useState<
+    "id" | "counterparty.name" | "operation_id"
+  >("id");
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    { trackCode: { $contL: "" } },
+  ]);
+  const [search, setSearch] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({
+        $and: [
+          ...searchFilters,
+          { shipment_id: { $eq: Number(id) } },
+          { status: { $eq: "В пути" } },
+        ],
+      }),
+      sort: `${sortField},${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: currentPage * pageSize,
+    };
+  };
+
+  const {
+    data,
+    isLoading,
+    refetch
+  } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
     },
   });
 
+  const [sorterVisible, setSorterVisible] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [totalWeight, setTotalWeight] = useState<number>(0);
@@ -127,7 +195,7 @@ const ShipmentEdit = () => {
         originalSaveButtonProps.onClick(e);
       }
     },
-    disabled: tableProps?.loading,
+    disabled: isLoading,
   };
 
   // Получаем данные о связанных товарах
@@ -147,7 +215,7 @@ const ShipmentEdit = () => {
         )
       );
     }
-  }, [tableProps?.dataSource, id]);
+  }, [data, id]);
 
   // Заполняем форму данными отправки после их загрузки
   useEffect(() => {
@@ -254,6 +322,146 @@ const ShipmentEdit = () => {
     "Инструменты",
     "Аксессуары",
   ];
+
+  useEffect(() => {
+    if (!searchparams.get("page") && !searchparams.get("size")) {
+      searchparams.set("page", String(currentPage));
+      searchparams.set("size", String(pageSize));
+      setSearchParams(searchparams);
+    } else {
+      const page = searchparams.get("page");
+      const size = searchparams.get("size");
+      setCurrentPage(Number(page));
+      setPageSize(Number(size));
+    }
+    refetch();
+  }, [searchFilters, sortDirection, currentPage, pageSize]);
+
+  const dataSource = data?.data?.data || [];
+
+  const datePickerContent = (
+    <DatePicker.RangePicker
+      style={{ width: "280px" }}
+      placeholder={["Начальная дата", "Конечная дата"]}
+      onChange={(dates, dateStrings) => {
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          setFilters(
+            [
+              {
+                created_at: {
+                  $gte: dateStrings[0],
+                  $lte: dateStrings[1],
+                },
+              },
+            ],
+            "replace"
+          );
+        }
+      }}
+    />
+  );
+
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
+        </div>
+        {/* Сортировка по дате создания */}
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По фио{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "operation_id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("operation_id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По статусу оплаты{" "}
+          {sortField === "operation_id" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
+
+  const setFilters = (
+    filters: any[],
+    mode: "replace" | "append" = "append"
+  ) => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+    // We'll refetch in useEffect after state updates
+  };
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+
+    // Обрабатываем сортировку, если она пришла из таблицы
+    if (sorter && sorter.field) {
+      setSortField(
+        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
+      );
+      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+    }
+  };
+
+  // Формируем пропсы для таблицы из данных useCustom
+  const tableProps = {
+    dataSource: dataSource,
+    loading: isLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
+  };
 
   return (
     <Edit
@@ -386,11 +594,74 @@ const ShipmentEdit = () => {
           </Flex>
         </Row>
 
-        <Button
-          icon={<FileAddOutlined />}
-          style={{ marginBottom: 10 }}
-          onClick={() => push(`/shipments/show/${id}/adding`)}
-        />
+        <Flex gap={10} style={{ marginBottom: 10 }}>
+          <CustomTooltip title="Создать">
+            <Button
+              icon={<FileAddOutlined />}
+              onClick={() => push(`/shipments/show/${id}/adding`)}
+            />
+          </CustomTooltip>
+          <CustomTooltip title="Сортировка">
+            <Dropdown
+              overlay={sortContent}
+              trigger={["click"]}
+              placement="bottomLeft"
+              open={sorterVisible}
+              onOpenChange={(visible) => {
+                setSorterVisible(visible);
+              }}
+            >
+              <Button
+                icon={
+                  sortDirection === "ASC" ? (
+                    <ArrowUpOutlined />
+                  ) : (
+                    <ArrowDownOutlined />
+                  )
+                }
+              ></Button>
+            </Dropdown>
+          </CustomTooltip>
+          <Input
+            style={{ width: "90%" }}
+            placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
+            prefix={<SearchOutlined />}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!value) {
+                setFilters([{ trackCode: { $contL: "" } }], "replace");
+                setSearchParams(searchparams);
+                return;
+              }
+
+              searchparams.set("page", "1");
+              searchparams.set("size", "10");
+              setSearchParams(searchparams);
+              setSearch(value);
+              setFilters(
+                [
+                  {
+                    $or: [
+                      { trackCode: { $contL: value } },
+                      { "counterparty.clientCode": { $contL: value } },
+                      { "counterparty.name": { $contL: value } },
+                    ],
+                  },
+                ],
+                "replace"
+              );
+            }}
+          />
+          <Dropdown
+            overlay={datePickerContent}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button icon={<CalendarOutlined />} className="date-picker-button">
+              Дата
+            </Button>
+          </Dropdown>
+        </Flex>
         <Row gutter={16}>
           <Col span={24}>
             {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
@@ -452,6 +723,7 @@ const ShipmentEdit = () => {
                 title="Пункт назначения, Пвз"
               />
               <Table.Column dataIndex="weight" title="Вес" />
+              <Table.Column dataIndex="comments" title="Комментарий" />
             </Table>
           </Col>
         </Row>

@@ -653,7 +653,7 @@ const ShipmentCreate = () => {
               />
               <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="status" title="Статус" />
-              {operationStatus()}
+              <Table.Column dataIndex="comments" title="Комментарий" />   
             </Table>
           </Col>
         </Row>

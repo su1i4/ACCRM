@@ -190,12 +190,45 @@ const ReceivingShow = () => {
 
       {/* Таблица со списком товаров и чекбоксами */}
       <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
-        <Table.Column dataIndex="receptionDate" title="Дата" />
+        <Table.Column
+          dataIndex="created_at"
+          title={"Дата"}
+          width={120}
+          render={(value) => {
+            return `${value?.split("T")[0]} ${value
+              ?.split("T")[1]
+              ?.slice(0, 5)}`;
+          }}
+        />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
-        <Table.Column dataIndex="clientCode" title="Код Клиента" />
-        <Table.Column dataIndex="recipient" title="Получатель" />
-        <Table.Column dataIndex="city" title="Город" />
+        <Table.Column
+          dataIndex="counterparty"
+          title="Код получателя"
+          render={(value) => {
+            return value?.clientPrefix + "-" + value?.clientCode;
+          }}
+        />
+        <Table.Column
+          dataIndex="counterparty"
+          title="ФИО получателя"
+          render={(value) => value?.name}
+        />
+        <Table.Column
+          dataIndex="counterparty"
+          render={(value) => (
+            <p
+              style={{
+                width: "200px",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
+            </p>
+          )}
+          title="Пункт назначения, Пвз"
+        />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="status" title="Статус" />
       </Table>

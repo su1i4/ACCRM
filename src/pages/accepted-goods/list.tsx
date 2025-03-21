@@ -44,6 +44,7 @@ export const AcceptedGoodsList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('')
 
   const buildQueryParams = () => {
     return {
@@ -272,6 +273,25 @@ export const AcceptedGoodsList = () => {
     }
   };
 
+  useEffect(() => {
+    const value = searchparams.get('value')
+    if (value) {
+      setFilters(
+        [
+          {
+            $or: [
+              { trackCode: { $contL: value } },
+              { "counterparty.clientCode": { $contL: value } },
+              { "counterparty.name": { $contL: value } },
+            ],
+          },
+        ],
+        "replace"
+      );
+    }
+    setSearch(value || '')
+  }, [])
+
   const tableProps = {
     dataSource: dataSource,
     loading: isLoading,
@@ -332,20 +352,25 @@ export const AcceptedGoodsList = () => {
           </Space>
         </Col>
         <Col flex="auto">
-          <Input
+        <Input
             placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
             prefix={<SearchOutlined />}
+            value={search}
             onChange={(e) => {
               const value = e.target.value;
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
+                setSearch("");
+                searchparams.set("search", '');
+                setSearchParams(searchparams);
                 return;
               }
 
-              searchparams.set("page", '1');
-              searchparams.set("size", '10');
+              searchparams.set("page", "1");
+              searchparams.set("size", "10");
+              searchparams.set("value", value);
               setSearchParams(searchparams);
-              
+              setSearch(value);
               setFilters(
                 [
                   {
