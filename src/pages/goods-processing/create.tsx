@@ -95,13 +95,13 @@ export const GoodsCreate = () => {
         const cleanedPhoto = {
           file: {
             response: {
-              filePath: variables.photo.file?.response?.filePath
-            }
-          }
+              filePath: variables.photo.file?.response?.filePath,
+            },
+          },
         };
         variables.photo = cleanedPhoto;
       }
-    }
+    },
   });
 
   const { selectProps: branchSelectProps } = useSelect({
@@ -142,24 +142,24 @@ export const GoodsCreate = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Form 
-        {...formProps} 
+      <Form
+        {...formProps}
         layout="horizontal"
         onFinish={(values: any) => {
           // Создаем копию всех значений
           const submitValues: GoodsFormValues = { ...values };
-          
+
           // Если есть фото, гарантируем точную структуру
           if (submitValues.photo) {
             submitValues.photo = {
               file: {
                 response: {
-                  filePath: submitValues.photo.file?.response?.filePath
-                }
-              }
+                  filePath: submitValues.photo.file?.response?.filePath,
+                },
+              },
             };
           }
-          
+
           // Вызываем оригинальный обработчик formProps.onFinish
           if (formProps.onFinish) {
             formProps.onFinish(submitValues);
@@ -195,7 +195,9 @@ export const GoodsCreate = () => {
                       // Ограничиваем выбор только одним значением
                       if (Array.isArray(value) && value.length > 1) {
                         // Берем только последнее выбранное значение
-                        form.setFieldValue(field.name, [value[value.length - 1]]);
+                        form.setFieldValue(field.name, [
+                          value[value.length - 1],
+                        ]);
                       }
                     }}
                   />
@@ -238,11 +240,13 @@ export const GoodsCreate = () => {
             </Form.Item>
           </Col>
           <Col span={8}>
-            <Form.Item
-              label={"Скидка"}
-              name={["discount_custom"]}
-            >
-              <Input type="number" min={0} max={100} style={{ width: "100%" }} />
+            <Form.Item label={"Скидка"} name={["discount_custom"]}>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                style={{ width: "100%" }}
+              />
             </Form.Item>
           </Col>
         </Row>
@@ -259,16 +263,9 @@ export const GoodsCreate = () => {
                   accept=".png,.jpg,.jpeg"
                   onChange={(info) => {
                     if (info.file.status === "done") {
-                      // Формируем только нужную структуру без лишних ключей
-                      const photoValue = {
-                        file: {
-                          response: {
-                            filePath: info.file.response.filePath
-                          }
-                        }
-                      };
+                      const photoValue = info.file.response.filePath;
                       form.setFieldsValue({
-                        photo: photoValue
+                        photo: photoValue,
                       });
                     }
                   }}

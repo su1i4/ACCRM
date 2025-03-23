@@ -6,7 +6,9 @@ import {
   DeleteButton,
 } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
-import { Typography, Row, Col } from "antd";
+import { Typography, Row, Col, Button } from "antd";
+import { MyEditModal } from "./modal/edit-modal";
+import { useState } from "react";
 
 const { Title } = Typography;
 
@@ -25,16 +27,26 @@ export const CounterpartyShow: React.FC = () => {
     0
   );
 
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (
         <>
+          <Button onClick={() => setOpenEdit(true)}>Добавить скидку</Button>
           {editButtonProps && <EditButton {...editButtonProps} />}
           {deleteButtonProps && <DeleteButton {...deleteButtonProps} />}
         </>
       )}
       isLoading={isLoading}
     >
+      <MyEditModal
+        id={editId}
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        // onSuccess={() => refetch()}
+      />
       <Row gutter={[16, 16]}>
         {/* Левая колонка */}
         <Col xs={24} sm={12}>

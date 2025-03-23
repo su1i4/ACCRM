@@ -12,7 +12,7 @@ import {
   Select,
 } from "antd";
 import { BaseRecord, useNavigation, useCustom } from "@refinedev/core";
-import { MyCreateModal } from "./modal/create-modal";
+// import { MyCreateModal } from "./modal/create-modal";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -158,7 +158,7 @@ export const CounterpartyList: React.FC = () => {
   return (
     <List headerButtons={() => null}>
       {/* Передаем open и setOpen в модальное окно */}
-      <MyCreateModal
+      {/* <MyCreateModal
         open={open}
         onClose={() => setOpen(false)}
         onSuccess={() => refetch()}
@@ -168,7 +168,7 @@ export const CounterpartyList: React.FC = () => {
         open={openEdit}
         onClose={() => setOpenEdit(false)}
         onSuccess={() => refetch()}
-      />
+      /> */}
 
       {/* Верхняя панель с фильтром и кнопкой создания */}
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
