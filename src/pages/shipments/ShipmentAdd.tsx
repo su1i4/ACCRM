@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm, Show } from "@refinedev/antd";
-import {
-  useUpdateMany,
-  useNavigation,
-  useCustom,
-} from "@refinedev/core";
+import { useUpdateMany, useNavigation, useCustom } from "@refinedev/core";
 import {
   Input,
   Row,
@@ -35,20 +31,20 @@ const ShipmentAdd = () => {
   const [sorterVisible, setSorterVisible] = useState(false);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { status: { $eq: "В складе" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters }),
+      s: JSON.stringify({
+        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: currentPage * pageSize,
     };
   };
 
@@ -92,17 +88,22 @@ const ShipmentAdd = () => {
     },
   });
 
-  // Функция для обработки сохранения
   const handleSave = async () => {
     if (selectedRowKeys.length > 0) {
       try {
-        await updateManyGoods({
-          ids: selectedRowKeys,
-          values: {
-            shipment_id: Number(id),
-            status: "В пути",
-          },
-        });
+        await Promise.all(
+          selectedRowKeys.map(async (key) => {
+            await updateManyGoods({
+              ids: [key], // Передаём массив с одним id
+              values: {
+                id: Number(key),
+                shipment_id: Number(id),
+                status: "В пути",
+                adding: true,
+              },
+            });
+          })
+        );
         push(`/shipments/edit/${id}`);
       } catch (error) {
         console.error("Ошибка при сохранении:", error);
@@ -252,12 +253,6 @@ const ShipmentAdd = () => {
       )}
     >
       <Flex gap={10} style={{ marginBottom: 10 }}>
-        <CustomTooltip title="Создать">
-          <Button
-            icon={<FileAddOutlined />}
-            onClick={() => push(`/shipments/show/${id}/adding`)}
-          />
-        </CustomTooltip>
         <CustomTooltip title="Сортировка">
           <Dropdown
             overlay={sortContent}
@@ -286,12 +281,12 @@ const ShipmentAdd = () => {
           onChange={(e) => {
             const value = e.target.value;
             if (!value) {
-              setFilters([{ trackCode: { $contL: "" } }], "replace");
+              setFilters([], "replace");
               return;
             }
 
             searchparams.set("page", "1");
-            searchparams.set("size", "10");
+            searchparams.set("size", String(pageSize));
             setSearchParams(searchparams);
 
             setFilters(
@@ -323,6 +318,7 @@ const ShipmentAdd = () => {
         rowKey="id"
         rowSelection={{
           type: "checkbox",
+          preserveSelectedRowKeys: true,
           selectedRowKeys: selectedRowKeys,
           onChange: (keys, rows) => {
             setSelectedRowKeys(keys as number[]);
@@ -337,6 +333,7 @@ const ShipmentAdd = () => {
         locale={{
           emptyText: "Нет доступных товаров для отправки",
         }}
+        scroll={{ x: 1200 }}
       >
         <Table.Column
           dataIndex="created_at"

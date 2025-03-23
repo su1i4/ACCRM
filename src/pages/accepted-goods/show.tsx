@@ -157,7 +157,29 @@ export const AcceptedGoodsShow: React.FC = () => {
 
         <Col xs={24} md={6}>
           <Title level={5}>Пункт назначение</Title>
-          <TextField value={`${record?.counterparty?.branch?.name}, ${record?.counterparty?.under_branch?.address || ''}`} />
+          <TextField
+            value={`${record?.counterparty?.branch?.name}, ${
+              record?.counterparty?.under_branch?.address || ""
+            }`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Тариф клиента</Title>
+          <TextField
+            value={`${(
+              Number(record?.counterparty?.branch?.tarif || 0) -
+              Number(record?.counterparty?.discount?.discount || 0)
+            ).toFixed(2)}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Скидка</Title>
+          <TextField value={record?.discount} />
+        </Col>
+
+        <Col xs={24} md={6}>
+          <Title level={5}>Ручная скидка</Title>
+          <TextField value={record?.discount_custom} />
         </Col>
 
         <Col xs={24} md={24}>
@@ -185,4 +207,4 @@ export const AcceptedGoodsShow: React.FC = () => {
       </Row>
     </Show>
   );
-}; 
+};

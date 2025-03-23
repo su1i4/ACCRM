@@ -44,11 +44,13 @@ export const AcceptedGoodsList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters, status: { $eq: "В складе" } }),
+      s: JSON.stringify({
+        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -274,7 +276,7 @@ export const AcceptedGoodsList = () => {
   };
 
   useEffect(() => {
-    const value = searchparams.get('value')
+    const value = searchparams.get("value");
     if (value) {
       setFilters(
         [
@@ -289,8 +291,8 @@ export const AcceptedGoodsList = () => {
         "replace"
       );
     }
-    setSearch(value || '')
-  }, [])
+    setSearch(value || "");
+  }, []);
 
   const tableProps = {
     dataSource: dataSource,
@@ -305,7 +307,11 @@ export const AcceptedGoodsList = () => {
 
   return (
     <List headerButtons={() => false}>
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+      <Row
+        gutter={[16, 16]}
+        align="middle"
+        style={{ marginBottom: 16, position: "sticky", top: 80, zIndex: 10 }}
+      >
         <Col>
           <Space size="middle">
             <CustomTooltip title="Создать">
@@ -352,7 +358,7 @@ export const AcceptedGoodsList = () => {
           </Space>
         </Col>
         <Col flex="auto">
-        <Input
+          <Input
             placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
             prefix={<SearchOutlined />}
             value={search}
@@ -361,13 +367,13 @@ export const AcceptedGoodsList = () => {
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
                 setSearch("");
-                searchparams.set("search", '');
+                searchparams.set("search", "");
                 setSearchParams(searchparams);
                 return;
               }
 
               searchparams.set("page", "1");
-              searchparams.set("size", "10");
+              searchparams.set("size", String(pageSize));
               searchparams.set("value", value);
               setSearchParams(searchparams);
               setSearch(value);
@@ -427,7 +433,7 @@ export const AcceptedGoodsList = () => {
         scroll={{ x: "max-content" }}
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("goods-processing", record.id as number);
+            show("accepted-goods", record.id as number);
           },
         })}
       >
@@ -436,7 +442,11 @@ export const AcceptedGoodsList = () => {
           title={<Checkbox checked={mainChecked} onChange={clickAll} />}
           render={(value, record) => {
             if (value) {
-              return <EyeOutlined />;
+              return (
+                <CustomTooltip title="Уже видно клиенту">
+                  <EyeOutlined />
+                </CustomTooltip>
+              );
             } else {
               return (
                 <Checkbox
@@ -495,7 +505,7 @@ export const AcceptedGoodsList = () => {
             return `${(
               Number(value?.branch?.tarif || 0) -
               Number(record?.counterparty?.discount?.discount || 0)
-            ).toFixed(2)}`;
+            ).toFixed(2)}$`;
           }}
         />
 

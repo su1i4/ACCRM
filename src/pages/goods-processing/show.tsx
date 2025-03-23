@@ -163,9 +163,19 @@ export const GoodsShow: React.FC = () => {
           <TextField value={record?.status} />
         </Col>
         <Col xs={24} md={6}>
+          <Title level={5}>Тариф клиента</Title>
+          <TextField
+            value={`${(
+              Number(record?.counterparty?.branch?.tarif || 0) -
+              Number(record?.counterparty?.discount?.discount || 0)
+            ).toFixed(2)}`}
+          />
+        </Col>
+        <Col xs={24} md={6}>
           <Title level={5}>Комментарии</Title>
           <TextField value={record?.comments} />
         </Col>
+
         <Col xs={24} md={6}>
           <Title level={5}>Дата приёма</Title>
           <TextField

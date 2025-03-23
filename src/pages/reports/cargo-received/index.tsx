@@ -5,28 +5,34 @@ import {
   DatePicker,
   Dropdown,
   Card,
+  Space,
+  message,
 } from "antd";
 import {
   CalendarOutlined,
+  FileExcelOutlined,
+  GoogleOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useCustom, useNavigation } from "@refinedev/core";
 import dayjs from "dayjs";
 import { API_URL } from "../../../App";
+import * as XLSX from "xlsx";
 
 export const CargoReceivedReport = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { trackCode: { $contL: "" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10000);
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters }),
+      s: JSON.stringify({
+        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -41,9 +47,6 @@ export const CargoReceivedReport = () => {
       query: buildQueryParams(),
     },
   });
-
-  const [sorterVisible, setSorterVisible] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Fixed: Update filters function that properly formats filters
   const setFilters = (
@@ -66,8 +69,10 @@ export const CargoReceivedReport = () => {
 
   const datePickerContent = (
     <DatePicker.RangePicker
-      style={{ width: "280px" }}
+      style={{ width: "350px" }}
       placeholder={["Начальная дата", "Конечная дата"]}
+      showTime={{ format: "HH:mm" }}
+      format="YYYY-MM-DD HH:mm"
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
           // Fixed: Use consistent filter format
@@ -82,58 +87,13 @@ export const CargoReceivedReport = () => {
             ],
             "replace"
           );
+        } else {
+          setFilters([], "replace");
         }
       }}
     />
   );
-
-  const sortContent = (
-    <Card style={{ width: 200, padding: "0px" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-        <div
-          style={{
-            marginBottom: "8px",
-            color: "#666",
-            fontSize: "14px",
-            textAlign: "center",
-          }}
-        >
-          Сортировать по
-        </div>
-        {/* Сортировка по дате создания */}
-        <Button
-          type="text"
-          style={{
-            textAlign: "left",
-            fontWeight: sortField === "id" ? "bold" : "normal",
-          }}
-          onClick={() => {
-            setSortField("id");
-            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
-          }}
-        >
-          Дате создания{" "}
-          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
-        </Button>
-        <Button
-          type="text"
-          style={{
-            textAlign: "left",
-            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
-          }}
-          onClick={() => {
-            setSortField("counterparty.name");
-            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
-          }}
-        >
-          По фио{" "}
-          {sortField === "counterparty.name" &&
-            (sortDirection === "ASC" ? "↑" : "↓")}
-        </Button>
-      </div>
-    </Card>
-  );
-
+  
   const dataSource = data?.data?.data || [];
 
   const { show } = useNavigation();
@@ -164,20 +124,157 @@ export const CargoReceivedReport = () => {
     onChange: handleTableChange,
   };
 
+  // Функция для экспорта данных в Excel
+  const exportToExcel = () => {
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    // Преобразование данных для экспорта
+    const exportData = dataSource.map((item: any) => ({
+      "Дата приемки": item.created_at
+        ? dayjs(item.created_at).format("DD.MM.YYYY HH:MM")
+        : "",
+      "Трек-код": item.trackCode,
+      "Тип груза": item.cargoType,
+      "Код получателя": item.counterparty
+        ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+        : "",
+      "ФИО получателя": item.counterparty ? item.counterparty.name : "",
+      "Пункт назначения, Пвз": item.counterparty
+        ? `${item.counterparty.branch?.name},${
+            item.counterparty.under_branch?.address || ""
+          }`
+        : "",
+      Вес: item.weight,
+      Сумма: item.amount,
+      Скидка: item.discount,
+      Сотрудник: item.employee
+        ? `${item.employee.firstName}-${item.employee.lastName}`
+        : "",
+      Комментарий: item.comments,
+    }));
+
+    // Создание Excel файла
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Отчет по принятым грузам"
+    );
+
+    // Сохранение файла
+    XLSX.writeFile(workbook, "cargo_received_report.xlsx");
+  };
+
+  // Функция для экспорта данных в Google Sheets
+  const exportToGoogleSheets = () => {
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    try {
+      // Преобразование данных для экспорта
+      const exportData = dataSource.map((item: any) => ({
+        "Дата приемки": item.created_at
+          ? dayjs(item.created_at).format("DD.MM.YYYY HH:MM")
+          : "",
+        "Трек-код": item.trackCode,
+        "Тип груза": item.cargoType,
+        "Код получателя": item.counterparty
+          ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+          : "",
+        "ФИО получателя": item.counterparty ? item.counterparty.name : "",
+        "Пункт назначения, Пвз": item.counterparty
+          ? `${item.counterparty.branch?.name},${
+              item.counterparty.under_branch?.address || ""
+            }`
+          : "",
+        Вес: item.weight,
+        Сумма: item.amount,
+        Скидка: item.discount,
+        Сотрудник: item.employee
+          ? `${item.employee.firstName}-${item.employee.lastName}`
+          : "",
+        Комментарий: item.comments,
+      }));
+
+      // Создание CSV для Google Sheets
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+
+      // Создание Blob и ссылки для скачивания
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      // Создание элемента для скачивания
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "cargo_received_report.csv");
+      document.body.appendChild(link);
+
+      // Имитация клика для скачивания
+      link.click();
+
+      // Очистка
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      message.success("Файл готов для импорта в Google Sheets");
+    } catch (error) {
+      console.error("Ошибка при экспорте в Google Sheets:", error);
+      message.error("Ошибка при экспорте данных");
+    }
+  };
+
   return (
     <List
       title="Отчет по принятым грузам"
       headerButtons={() => {
         return (
-          <Dropdown
-            overlay={datePickerContent}
-            trigger={["click"]}
-            placement="bottomRight"
-          >
-            <Button icon={<CalendarOutlined />} className="date-picker-button">
-              Дата
+          <Space>
+            <Button
+              icon={<FileExcelOutlined />}
+              onClick={exportToExcel}
+              type="primary"
+              ghost
+              style={{
+                backgroundColor: "white",
+                borderColor: "#4285F4",
+                color: "#4285F4",
+              }}
+            >
+              XLSX
             </Button>
-          </Dropdown>
+            <Button
+              icon={<FileOutlined />}
+              onClick={exportToGoogleSheets}
+              type="primary"
+              ghost
+              style={{
+                backgroundColor: "white",
+                borderColor: "#4285F4",
+                color: "#4285F4",
+              }}
+            >
+              CSV
+            </Button>
+            <Dropdown
+              overlay={datePickerContent}
+              trigger={["click"]}
+              placement="bottomRight"
+            >
+              <Button
+                icon={<CalendarOutlined />}
+                className="date-picker-button"
+              >
+                Дата
+              </Button>
+            </Dropdown>
+          </Space>
         );
       }}
     >
@@ -190,6 +287,7 @@ export const CargoReceivedReport = () => {
             show("goods-processing", record.id as number);
           },
         })}
+        pagination={false}
       >
         <Table.Column
           dataIndex="created_at"
@@ -222,7 +320,7 @@ export const CargoReceivedReport = () => {
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="amount" title="Сумма" />
         <Table.Column dataIndex="discount" title="Скидка" />
-        <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
+        {/* <Table.Column dataIndex="paymentMethod" title="Способ оплаты" /> */}
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

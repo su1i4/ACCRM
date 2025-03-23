@@ -81,7 +81,7 @@ export const IssueProcessingList = () => {
     { status: { $eq: "Готов к выдаче" } },
   ]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
 
   const buildQueryParams = () => {
     return {
@@ -103,6 +103,40 @@ export const IssueProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
+  const [sumData, setSumData] = useState<{
+    Доллар: string;
+    Сом: string;
+    Рубль: string;
+  } | null>(null);
+
+  const getSumData = async () => {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      `${API_URL}/goods-processing/amount-in-currency/Готов к выдаче`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(selectedRowKeys),
+      }
+    );
+
+    const result = await response.json();
+    setSumData(result);
+  };
+
+  console.log(sumData);
+
+  useEffect(() => {
+    if (selectedRowKeys.length) {
+      getSumData();
+    } else {
+      setSumData(null);
+    }
+  }, [selectedRowKeys]);
 
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
@@ -474,8 +508,17 @@ export const IssueProcessingList = () => {
           }}
         >
           <Typography.Text>
-            Общая сумма: <strong>{totalAmount} $</strong>
-          </Typography.Text>{" "}
+            Доллар:{" "}
+            <strong>{Number(sumData?.Доллар || 0)?.toFixed(3)} $</strong>
+          </Typography.Text>
+          |
+          <Typography.Text>
+            Сом: <strong>{Number(sumData?.Сом || 0)?.toFixed(2)} сом</strong>
+          </Typography.Text>
+          |
+          <Typography.Text>
+            Рубль: <strong>{Number(sumData?.Рубль || 0)?.toFixed(2)} р</strong>
+          </Typography.Text>
           |
           <Typography.Text>
             Общий вес: <strong>{totalWeight} кг</strong>
@@ -489,24 +532,13 @@ export const IssueProcessingList = () => {
       <Table
         dataSource={dataSource}
         loading={isLoading}
+        pagination={false}
         rowKey="id"
         rowSelection={{
           type: "checkbox",
           selectedRowKeys,
           onChange: handleRowSelectionChange,
         }}
-        pagination={{
-          current: currentPage,
-          pageSize: pageSize,
-          total: data?.data?.total || 0,
-          onChange: (page, pageSize) => {
-            setCurrentPage(page);
-            setPageSize(pageSize);
-          },
-        }}
-        // onRow={(record) => ({
-        //   onDoubleClick: () => show("issue", record.id as number),
-        // })}
         scroll={{ x: 2000 }}
       >
         <Table.Column
@@ -546,6 +578,16 @@ export const IssueProcessingList = () => {
           dataIndex="weight"
           title="Вес"
           render={(value) => value + " кг"}
+        />
+        <Table.Column
+          dataIndex="counterparty"
+          title="Тариф клиента"
+          render={(value, record) => {
+            return `${(
+              Number(value?.branch?.tarif || 0) -
+              Number(record?.counterparty?.discount?.discount || 0)
+            ).toFixed(2)}$`;
+          }}
         />
         <Table.Column
           dataIndex="amount"

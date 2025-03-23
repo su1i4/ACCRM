@@ -1,12 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  Create,
-  getValueFromEvent,
-  useForm,
-  Edit,
-  useSelect,
-  useTable,
-} from "@refinedev/antd";
+import { useState, useEffect } from "react";
+import { useForm, Edit, useSelect } from "@refinedev/antd";
 import {
   Form,
   Input,
@@ -16,17 +9,20 @@ import {
   Upload,
   Row,
   Col,
-  Flex,
   message,
 } from "antd";
-import { CalendarOutlined, InboxOutlined } from "@ant-design/icons";
-import { EntityMetadata } from "typeorm";
+import { InboxOutlined } from "@ant-design/icons";
 import { API_URL } from "../../App";
-import dayjs from "dayjs";
-import { entityFields } from "./create";
+import { entityFields } from "../goods-processing";
+import { useParsed } from "@refinedev/core";
+import { useParams } from "react-router";
 
-export const GoodsEdit = () => {
-  const { formProps, saveButtonProps, queryResult, form } = useForm();
+export const AcceptedGoodsEdit = () => {
+  const { id } = useParsed();
+  const { formProps, saveButtonProps, queryResult, form } = useForm({
+    resource: "goods-processing",
+    id: Number(id),
+  });
   const [fileList, setFileList] = useState<any>([]);
 
   const record = queryResult?.data?.data;
@@ -106,7 +102,6 @@ export const GoodsEdit = () => {
     }
     return e?.fileList || [];
   };
-
 
   return (
     <Edit headerButtons={() => false} saveButtonProps={saveButtonProps}>

@@ -111,6 +111,7 @@ import { TriggersEdit } from "./pages/triggers/edit";
 import { TriggersShow } from "./pages/triggers/show";
 import { NotificationsList } from "./pages/notifications/list";
 import { NotificationsCreate } from "./pages/notifications/create";
+import { AcceptedGoodsEdit } from "./pages/accepted-goods/edit";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -242,6 +243,7 @@ function App() {
                   <Route path="/accepted-goods">
                     <Route index element={<AcceptedGoodsList />} />
                     <Route path="show/:id" element={<AcceptedGoodsShow />} />
+                    <Route path="edit/:id" element={<AcceptedGoodsEdit />} />
                   </Route>
 
                   <Route path="/not-paid-goods">

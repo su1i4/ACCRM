@@ -461,17 +461,27 @@ const ShipmentCreate = () => {
                 <Form.Item
                   name="length"
                   noStyle
-                  rules={[{ required: true, message: "Введите длину" }]}
+                  rules={[
+                    { required: true, message: "Введите длину" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная длина — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Длина"
                     onChange={() => {
-                      // Триггер для обновления расчетов
-                      form.validateFields(["width", "height"]);
+                      form.validateFields(["width", "height", "length"]);
                     }}
                     type="number"
-                    min={0}
                   />
                 </Form.Item>
 
@@ -480,17 +490,27 @@ const ShipmentCreate = () => {
                 <Form.Item
                   name="width"
                   noStyle
-                  rules={[{ required: true, message: "Введите ширину" }]}
+                  rules={[
+                    { required: true, message: "Введите ширину" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная ширина — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Ширина"
                     onChange={() => {
-                      // Триггер для обновления расчетов
-                      form.validateFields(["length", "height"]);
+                      form.validateFields(["length", "height", "width"]);
                     }}
                     type="number"
-                    min={0}
                   />
                 </Form.Item>
 
@@ -499,17 +519,27 @@ const ShipmentCreate = () => {
                 <Form.Item
                   name="height"
                   noStyle
-                  rules={[{ required: true, message: "Введите высоту" }]}
+                  rules={[
+                    { required: true, message: "Введите высоту" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная высота — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Высота"
                     onChange={() => {
-                      // Триггер для обновления расчетов
-                      form.validateFields(["length", "width"]);
+                      form.validateFields(["length", "width", "height"]);
                     }}
                     type="number"
-                    min={0}
                   />
                 </Form.Item>
               </Input.Group>
@@ -529,6 +559,13 @@ const ShipmentCreate = () => {
               rules={[{ required: true }]}
             >
               <Input disabled />
+            </Form.Item>
+            <Form.Item
+              style={{ width: 150 }}
+              label="Вес коробки"
+              name="box_weight"
+            >
+              <Input min={0} type="number" />
             </Form.Item>
           </Flex>
         </Row>
@@ -569,8 +606,8 @@ const ShipmentCreate = () => {
                   setFilters([{ trackCode: { $contL: "" } }]);
                   return;
                 }
-                setCurrentPage(1)
-                searchparams.set("page", '1');
+                setCurrentPage(1);
+                searchparams.set("page", "1");
                 setSearchParams(searchparams);
 
                 setFilters([
@@ -612,8 +649,10 @@ const ShipmentCreate = () => {
             <Table
               {...tableProps}
               rowKey="id"
+
               rowSelection={{
                 type: "checkbox",
+                preserveSelectedRowKeys: true,
                 onChange: (keys, rows) => {
                   setSelectedRowKeys(keys as number[]);
                   setSelectedRows(rows);
@@ -629,7 +668,7 @@ const ShipmentCreate = () => {
               locale={{
                 emptyText: "Нет доступных товаров для отправки",
               }}
-              scroll={{x: 'max-content'}}
+              scroll={{ x: "max-content" }}
             >
               {catchDateTable("Дата приемки", "В складе")}
               <Table.Column dataIndex="cargoType" title="Тип груза" />
@@ -653,7 +692,7 @@ const ShipmentCreate = () => {
               />
               <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="status" title="Статус" />
-              <Table.Column dataIndex="comments" title="Комментарий" />   
+              <Table.Column dataIndex="comments" title="Комментарий" />
             </Table>
           </Col>
         </Row>

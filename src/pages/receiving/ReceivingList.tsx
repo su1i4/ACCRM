@@ -185,7 +185,7 @@ const ReceivingList = () => {
           title={"Пункт назначения"}
         />
         <Table.Column dataIndex="status" title={"Статус"} />
-        {operationStatus()}
+        {/* {operationStatus()} */}
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

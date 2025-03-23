@@ -3,7 +3,7 @@ import {
   ArrowUpOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { CreateButton, List, useTable } from "@refinedev/antd";
+import { CreateButton, List, TextField, useTable } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Flex, Input, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
@@ -35,6 +35,21 @@ const ShipmentList = () => {
       query: buildQueryParams(),
     },
   });
+
+  const {
+    data: statistic,
+    isLoading: statisticLoading,
+    refetch: statRefetch,
+  } = useCustom({
+    url: `${API_URL}/shipments/statistics`,
+    method: "get",
+  });
+
+  useEffect(() => {
+    if (!statisticLoading) {
+      statRefetch();
+    }
+  }, []);
 
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
@@ -153,15 +168,16 @@ const ShipmentList = () => {
           ) : (
             <>
               <Typography.Text style={{ fontSize: 14 }}>
-                Общий вес: <strong>20 кг</strong>
+                Общий вес: <strong>{statistic?.data?.totalWeight} кг</strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
                 {/* @ts-ignore */}
                 Количество рейсов:{" "}
-                <strong>{tableProps.pagination?.total}</strong>
+                <strong>{statistic?.data?.totalShipments}</strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
-                Количество посылок: <strong>20</strong>
+                Количество посылок:{" "}
+                <strong>{statistic?.data?.totalParcels}</strong>
               </Typography.Text>
             </>
           )}
@@ -178,7 +194,13 @@ const ShipmentList = () => {
         scroll={{ x: 1500 }}
       >
         {catchDateTable("Дата отправки", "В пути")}
-        <Table.Column dataIndex="id" title={"Номер рейса"} />
+        <Table.Column
+          dataIndex="id"
+          title={"Номер рейса"}
+          render={(value) => (
+            <TextField style={{padding: 5, textDecoration: 'underline', cursor: 'pointer' }} value={value} />
+          )}
+        />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
         <Table.Column dataIndex="truck_number" title={"Номер фуры"} />
         <Table.Column
@@ -190,7 +212,7 @@ const ShipmentList = () => {
         <Table.Column
           dataIndex="weight"
           title={"Вес"}
-          render={(value) => (
+          render={(value, record) => (
             <p
               style={{
                 whiteSpace: "nowrap",
@@ -198,7 +220,7 @@ const ShipmentList = () => {
                 textOverflow: "ellipsis",
               }}
             >
-              {value} кг
+              {Number(value) + Number(record?.box_weight)} кг
             </p>
           )}
         />
@@ -211,6 +233,7 @@ const ShipmentList = () => {
         />
         <Table.Column dataIndex="cube" title={"Куб"} />
         <Table.Column dataIndex="density" title={"Плотность"} />
+        <Table.Column dataIndex="box_weight" title={"Вес коробки"} />
         <Table.Column dataIndex="type" title={"Тип"} />
         <Table.Column
           render={(value) => value?.name}

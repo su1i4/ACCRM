@@ -59,9 +59,7 @@ const ShipmentEdit = () => {
   const [sortField, setSortField] = useState<
     "id" | "counterparty.name" | "operation_id"
   >("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { trackCode: { $contL: "" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,11 +81,7 @@ const ShipmentEdit = () => {
     };
   };
 
-  const {
-    data,
-    isLoading,
-    refetch
-  } = useCustom<any>({
+  const { data, isLoading, refetch } = useCustom<any>({
     url: `${API_URL}/goods-processing`,
     method: "get",
     config: {
@@ -168,27 +162,29 @@ const ShipmentEdit = () => {
     },
   });
 
+  const allValues = Form.useWatch([], form);
+
   // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
   const saveButtonProps = {
     ...originalSaveButtonProps,
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (selectedRowKeys.length === 0) {
-        // Показываем предупреждение, если товары не выбраны
-        return form
-          .validateFields()
-          .then(() => {
-            // Если форма валидна, но товары не выбраны - показываем ошибку
-            form.setFields([
-              {
-                name: "_goods",
-                errors: ["Необходимо выбрать хотя бы один товар для отправки"],
-              },
-            ]);
-          })
-          .catch((errorInfo) => {
-            // Стандартная обработка ошибок валидации формы
-          });
-      }
+      // if (selectedRowKeys.length === 0) {
+      //   // Показываем предупреждение, если товары не выбраны
+      //   return form
+      //     .validateFields()
+      //     .then(() => {
+      //       // Если форма валидна, но товары не выбраны - показываем ошибку
+      //       form.setFields([
+      //         {
+      //           name: "_goods",
+      //           errors: ["Необходимо выбрать хотя бы один товар для отправки"],
+      //         },
+      //       ]);
+      //     })
+      //     .catch((errorInfo) => {
+      //       // Стандартная обработка ошибок валидации формы
+      //     });
+      // }
 
       // Если товары выбраны, вызываем оригинальный обработчик
       if (originalSaveButtonProps.onClick) {
@@ -235,42 +231,40 @@ const ShipmentEdit = () => {
       }, 0);
 
       setTotalWeight(sum);
-      form.setFieldsValue({ weight: sum.toFixed(2) });
+      form.setFieldsValue({ weight: sum });
 
       // Расчитываем "куб" и "плотность"
       const length = form.getFieldValue("length") || 0;
       const width = form.getFieldValue("width") || 0;
       const height = form.getFieldValue("height") || 0;
 
-      const cube = ((length * width * height) / 1000000).toFixed(2);
+      const cube = (length * width * height) / 1000000;
       form.setFieldsValue({ cube });
 
-      if (parseFloat(cube) > 0) {
-        const density = (sum / parseFloat(cube)).toFixed(2);
-        form.setFieldsValue({ density: density });
+      if (cube > 0) {
+        const boxWeight = Number(form.getFieldValue("box_weight") || 0);
+        const density = (sum + boxWeight) / cube;
+        form.setFieldsValue({ density });
       }
     } else {
       setTotalWeight(0);
-      form.setFieldsValue({ weight: "0" });
+      form.setFieldsValue({ weight: 0 });
 
-      // Не сбрасываем куб и плотность при отсутствии товаров, если есть размеры
       const length = form.getFieldValue("length") || 0;
       const width = form.getFieldValue("width") || 0;
       const height = form.getFieldValue("height") || 0;
 
       if (length && width && height) {
-        const cube = ((length * width * height) / 1000000).toFixed(2);
+        const cube = (length * width * height) / 1000000;
         form.setFieldsValue({ cube });
 
-        // Плотность 0, если нет веса
-        form.setFieldsValue({ density: "0" });
+        form.setFieldsValue({ density: 0 });
       } else {
-        form.setFieldsValue({ cube: "0", density: "0" });
+        form.setFieldsValue({ cube: 0, density: 0 });
       }
     }
   }, [selectedRows, form]);
 
-  // Обновляем куб и плотность при изменении размеров
   useEffect(() => {
     const updateCalculations = () => {
       const length = form.getFieldValue("length") || 0;
@@ -278,13 +272,16 @@ const ShipmentEdit = () => {
       const height = form.getFieldValue("height") || 0;
 
       if (length && width && height) {
-        const cube = ((length * width * height) / 1000000).toFixed(2);
+        const cube = (length * width * height) / 1000000;
         form.setFieldsValue({ cube });
 
-        const weight = form.getFieldValue("weight") || 0;
-        if (parseFloat(cube) > 0 && parseFloat(weight) > 0) {
-          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(2);
-          form.setFieldsValue({ density: density });
+        const itemWeight = parseFloat(form.getFieldValue("weight") || 0);
+        const boxWeight = parseFloat(form.getFieldValue("box_weight") || 0);
+        const totalWeight = itemWeight + boxWeight;
+
+        if (cube > 0 && totalWeight > 0) {
+          const density = totalWeight / cube;
+          form.setFieldsValue({ density });
         }
       }
     };
@@ -295,6 +292,7 @@ const ShipmentEdit = () => {
     form.getFieldValue("length"),
     form.getFieldValue("width"),
     form.getFieldValue("height"),
+    form.getFieldValue("box_weight"),
   ]);
 
   const { selectProps: branchSelectProps } = useSelect({
@@ -463,6 +461,8 @@ const ShipmentEdit = () => {
     onChange: handleTableChange,
   };
 
+  console.log("lox");
+
   return (
     <Edit
       //@ts-ignore
@@ -531,14 +531,27 @@ const ShipmentEdit = () => {
                 <Form.Item
                   name="length"
                   noStyle
-                  rules={[{ required: true, message: "Введите длину" }]}
+                  rules={[
+                    { required: true, message: "Введите длину" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная длина — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Длина"
                     onChange={() => {
-                      form.validateFields(["width", "height"]);
+                      form.validateFields(["width", "height", "length"]);
                     }}
+                    type="number"
                   />
                 </Form.Item>
 
@@ -547,14 +560,27 @@ const ShipmentEdit = () => {
                 <Form.Item
                   name="width"
                   noStyle
-                  rules={[{ required: true, message: "Введите ширину" }]}
+                  rules={[
+                    { required: true, message: "Введите ширину" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная ширина — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Ширина"
                     onChange={() => {
-                      form.validateFields(["length", "height"]);
+                      form.validateFields(["length", "height", "width"]);
                     }}
+                    type="number"
                   />
                 </Form.Item>
 
@@ -563,14 +589,27 @@ const ShipmentEdit = () => {
                 <Form.Item
                   name="height"
                   noStyle
-                  rules={[{ required: true, message: "Введите высоту" }]}
+                  rules={[
+                    { required: true, message: "Введите высоту" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || Number(value) >= 10) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("Минимальная высота — 10см")
+                        );
+                      },
+                    },
+                  ]}
                 >
                   <Input
                     style={{ width: 100, textAlign: "center" }}
                     placeholder="Высота"
                     onChange={() => {
-                      form.validateFields(["length", "width"]);
+                      form.validateFields(["length", "width", "height"]);
                     }}
+                    type="number"
                   />
                 </Form.Item>
               </Input.Group>
@@ -584,12 +623,19 @@ const ShipmentEdit = () => {
               <Input disabled />
             </Form.Item>
             <Form.Item
-              style={{ width: 120 }}
+              style={{ width: 150 }}
               label="Плотность"
               name="density"
               rules={[{ required: true }]}
             >
               <Input disabled />
+            </Form.Item>
+            <Form.Item
+              style={{ width: 150 }}
+              label="Вес коробки"
+              name="box_weight"
+            >
+              <Input min={0} type="number" />
             </Form.Item>
           </Flex>
         </Row>
@@ -635,7 +681,7 @@ const ShipmentEdit = () => {
               }
 
               searchparams.set("page", "1");
-              searchparams.set("size", "10");
+              searchparams.set("size", String(pageSize));
               setSearchParams(searchparams);
               setSearch(value);
               setFilters(

@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
+import { List, useTable, useSelect } from "@refinedev/antd";
 import {
-  List,
-  useTable,
-  EditButton,
-  ShowButton,
-  DeleteButton,
-} from "@refinedev/antd";
-import { Space, Table, Input, Button, Row, Col, Dropdown, Card } from "antd";
-import { BaseKey, BaseRecord, useNavigation, useCustom } from "@refinedev/core";
+  Space,
+  Table,
+  Input,
+  Button,
+  Row,
+  Col,
+  Dropdown,
+  Card,
+  Select,
+} from "antd";
+import { BaseRecord, useNavigation, useCustom } from "@refinedev/core";
 import { MyCreateModal } from "./modal/create-modal";
 import {
   ArrowDownOutlined,
@@ -24,6 +28,7 @@ export const CounterpartyList: React.FC = () => {
   const [sortField, setSortField] = useState<"name" | "clientCode" | "id">(
     "id"
   );
+  const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sorterVisible, setSorterVisible] = useState(false);
 
@@ -38,13 +43,11 @@ export const CounterpartyList: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  // Функция для построения параметров запроса с сортировкой и фильтрами
   const buildQueryParams = () => {
     const params: any = {
       sort: `${sortField},${sortDirection}`,
     };
 
-    // Добавляем параметр поиска, если он есть
     if (searchValue) {
       params.s = JSON.stringify({
         $or: [
@@ -58,7 +61,6 @@ export const CounterpartyList: React.FC = () => {
     return params;
   };
 
-  // Используем useCustom для получения данных с сортировкой
   const { data, isLoading, refetch } = useCustom<any>({
     url: `${API_URL}/counterparty`,
     method: "get",
@@ -67,17 +69,14 @@ export const CounterpartyList: React.FC = () => {
     },
   });
 
-  // Обновляем данные при изменении параметров сортировки или поиска
   useEffect(() => {
     refetch();
   }, [sortDirection, sortField, searchValue]);
 
-  // Обновляем данные при монтировании компонента
   useEffect(() => {
     refetch();
   }, []);
 
-  // Подготавливаем данные для таблицы
   const dataSource = data?.data || [];
   const tableProps = {
     ...defaultTableProps,
@@ -88,15 +87,8 @@ export const CounterpartyList: React.FC = () => {
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
-  const handleEditClick = (id: BaseKey | undefined) => {
-    // @ts-ignore
-    setEditId(id);
-    setOpenEdit(true);
-  };
-
   const { show } = useNavigation();
 
-  // Содержимое выпадающего меню сортировки
   const sortContent = (
     <Card style={{ width: 200, padding: "0px" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -139,7 +131,6 @@ export const CounterpartyList: React.FC = () => {
         >
           Имени {sortField === "name" && (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
-        {/* Сортировка по коду клиента */}
         <Button
           type="text"
           style={{
@@ -158,6 +149,11 @@ export const CounterpartyList: React.FC = () => {
       </div>
     </Card>
   );
+
+  const { selectProps: branchSelectProps } = useSelect({
+    resource: "branch",
+    optionLabel: "name",
+  });
 
   return (
     <List headerButtons={() => null}>
@@ -184,9 +180,6 @@ export const CounterpartyList: React.FC = () => {
               onClick={() => setOpen(true)}
             />
 
-            {/*<Button icon={<EditOutlined />} onClick={handleBulkEdit} />*/}
-            {/* <Button icon={<UnorderedListOutlined />} /> */}
-
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -206,12 +199,6 @@ export const CounterpartyList: React.FC = () => {
                 }
               />
             </Dropdown>
-
-            <Button
-              icon={<SyncOutlined />}
-              onClick={() => refetch()}
-              title="Обновить данные"
-            />
           </Space>
         </Col>
         <Col flex="auto">
@@ -238,18 +225,25 @@ export const CounterpartyList: React.FC = () => {
           />
         </Col>
         <Col>
-          {/*<Dropdown*/}
-          {/*    overlay={}*/}
-          {/*    trigger={['click']}*/}
-          {/*    placement="bottomRight"*/}
-          {/*>*/}
-          {/*    <Button*/}
-          {/*        icon={<CalendarOutlined />}*/}
-          {/*        className="date-picker-button"*/}
-          {/*    >*/}
-          {/*        Дата*/}
-          {/*    </Button>*/}
-          {/*</Dropdown>*/}
+          <Select
+            {...branchSelectProps}
+            placeholder="Выберите филиал"
+            style={{ width: 300 }}
+            value={selectedBranch?.id}
+            onChange={(branch) => {
+              setSelectedBranch(branch);
+              setFilters(
+                [
+                  {
+                    field: "branch_id",
+                    operator: "eq",
+                    value: branch.id,
+                  },
+                ],
+                "replace"
+              );
+            }}
+          />
         </Col>
       </Row>
 
@@ -280,38 +274,47 @@ export const CounterpartyList: React.FC = () => {
         <Table.Column dataIndex="name" title="Фио" />
         <Table.Column dataIndex="address" title="Адрес" />
         <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
-        <Table.Column dataIndex="branch" title="Тариф клиента" render={(value, record) => {
-          return (Number(value?.tarif) || 0) - (Number(record?.discount?.discount) || 0);
-        }}   />
-        <Table.Column dataIndex="email" title="Почта" render={(value) => {
-          return value ? value : "-";
-        }} />
+        <Table.Column
+          dataIndex="branch"
+          title="Тариф клиента"
+          render={(value, record) => {
+            return `${
+              (Number(value?.tarif) || 0) -
+              (Number(record?.discount?.discount) || 0)
+            }$`;
+          }}
+        />
+        <Table.Column
+          dataIndex="email"
+          title="Почта"
+          render={(value) => {
+            return value ? value : "-";
+          }}
+        />
         <Table.Column
           dataIndex="discount"
           title="Скидка"
           render={(value) => {
-            return value ? value?.discount : "0";
+            return value ? value?.discount + "$" : "0$";
           }}
         />
 
         <Table.Column
           dataIndex="goods"
-          title="Сумма заказов Кг"
+          title="Общий вес кг"
           render={(value) => {
-            return value.reduce(
-              (acc: number, curr: any) => acc + Number(curr.weight),
-              0
-            );
+            return `${value
+              .reduce((acc: number, curr: any) => acc + Number(curr.weight), 0)
+              .toFixed(2)} кг`;
           }}
         />
         <Table.Column
           dataIndex="goods"
-          title="Сумма заказов USD"
+          title="Общая сумма USD"
           render={(value) => {
-            return value.reduce(
-              (acc: number, curr: any) => acc + Number(curr.amount),
-              0
-            );
+            return `${value
+              .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0)
+              .toFixed(2)}$`;
           }}
         />
         <Table.Column

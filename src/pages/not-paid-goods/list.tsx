@@ -44,7 +44,7 @@ export const NotPaidGoodsList = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
 
   const buildQueryParams = () => {
     return {
@@ -281,7 +281,7 @@ export const NotPaidGoodsList = () => {
   };
 
   useEffect(() => {
-    const value = searchparams.get('value')
+    const value = searchparams.get("value");
     if (value) {
       setFilters(
         [
@@ -296,8 +296,8 @@ export const NotPaidGoodsList = () => {
         "replace"
       );
     }
-    setSearch(value || '')
-  }, [])
+    setSearch(value || "");
+  }, []);
 
   // Формируем пропсы для таблицы из данных useCustom
   const tableProps = {
@@ -313,7 +313,11 @@ export const NotPaidGoodsList = () => {
 
   return (
     <List headerButtons={() => false}>
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+      <Row
+        gutter={[16, 16]}
+        align="middle"
+        style={{ marginBottom: 16, position: "sticky", top: 80, zIndex: 10 }}
+      >
         <Col>
           <Space size="middle">
             <Dropdown
@@ -347,13 +351,13 @@ export const NotPaidGoodsList = () => {
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
                 setSearch("");
-                searchparams.set('value', '');
+                searchparams.set("value", "");
                 setSearchParams(searchparams);
                 return;
               }
 
               searchparams.set("page", "1");
-              searchparams.set("size", "10");
+              searchparams.set("size", String(pageSize));
               searchparams.set("value", value);
               setSearchParams(searchparams);
               setSearch(value);

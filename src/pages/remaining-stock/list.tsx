@@ -262,30 +262,6 @@ export const RemainingStockProcessingList = () => {
     setIsModalVisible1(false);
   };
 
-  const handleBulkEdit = () => {
-    const selectedRowKeys = data?.data?.map((item: any) => item.id) || [];
-    if (selectedRowKeys.length > 0) {
-      updateMany({
-        resource: "goods",
-        ids: selectedRowKeys,
-        values: {
-          /* новые значения для всех полей */
-        },
-      });
-      console.log("Массовое изменение элементов:", selectedRowKeys);
-    } else {
-      alert("Выберите элементы для массового изменения");
-    }
-  };
-
-  const { data: branchData, isLoading: branchIsLoading } = useMany({
-    resource: "branch",
-    ids: dataSource?.map((item: any) => item?.branch?.id).filter(Boolean) ?? [],
-    queryOptions: {
-      enabled: !!dataSource,
-    },
-  });
-
   const { data: userData, isLoading: userIsLoading } = useMany({
     resource: "users",
     ids: dataSource?.map((item: any) => item?.user?.id).filter(Boolean) ?? [],
@@ -311,7 +287,6 @@ export const RemainingStockProcessingList = () => {
 
   const { push } = useNavigation();
 
-  const [isModalVisibleTransfer, setIsModalVisibleTransfer] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedRecord, setSelectedRecord] = useState<BaseRecord | null>(null);
   const { mutate } = useUpdate({

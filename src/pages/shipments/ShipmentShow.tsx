@@ -109,7 +109,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Вес</Title>
-          <TextField value={record?.weight} />
+          <TextField value={Number(record?.weight) + Number(record?.box_weight)} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Размеры (Д × Ш × В)</Title>

@@ -25,8 +25,8 @@ export const DiscountCreate: React.FC = () => {
       ],
     },
     pagination: {
-      mode: 'off'
-    }
+      mode: "off",
+    },
   });
 
   return (
@@ -40,14 +40,14 @@ export const DiscountCreate: React.FC = () => {
           <Select
             showSearch
             filterOption={(input, option) =>
-              (option?.label ?? "")
-                .toLowerCase()
-                .includes(input.toLowerCase())
+              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
             }
             options={tableProps.dataSource
               ?.filter((item: any) => item.discount === null)
               .map((item: any) => ({
-                label: `${item.name} - ${item.clientPrefix}-${String(item.clientCode).padStart(4, '0')}`,
+                label: `${item.name} - ${item.clientPrefix}-${String(
+                  item.clientCode
+                ).padStart(4, "0")}`,
                 value: item.id,
               }))}
           />

@@ -18,13 +18,6 @@ export const ReportList = () => {
             link: 'cargo-received'
         },
         {
-            id: "cash-book",
-            title: "Отчеты по отправкам",
-            description: "Анализ отправленных грузов со складов",
-            icon: <CargoReceivedIcon2 />,
-            link: 'cash-book'
-        },
-        {
             id: "cargo-types",
             title: "Отчеты по полученным товарам",
             description: "Фиксирует, сколько товаров прибыло на склады в определенный",

@@ -46,6 +46,7 @@ export const routes = [
     name: "accepted-goods",
     list: "/accepted-goods",
     show: "/accepted-goods/show/:id",
+    edit: "/accepted-goods/edit/:id",
     meta: {
       canDelete: true,
       label: "Принятые товары",

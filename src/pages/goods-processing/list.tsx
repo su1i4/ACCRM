@@ -324,9 +324,11 @@ export const GoogsProcessingList = () => {
     onChange: handleTableChange,
   };
 
+  console.log(pageSize, 'this is page size')
+
   return (
     <List headerButtons={() => false}>
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16, position: 'sticky', top: 80, zIndex: 10 }}>
         <Col>
           <Space size="middle">
             <CustomTooltip title="Создать">
@@ -388,7 +390,7 @@ export const GoogsProcessingList = () => {
               }
 
               searchparams.set("page", "1");
-              searchparams.set("size", "10");
+              searchparams.set("size", String(pageSize));
               searchparams.set("value", value)
               setSearchParams(searchparams);
               setSearch(value);
@@ -510,7 +512,7 @@ export const GoogsProcessingList = () => {
             return `${(
               Number(value?.branch?.tarif || 0) -
               Number(record?.counterparty?.discount?.discount || 0)
-            ).toFixed(2)}`;
+            ).toFixed(2)}$`;
           }}
         />
 
