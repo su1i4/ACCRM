@@ -11,14 +11,14 @@ export const MyEditModal: React.FC<{
   onSuccess?: () => void;
 }> = ({ id, open, onClose, onSuccess }) => {
   const { modalProps, formProps, submit } = useModalForm({
-    resource: "discount",
+    resource: "counterparty",
     action: "edit",
     // @ts-ignore
-    id,
+    id, // Передаем ID редактируемого элемента
     onMutationSuccess: () => {
-      onClose();
+      onClose(); // Закрываем модальное окно после успешного обновления
       if (onSuccess) {
-        onSuccess();
+        onSuccess(); // Вызываем функцию обновления данных
       }
     },
   });
@@ -30,17 +30,41 @@ export const MyEditModal: React.FC<{
       onOk={submit}
       open={open} // Управляем открытием через props
       onCancel={onClose} // Закрываем модалку
-      style={{ width: 200 }}
     >
       <Form {...formProps} layout="vertical">
         <Form.Item
-          name="discount"
-          label="Скидка"
-          rules={[{ required: true, message: "Введите Скидку" }]}
+          label="Фио"
+          name="name"
+          rules={[{ required: true, message: "Укажите Фио" }]}
         >
-          <Input min={0} max={100} type="number" />
+          <Input />
+        </Form.Item>
+
+        <Form.Item label="Адрес" name="address" rules={[{ required: false }]}>
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          label="Номер телефона"
+          name="phoneNumber"
+          rules={[{ required: true, message: "Введите номер телефона" }]}
+        >
+          <PhoneInput onlyCountries={["kg", "cn", "kz", "ru"]} country={"kg"} />
+        </Form.Item>
+
+        <Form.Item
+          label="Почта"
+          name="email"
+          rules={[{ type: "email", message: "Неверный формат email" }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item label="Комментарий" name="comment">
+          <Input.TextArea rows={4} />
         </Form.Item>
       </Form>
     </Modal>
   );
 };
+
