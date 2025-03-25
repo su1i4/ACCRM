@@ -88,8 +88,9 @@ export const i18nProvider_ru = {
       "notification.titles.create": "Создать уведомление",
       "notifications.editSuccess": "Успешно обновлено",
       "accepted-goods.titles.edit": "Изменить принятый товар",
-      "under-branch.titles.edit": 'Изменить пвз',
-      "under-branch.titles.show": 'Просмотр пвз'
+      "under-branch.titles.edit": "Изменить пвз",
+      "under-branch.titles.show": "Просмотр пвз",
+      "notifications.deleteSuccess": "Успешно удалено",
     };
     return translations[key] || key;
   },

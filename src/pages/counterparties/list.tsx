@@ -59,6 +59,12 @@ export const CounterpartyList: React.FC = () => {
       });
     }
 
+    if (selectedBranch) {
+      params.s = JSON.stringify({
+        $or: [{ branch_id: { $eq: selectedBranch } }],
+      });
+    }
+
     return params;
   };
 
@@ -159,6 +165,7 @@ export const CounterpartyList: React.FC = () => {
   return (
     <List headerButtons={() => null}>
       <MyCreateModal
+        id={1}
         open={open}
         onClose={() => setOpen(false)}
         onSuccess={() => refetch()}

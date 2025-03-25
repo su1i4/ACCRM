@@ -5,14 +5,16 @@ import {
   EditButton,
   DeleteButton,
 } from "@refinedev/antd";
-import { useShow } from "@refinedev/core";
+import { useNavigation, useParsed, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Button } from "antd";
 import { MyEditModal } from "./modal/edit-modal";
 import { useState } from "react";
+import { MyCreateModal } from "./modal/create-modal";
 
 const { Title } = Typography;
 
 export const CounterpartyShow: React.FC = () => {
+  const { id } = useParsed();
   const { queryResult } = useShow();
   const { data, isLoading } = queryResult;
 
@@ -30,19 +32,32 @@ export const CounterpartyShow: React.FC = () => {
   const [openEdit, setOpenEdit] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
+  const { push } = useNavigation();
+
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (
         <>
-          <Button onClick={() => setOpenEdit(true)}>Добавить скидку</Button>
+          <Button
+            onClick={() => {
+              if (record?.discount?.id) {
+                push(`/discount/edit/${record?.discount?.id}`);
+              } else {
+                setEditId(Number(record?.id));
+                setOpenEdit(true);
+              }
+            }}
+          >
+            {record?.discount?.id ? "Изменить скидку" : "Добавить скидку"}
+          </Button>
           {editButtonProps && <EditButton {...editButtonProps} />}
           {deleteButtonProps && <DeleteButton {...deleteButtonProps} />}
         </>
       )}
       isLoading={isLoading}
     >
-      <MyEditModal
-        id={editId}
+      <MyCreateModal
+        id={editId || 0}
         open={openEdit}
         onClose={() => setOpenEdit(false)}
         // onSuccess={() => refetch()}

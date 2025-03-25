@@ -230,7 +230,7 @@ function App() {
                 >
                   <Route
                     index
-                    element={<NavigateToResource resource="goods-processing" />}
+                    element={<NavigateToResource resource="accepted-goods" />}
                   />
 
                   <Route path="/goods-processing">
