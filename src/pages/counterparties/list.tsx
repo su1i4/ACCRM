@@ -165,7 +165,6 @@ export const CounterpartyList: React.FC = () => {
   return (
     <List headerButtons={() => null}>
       <MyCreateModal
-        id={1}
         open={open}
         onClose={() => setOpen(false)}
         onSuccess={() => refetch()}

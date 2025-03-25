@@ -10,6 +10,7 @@ import { Typography, Row, Col, Button } from "antd";
 import { MyEditModal } from "./modal/edit-modal";
 import { useState } from "react";
 import { MyCreateModal } from "./modal/create-modal";
+import { DiscountModal } from "./modal/fuck-modal";
 
 const { Title } = Typography;
 
@@ -56,7 +57,7 @@ export const CounterpartyShow: React.FC = () => {
       )}
       isLoading={isLoading}
     >
-      <MyCreateModal
+      <DiscountModal
         id={editId || 0}
         open={openEdit}
         onClose={() => setOpenEdit(false)}
