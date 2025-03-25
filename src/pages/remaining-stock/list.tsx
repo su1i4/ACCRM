@@ -54,7 +54,7 @@ export const RemainingStockProcessingList = () => {
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [filterVisible, setFilterVisible] = useState(false);
   const [sortVisible, setSortVisible] = useState(false);
   const [isModalVisible1, setIsModalVisible1] = useState(false);

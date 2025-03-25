@@ -150,7 +150,7 @@ const ReceivingShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Количество посылок</Title>
-          <TextField value={record?.count} />
+          <TextField value={record?.goodsCount} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата</Title>

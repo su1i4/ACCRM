@@ -16,7 +16,7 @@ const ShipmentList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [filters, setFilters] = useState<any[]>([]);
   const { show } = useNavigation();
 
@@ -122,7 +122,7 @@ const ShipmentList = () => {
         <Input
           placeholder="Поиск по номеру рейса, коду коробки и по номеру фуры"
           prefix={<SearchOutlined />}
-          style={{ width: "50%", height: 33 }}
+          style={{ width: "40%", height: 33 }}
           onChange={(e) => {
             const value = e.target.value;
             if (!value) {
@@ -156,7 +156,7 @@ const ShipmentList = () => {
             alignItems: "center",
             gap: 10,
             flexWrap: "wrap",
-            width: "50%",
+            width: "60%",
             height: 33,
             boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
           }}

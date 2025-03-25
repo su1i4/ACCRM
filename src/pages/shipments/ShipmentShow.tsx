@@ -109,7 +109,9 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Вес</Title>
-          <TextField value={Number(record?.weight) + Number(record?.box_weight)} />
+          <TextField
+            value={Number(record?.weight) + Number(record?.box_weight)}
+          />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Размеры (Д × Ш × В)</Title>
@@ -128,7 +130,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Количество посылок</Title>
-          <TextField value={record?.count} />
+          <TextField value={record?.goodsCount} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата</Title>
@@ -151,15 +153,20 @@ const ShipmentShow = () => {
           <TextField value={record?.status} />
         </Col>
         <Col xs={24} md={6}>
-          <Title level={5}>Статус</Title>
-          <TextField value={record?.truck_number} />
+          <Title level={5}>Номер фуры</Title>
+          <TextField value={record?.truck_number || '-'} />
         </Col>
       </Row>
 
       <Title level={4} style={{ marginTop: 24 }}>
         Товары в этом рейсе
       </Title>
-      <Table {...tableProps} rowKey="id" scroll={{x: 1000}} >
+      <Table
+        pagination={{ showSizeChanger: true }}
+        {...tableProps}
+        rowKey="id"
+        scroll={{ x: 1000 }}
+      >
         {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"

@@ -31,6 +31,11 @@ import {
 } from "@ant-design/icons";
 import { API_URL } from "../../App";
 import TextArea from "antd/lib/input/TextArea";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const CashDeskCreate: React.FC = () => {
   const { push } = useNavigation();
@@ -58,8 +63,6 @@ export const CashDeskCreate: React.FC = () => {
           },
         });
       }
-      console.log("row");
-      console.log(selectedRowKeys);
       if (selectedRowKeys.length === 0) push("/income");
     },
     resource: "cash-desk",
@@ -438,7 +441,7 @@ export const CashDeskCreate: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={isAgent ? 6 : 8}>
+              {/* <Col span={isAgent ? 6 : 8}>
                 <Form.Item
                   label="Трек-код"
                   name="trackCode"
@@ -447,10 +450,10 @@ export const CashDeskCreate: React.FC = () => {
                 >
                   <Input />
                 </Form.Item>
-              </Col>
+              </Col> */}
             </>
           )}
-          <Col span={isAgent ? 4 : 12}>
+          <Col span={isAgent ? 7 : 12}>
             <Form.Item
               name="type_currency"
               label="Валюта"
@@ -470,7 +473,7 @@ export const CashDeskCreate: React.FC = () => {
               />
             </Form.Item>
           </Col>
-          <Col span={isAgent ? 4 : 12}>
+          <Col span={isAgent ? 7 : 12}>
             <Form.Item
               label="Сумма"
               name="amount"

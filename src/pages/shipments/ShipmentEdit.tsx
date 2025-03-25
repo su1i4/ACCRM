@@ -63,7 +63,7 @@ const ShipmentEdit = () => {
   const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
 
   const buildQueryParams = () => {
     return {
@@ -470,7 +470,7 @@ const ShipmentEdit = () => {
       headerButtons={() => false}
       isLoading={formLoading || isLoadingShipment}
     >
-      <Form {...formProps} layout="vertical">
+      <Form  {...formProps} layout="vertical">
         {/* Скрытое поле для отображения ошибки выбора товаров */}
         <Form.Item name="_goods" style={{ display: "none" }}>
           <Input />
@@ -478,8 +478,20 @@ const ShipmentEdit = () => {
 
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
+            {/* <Form.Item
+              label="Дата отправки"
+              name="created_at"
+              style={{ marginBottom: 5 }}
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder="Выберите дату"
+                showTime
+              />
+            </Form.Item> */}
             <Form.Item
-              style={{ minWidth: 250 }}
+              style={{ minWidth: 200 }}
               label="Тип"
               name="type"
               rules={[{ required: true }]}
@@ -739,6 +751,7 @@ const ShipmentEdit = () => {
               locale={{
                 emptyText: "Нет доступных товаров для отправки",
               }}
+              pagination={{ showSizeChanger: true }}
             >
               <Table.Column
                 dataIndex="created_at"

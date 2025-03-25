@@ -128,8 +128,6 @@ export const IssueProcessingList = () => {
     setSumData(result);
   };
 
-  console.log(sumData);
-
   useEffect(() => {
     if (selectedRowKeys.length) {
       getSumData();

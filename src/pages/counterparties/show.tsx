@@ -61,7 +61,6 @@ export const CounterpartyShow: React.FC = () => {
         id={editId || 0}
         open={openEdit}
         onClose={() => setOpenEdit(false)}
-        // onSuccess={() => refetch()}
       />
       <Row gutter={[16, 16]}>
         {/* Левая колонка */}

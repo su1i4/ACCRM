@@ -13,6 +13,7 @@ import {
   Modal,
   Checkbox,
   Typography,
+  Image,
 } from "antd";
 import {
   SearchOutlined,
@@ -43,8 +44,9 @@ export const AcceptedGoodsList = () => {
   const [searchFilters, setSearchFilters] = useState<any[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [search, setSearch] = useState("");
+  const [sumData, setSumData] = useState<any>(null);
 
   const buildQueryParams = () => {
     return {
@@ -65,6 +67,29 @@ export const AcceptedGoodsList = () => {
       query: buildQueryParams(),
     },
   });
+
+  const getSumData = async () => {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(
+      `${API_URL}/goods-processing/amount-in-weight/В складе`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(selectedRowKeys),
+      }
+    );
+
+    const result = await response.json();
+    setSumData(result);
+  };
+
+  useEffect(() => {
+    getSumData();
+  }, []);
 
   const [sorterVisible, setSorterVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -367,7 +392,7 @@ export const AcceptedGoodsList = () => {
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
                 setSearch("");
-                searchparams.set("search", "");
+                searchparams.set("value", "");
                 setSearchParams(searchparams);
                 return;
               }
@@ -402,6 +427,11 @@ export const AcceptedGoodsList = () => {
               Дата
             </Button>
           </Dropdown>
+        </Col>
+        <Col>
+          <Typography.Text>
+            Общий вес: <strong>{sumData?.totalWeight || 0} кг</strong>
+          </Typography.Text>
         </Col>
         <Col>
           <Typography.Text>
@@ -518,7 +548,15 @@ export const AcceptedGoodsList = () => {
             return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
           }} /> */}
         <Table.Column dataIndex="status" title="Статус" />
-        {operationStatus()}
+        <Table.Column
+          dataIndex="photo"
+          title="Фото"
+          render={(photo) =>
+            photo ? (
+              <Image width={30} height={30} src={API_URL + "/" + photo} />
+            ) : null
+          }
+        />
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

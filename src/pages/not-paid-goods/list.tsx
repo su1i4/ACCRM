@@ -43,7 +43,7 @@ export const NotPaidGoodsList = () => {
   ]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [search, setSearch] = useState("");
 
   const buildQueryParams = () => {
@@ -54,7 +54,7 @@ export const NotPaidGoodsList = () => {
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: currentPage * pageSize,
     };
   };
 

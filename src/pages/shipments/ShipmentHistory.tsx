@@ -3,9 +3,9 @@ import {
   ArrowUpOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { List, useTable } from "@refinedev/antd";
+import { List } from "@refinedev/antd";
 import { useNavigation, useCustom } from "@refinedev/core";
-import { Button, Flex, Input, Table, Typography } from "antd";
+import { Button, Flex, Input, Table } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import { catchDateTable } from "../../lib/utils";
@@ -15,9 +15,8 @@ export const ShipmentHistory = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
   const [filters, setFilters] = useState<any[]>([]);
-  const { show } = useNavigation();
 
   const buildQueryParams = () => ({
     sort: `id,${sortDirection}`,

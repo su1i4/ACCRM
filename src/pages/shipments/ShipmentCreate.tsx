@@ -18,13 +18,19 @@ import {
 import { catchDateTable } from "../../lib/utils";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
-import { CustomTooltip, operationStatus } from "../../shared";
+import { CustomTooltip } from "../../shared";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
  * Пример: Когда мы нажимаем "Сохранить" (Create),
@@ -51,7 +57,7 @@ const ShipmentCreate = () => {
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: currentPage * pageSize,
+      offset: (currentPage - 1) * pageSize,
     };
   };
 
@@ -122,6 +128,7 @@ const ShipmentCreate = () => {
     height: string;
     cube: string;
     density: string;
+    created_at: any;
   }
 
   const {
@@ -148,6 +155,16 @@ const ShipmentCreate = () => {
     ...formProps,
     onFinish: async (values: IShipment) => {
       const { cube, ...dataToSubmit } = values;
+      if (dataToSubmit.created_at) {
+        // Get the timezone offset in minutes between local and server timezone
+        // Replace 180 with the actual offset in minutes between client and server
+        const offsetMinutes = 360; // Example: 3 hours = 180 minutes
+        
+        // Add the offset to compensate for the shift
+        dataToSubmit.created_at = dayjs(dataToSubmit.created_at)
+          .add(offsetMinutes, 'minute')
+          .format('YYYY-MM-DD HH:mm:ss');
+      }
       return formProps.onFinish?.(dataToSubmit);
     },
   };
@@ -213,6 +230,16 @@ const ShipmentCreate = () => {
       form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
     }
   }, [selectedRows, form]);
+
+  const currentDateDayjs = dayjs();
+
+  useEffect(() => {
+    if (formProps.form) {
+      formProps.form.setFieldsValue({
+        created_at: currentDateDayjs,
+      });
+    }
+  }, []);
 
   // Обновляем куб и плотность при изменении размеров
   useEffect(() => {
@@ -409,7 +436,19 @@ const ShipmentCreate = () => {
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
             <Form.Item
-              style={{ minWidth: 250 }}
+              label="Дата отправки"
+              name="created_at"
+              style={{ marginBottom: 5 }}
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                format="YYYY-MM-DD HH:mm"
+                placeholder="Выберите дату"
+                showTime
+              />
+            </Form.Item>
+            <Form.Item
+              style={{ minWidth: 200 }}
               label="Тип"
               name="type"
               rules={[{ required: true }]}
@@ -649,7 +688,6 @@ const ShipmentCreate = () => {
             <Table
               {...tableProps}
               rowKey="id"
-
               rowSelection={{
                 type: "checkbox",
                 preserveSelectedRowKeys: true,
