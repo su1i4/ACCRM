@@ -10,6 +10,7 @@ import { InboxOutlined } from "@ant-design/icons";
 export const NotificationsCreate = () => {
   const { formProps, saveButtonProps, form } = useForm();
   const [isEmojiPickerVisible, setIsEmojiPickerVisible] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [text, setText] = useState("");
 
   useEffect(() => {
@@ -28,12 +29,15 @@ export const NotificationsCreate = () => {
 
   const handleFileUpload = (info: any, fieldName: string) => {
     if (info.file.status === "done") {
-      console.log('loc')
+      setPhotos((prev) => [...prev, info.file.response.filePath]);
       const uploadedFileUrl = info.file.response.filePath;
       const existingFiles = form.getFieldValue(fieldName) || [];
       form.setFieldsValue({
         [fieldName]: [...existingFiles, uploadedFileUrl],
       });
+    }
+    if (info.file.status === "removed") {
+      console.log(info)
     }
   };
 

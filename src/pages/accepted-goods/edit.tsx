@@ -14,14 +14,20 @@ import {
 import { InboxOutlined } from "@ant-design/icons";
 import { API_URL } from "../../App";
 import { entityFields } from "../goods-processing";
-import { useParsed } from "@refinedev/core";
+import { useNavigation, useParsed } from "@refinedev/core";
 import { useParams } from "react-router";
 
 export const AcceptedGoodsEdit = () => {
+  const { push } = useNavigation();
   const { id } = useParsed();
   const { formProps, saveButtonProps, queryResult, form } = useForm({
     resource: "goods-processing",
     id: Number(id),
+    action: "edit",
+    redirect: false,
+    onMutationSuccess(data, variables, context, isAutoSave) {
+      push(`/accepted-goods/show/${id}`);
+    },
   });
   const [fileList, setFileList] = useState<any>([]);
 

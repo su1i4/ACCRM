@@ -30,6 +30,7 @@ import { operationStatus } from "../../shared";
 
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -497,7 +498,11 @@ export const NotPaidGoodsList = () => {
             )}`;
           }}
         />
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         {operationStatus()}
         <Table.Column
           dataIndex="employee"

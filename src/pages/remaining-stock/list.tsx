@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  List,
-  useSelect,
-} from "@refinedev/antd";
+import { List, useSelect } from "@refinedev/antd";
 import { BaseRecord, useGo, useUpdate, useCustom } from "@refinedev/core";
 import {
   Space,
@@ -36,6 +33,7 @@ import { operationStatus } from "../../shared";
 
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -545,16 +543,16 @@ export const RemainingStockProcessingList = () => {
             title="Фото"
             render={(photo) =>
               photo ? (
-                <Image
-                  width={30}
-                  height={30}
-                  src={API_URL + "/" + photo}
-                />
+                <Image width={30} height={30} src={API_URL + "/" + photo} />
               ) : null
             }
           />
 
-          <Table.Column dataIndex="status" title="Статус" />
+          <Table.Column
+            dataIndex="status"
+            title="Статус"
+            render={(value) => translateStatus(value)}
+          />
           {operationStatus()}
           <Table.Column
             title="Переместить"

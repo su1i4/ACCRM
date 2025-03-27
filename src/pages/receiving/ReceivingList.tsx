@@ -13,8 +13,8 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
-import { operationStatus } from "../../shared";
 import { useSearchParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 const ReceivingList = () => {
   const [searchparams, setSearchParams] = useSearchParams()
@@ -184,7 +184,7 @@ const ReceivingList = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
-        <Table.Column dataIndex="status" title={"Статус"} />
+        <Table.Column dataIndex="status" title="Статус" render={(value) => translateStatus(value)} />
         {/* {operationStatus()} */}
         <Table.Column
           dataIndex="employee"

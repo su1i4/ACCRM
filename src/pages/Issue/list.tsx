@@ -41,6 +41,7 @@ import { API_URL } from "../../App";
 import type { Key } from "react";
 import { CustomTooltip, operationStatus } from "../../shared";
 import { useSearchParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -477,7 +478,7 @@ export const IssueProcessingList = () => {
       </Row>
 
       {/* Кнопки для действий */}
-      <Flex gap={16} style={{ marginBottom: 16 }}>
+      <Flex gap={10} style={{ marginBottom: 10 }}>
         <Button
           type="primary"
           icon={<CheckOutlined />}
@@ -498,16 +499,15 @@ export const IssueProcessingList = () => {
             backgroundColor: "#f9f9f9",
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 5,
             flexWrap: "wrap",
             width: "70%",
-            height: 32,
             boxShadow: "0 0 2px 0 rgba(0, 0, 0, 0.1)",
           }}
         >
           <Typography.Text>
             Доллар:{" "}
-            <strong>{Number(sumData?.Доллар || 0)?.toFixed(3)} $</strong>
+            <strong>{Number(sumData?.Доллар || 0)?.toFixed(2)} $</strong>
           </Typography.Text>
           |
           <Typography.Text>
@@ -615,7 +615,11 @@ export const IssueProcessingList = () => {
             ) : null
           }
         />
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         {operationStatus()}
         {/* <Table.Column
           title="Действия"

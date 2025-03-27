@@ -30,6 +30,7 @@ import {
 } from "@ant-design/icons";
 import { API_URL } from "../../App";
 import { CustomTooltip } from "../../shared";
+import { translateStatus } from "../../lib/utils";
 
 // const { tableProps, refetch: refetchGoods } = useTable({
 //   resource: "goods-processing",
@@ -470,7 +471,7 @@ const ShipmentEdit = () => {
       headerButtons={() => false}
       isLoading={formLoading || isLoadingShipment}
     >
-      <Form  {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical">
         {/* Скрытое поле для отображения ошибки выбора товаров */}
         <Form.Item name="_goods" style={{ display: "none" }}>
           <Input />
@@ -773,7 +774,11 @@ const ShipmentEdit = () => {
                 }}
               />
 
-              <Table.Column dataIndex="status" title="Статус" />
+              <Table.Column
+                dataIndex="status"
+                title="Статус"
+                render={(value) => translateStatus(value)}
+              />
               <Table.Column
                 dataIndex="counterparty"
                 render={(value) =>

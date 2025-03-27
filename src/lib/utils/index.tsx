@@ -12,7 +12,7 @@ export const catchDateTable = (title: string, status?: string) => {
       dataIndex="created_at"
       title={title}
       render={(value, record) => {
-        const local_status = status || record?.status
+        const local_status = status || record?.status;
         const findedStatus = record?.tracking_status?.find(
           (item: any) => item.status === local_status
         );
@@ -37,3 +37,6 @@ export const regularData = () => {
     />
   );
 };
+
+export const translateStatus = (status: string) =>
+  status === "В Складе" ? "На Cкладе" : status;

@@ -10,6 +10,7 @@ import { useMany, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
@@ -138,7 +139,7 @@ export const ShipmentHistoryShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField value={record?.status} />
+          <TextField value={translateStatus(record?.status)} />
         </Col>
       </Row>
 
@@ -167,7 +168,11 @@ export const ShipmentHistoryShow = () => {
           }}
         />
 
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>

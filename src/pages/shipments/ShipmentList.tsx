@@ -9,7 +9,7 @@ import { Button, Flex, Input, Table, Typography } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import { CustomTooltip } from "../../shared";
-import { catchDateTable } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 import { useSearchParams } from "react-router";
 
 const ShipmentList = () => {
@@ -198,7 +198,14 @@ const ShipmentList = () => {
           dataIndex="id"
           title={"Номер рейса"}
           render={(value) => (
-            <TextField style={{padding: 5, textDecoration: 'underline', cursor: 'pointer' }} value={value} />
+            <TextField
+              style={{
+                padding: 5,
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+              value={value}
+            />
           )}
         />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />
@@ -240,7 +247,11 @@ const ShipmentList = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
-        <Table.Column dataIndex="status" title={"Статус"} />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

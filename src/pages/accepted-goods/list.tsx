@@ -33,6 +33,7 @@ import { CustomTooltip, operationStatus } from "../../shared";
 
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -547,7 +548,11 @@ export const AcceptedGoodsList = () => {
         {/* <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
             return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
           }} /> */}
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="photo"
           title="Фото"

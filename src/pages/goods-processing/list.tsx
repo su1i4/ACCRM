@@ -30,6 +30,7 @@ import { useSearchParams } from "react-router";
 import { CustomTooltip, operationStatus } from "../../shared";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -100,7 +101,7 @@ export const GoogsProcessingList = () => {
   }, [searchFilters, sortDirection, currentPage, pageSize]);
 
   useEffect(() => {
-    const value = searchparams.get('value')
+    const value = searchparams.get("value");
     if (value) {
       setFilters(
         [
@@ -115,8 +116,8 @@ export const GoogsProcessingList = () => {
         "replace"
       );
     }
-    setSearch(value || '')
-  }, [])
+    setSearch(value || "");
+  }, []);
 
   const datePickerContent = (
     <DatePicker.RangePicker
@@ -324,11 +325,15 @@ export const GoogsProcessingList = () => {
     onChange: handleTableChange,
   };
 
-  console.log(pageSize, 'this is page size')
+  console.log(pageSize, "this is page size");
 
   return (
     <List headerButtons={() => false}>
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16, position: 'sticky', top: 80, zIndex: 10 }}>
+      <Row
+        gutter={[16, 16]}
+        align="middle"
+        style={{ marginBottom: 16, position: "sticky", top: 80, zIndex: 10 }}
+      >
         <Col>
           <Space size="middle">
             <CustomTooltip title="Создать">
@@ -384,14 +389,14 @@ export const GoogsProcessingList = () => {
               if (!value) {
                 setFilters([{ trackCode: { $contL: "" } }], "replace");
                 setSearch("");
-                searchparams.set("value", '');
+                searchparams.set("value", "");
                 setSearchParams(searchparams);
                 return;
               }
 
               searchparams.set("page", "1");
               searchparams.set("size", String(pageSize));
-              searchparams.set("value", value)
+              searchparams.set("value", value);
               setSearchParams(searchparams);
               setSearch(value);
               setFilters(
@@ -530,7 +535,11 @@ export const GoogsProcessingList = () => {
             )}`;
           }}
         />
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         {operationStatus()}
         <Table.Column
           dataIndex="employee"

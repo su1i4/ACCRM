@@ -14,14 +14,19 @@ import {
   useCustom,
 } from "@refinedev/core";
 import { Button, Space, Table, Flex, Typography, Input } from "antd";
-import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import dayjs from "dayjs";
 import { useSearchParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 export const ReceivingHistory = () => {
-  const [searchparams, setSearchParams] = useSearchParams()
+  const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -165,7 +170,11 @@ export const ReceivingHistory = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
-        <Table.Column dataIndex="status" title={"Статус"} />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

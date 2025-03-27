@@ -15,14 +15,14 @@ import {
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
+import { API_URL } from "../../App";
+import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
 const ReceivingShow = () => {
-  // Получаем ID из URL (например, /shipments/show/123)
   const { id } = useParams();
 
-  // Запрашиваем данные о конкретном рейсе (shipment) по ID
   const { queryResult } = useShow({
     resource: "shipments",
     id,
@@ -30,8 +30,6 @@ const ReceivingShow = () => {
   const { data, isLoading } = queryResult;
   const record = data?.data;
 
-  // Получаем список товаров (goods-processing),
-  // отфильтрованных по текущему shipment_id
   const { tableProps } = useTable({
     resource: "goods-processing",
     syncWithLocation: false,
@@ -57,18 +55,54 @@ const ReceivingShow = () => {
     },
   });
 
+  const postIds = async (ids: Record<string, number[]>) => {
+    const token = localStorage.getItem("access_token");
+
+    await fetch(`${API_URL}/goods-processing/send-notification-tg`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(ids),
+    });
+  };
   // -----------------------
   // 1. Состояние для выделенных строк
   // -----------------------
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [transformData, setTransformData] = useState({});
 
   // Настройка антовского rowSelection
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedKeys: React.Key[]) => {
+    onChange: (newSelectedKeys: React.Key[], newSelectedRows: any[]) => {
       setSelectedRowKeys(newSelectedKeys);
+
+      let tpsIds: Record<string, number[]> = {};
+
+      newSelectedRows.forEach((item: any) => {
+        const clientCode = item.counterparty?.clientCode;
+        const itemId = item.id;
+
+        if (!clientCode) return;
+
+        if (!tpsIds[clientCode]) {
+          tpsIds[clientCode] = [];
+        }
+
+        if (tpsIds[clientCode].includes(itemId)) {
+          tpsIds[clientCode] = tpsIds[clientCode].filter((id) => id !== itemId);
+        } else {
+          tpsIds[clientCode].push(itemId);
+        }
+      });
+
+      setTransformData(tpsIds);
     },
   };
+
+  console.log(transformData, "transformData");
 
   // -----------------------
   // 2. Массовое обновление
@@ -86,6 +120,7 @@ const ReceivingShow = () => {
       {
         onSuccess: () => {
           setSelectedRowKeys([]);
+          postIds(transformData);
         },
       }
     );
@@ -170,7 +205,7 @@ const ReceivingShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField value={record?.status} />
+          <TextField value={translateStatus(record?.status)} />
         </Col>
       </Row>
 
@@ -192,7 +227,7 @@ const ReceivingShow = () => {
       <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
         <Table.Column
           dataIndex="created_at"
-          title={"Дата"}
+          title="Дата приемки"
           width={120}
           render={(value) => {
             return `${value?.split("T")[0]} ${value
@@ -230,7 +265,11 @@ const ReceivingShow = () => {
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
       </Table>
     </Show>
   );

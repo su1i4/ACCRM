@@ -8,7 +8,7 @@ import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Flex, Input, Table } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
-import { catchDateTable } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 import { useSearchParams } from "react-router";
 
 export const ShipmentHistory = () => {
@@ -149,7 +149,11 @@ export const ShipmentHistory = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
-        <Table.Column dataIndex="status" title={"Статус"} />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="employee"
           title={"Сотрудник"}

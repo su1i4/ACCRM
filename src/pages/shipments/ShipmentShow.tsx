@@ -10,6 +10,7 @@ import { useMany, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
@@ -150,11 +151,11 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField value={record?.status} />
+          <TextField value={translateStatus(record?.status)} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Номер фуры</Title>
-          <TextField value={record?.truck_number || '-'} />
+          <TextField value={record?.truck_number || "-"} />
         </Col>
       </Row>
 
@@ -170,7 +171,7 @@ const ShipmentShow = () => {
         {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"
-          title="Дата"
+          title="Дата приемки"
           render={(value) => {
             return `${value?.split("T")[0]} ${value
               ?.split("T")[1]
@@ -178,7 +179,7 @@ const ShipmentShow = () => {
           }}
         />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
-        <Table.Column dataIndex="trackCode" title="Треккод" />
+        <Table.Column dataIndex="trackCode" title="Трек-код" />
 
         <Table.Column
           dataIndex="counterparty"
@@ -188,7 +189,11 @@ const ShipmentShow = () => {
           }}
         />
 
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>

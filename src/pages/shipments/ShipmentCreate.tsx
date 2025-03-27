@@ -15,7 +15,7 @@ import {
   Space,
   Card,
 } from "antd";
-import { catchDateTable } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 import { API_URL } from "../../App";
 import { useSearchParams } from "react-router";
 import { CustomTooltip } from "../../shared";
@@ -32,12 +32,6 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-/**
- * Пример: Когда мы нажимаем "Сохранить" (Create),
- * 1) создаётся рейс (shipment),
- * 2) затем сразу обновляются выбранные товары (goods-processing),
- *    проставляя им shipment_id = ID созданного рейса.
- */
 const ShipmentCreate = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -68,54 +62,15 @@ const ShipmentCreate = () => {
       query: buildQueryParams(),
     },
   });
-  // const { tableProps, setFilters } = useTable({
-  //   resource: "goods-processing",
-  //   syncWithLocation: false,
-  //   initialSorter: [
-  //     {
-  //       field: "id",
-  //       order: "desc",
-  //     },
-  //   ],
-  //   filters: {
-  //     permanent: [
-  //       {
-  //         field: "status",
-  //         operator: "eq",
-  //         value: "В складе",
-  //       },
-  //     ],
-  //   },
-  // });
-  /**
-   * Состояние для ID выбранных товаров
-   */
+
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
-  /**
-   * Состояние для полных данных выбранных товаров
-   */
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
-  /**
-   * Состояние для общего веса
-   */
-  const [totalWeight, setTotalWeight] = useState<number>(0);
 
-  /**
-   * Хук для массового обновления (updateMany) товаров.
-   * Здесь указываем ресурс "goods-processing" — именно его обновляем.
-   */
   const { mutate: updateManyGoods } = useUpdateMany({
     resource: "goods-processing",
-    // Можно дополнительно указать onSuccess / onError, если нужно.
   });
-
-  /**
-   * Хук формы для создания "shipments".
-   * При удачном создании (onMutationSuccess)
-   * мы получим ID нового рейса, и сразу используем updateMany для товаров.
-   */
 
   interface IShipment {
     id?: number;
@@ -156,29 +111,23 @@ const ShipmentCreate = () => {
     onFinish: async (values: IShipment) => {
       const { cube, ...dataToSubmit } = values;
       if (dataToSubmit.created_at) {
-        // Get the timezone offset in minutes between local and server timezone
-        // Replace 180 with the actual offset in minutes between client and server
-        const offsetMinutes = 360; // Example: 3 hours = 180 minutes
-        
-        // Add the offset to compensate for the shift
+        const offsetMinutes = 360;
+
         dataToSubmit.created_at = dayjs(dataToSubmit.created_at)
-          .add(offsetMinutes, 'minute')
-          .format('YYYY-MM-DD HH:mm:ss');
+          .add(offsetMinutes, "minute")
+          .format("YYYY-MM-DD HH:mm:ss");
       }
       return formProps.onFinish?.(dataToSubmit);
     },
   };
 
-  // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
   const saveButtonProps = {
     ...originalSaveButtonProps,
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
       if (selectedRowKeys.length === 0) {
-        // Показываем предупреждение, если товары не выбраны
         return form
           .validateFields()
           .then(() => {
-            // Если форма валидна, но товары не выбраны - показываем ошибку
             form.setFields([
               {
                 name: "_goods",
@@ -187,11 +136,9 @@ const ShipmentCreate = () => {
             ]);
           })
           .catch((errorInfo) => {
-            // Стандартная обработка ошибок валидации формы
           });
       }
 
-      // Если товары выбраны, вызываем оригинальный обработчик
       if (originalSaveButtonProps.onClick) {
         originalSaveButtonProps.onClick(e);
       }
@@ -199,37 +146,34 @@ const ShipmentCreate = () => {
     disabled: isLoading,
   };
 
-  // Рассчитываем общий вес при изменении выбранных строк
   useEffect(() => {
     if (selectedRows.length > 0) {
       const sum = selectedRows.reduce((total, row) => {
-        // Преобразуем в число, чтобы избежать конкатенации строк
         const weight = parseFloat(row.weight) || 0;
         return total + weight;
       }, 0);
 
-      setTotalWeight(sum);
 
-      // Обновляем поле веса в форме
       form.setFieldsValue({ weight: sum.toFixed(2) });
 
-      // Также расчитываем и обновляем поле "куб" и "плотность" если у вас есть нужные данные
       const length = form.getFieldValue("length") || 0;
       const width = form.getFieldValue("width") || 0;
       const height = form.getFieldValue("height") || 0;
 
-      const cube = ((length * width * height) / 1000000).toFixed(2);
+      const cube = ((length * width * height) / 1000000).toFixed(5);
       form.setFieldsValue({ cube });
 
       if (parseFloat(cube) > 0) {
-        const density = (sum / parseFloat(cube)).toFixed(2);
+        const density = (sum / parseFloat(cube)).toFixed(5);
         form.setFieldsValue({ density: density });
       }
     } else {
-      setTotalWeight(0);
       form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
     }
-  }, [selectedRows, form]);
+  }, [
+    selectedRows,
+    form,
+  ]);
 
   const currentDateDayjs = dayjs();
 
@@ -249,12 +193,12 @@ const ShipmentCreate = () => {
       const height = form.getFieldValue("height") || 0;
 
       if (length && width && height) {
-        const cube = ((length * width * height) / 1000000).toFixed(2);
+        const cube = ((length * width * height) / 1000000).toFixed(5);
         form.setFieldsValue({ cube });
 
         const weight = form.getFieldValue("weight") || 0;
         if (parseFloat(cube) > 0 && parseFloat(weight) > 0) {
-          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(2);
+          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(5);
           form.setFieldsValue({ density: density });
         }
       }
@@ -268,11 +212,6 @@ const ShipmentCreate = () => {
     form.getFieldValue("width"),
     form.getFieldValue("height"),
   ]);
-
-  /**
-   * useTable для ресурса "goods-processing".
-   * Показываем товары, которые пользователь сможет выбрать для привязки.
-   */
 
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
@@ -729,7 +668,11 @@ const ShipmentCreate = () => {
                 render={(value) => value?.branch?.name}
               />
               <Table.Column dataIndex="weight" title="Вес" />
-              <Table.Column dataIndex="status" title="Статус" />
+              <Table.Column
+                dataIndex="status"
+                title="Статус"
+                render={(value) => translateStatus(value)}
+              />
               <Table.Column dataIndex="comments" title="Комментарий" />
             </Table>
           </Col>

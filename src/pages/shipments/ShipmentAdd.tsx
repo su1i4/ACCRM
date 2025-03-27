@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { API_URL } from "../../App";
 import { CustomTooltip } from "../../shared";
+import { translateStatus } from "../../lib/utils";
 
 const ShipmentAdd = () => {
   const { id } = useParams();
@@ -355,7 +356,11 @@ const ShipmentAdd = () => {
           }}
         />
 
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         <Table.Column
           dataIndex="counterparty"
           render={(value) => (

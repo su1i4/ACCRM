@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -137,7 +138,7 @@ export const AcceptedGoodsShow: React.FC = () => {
 
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
-          <TextField value={record?.status} />
+          <TextField value={translateStatus(record?.status)} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Комментарии</Title>

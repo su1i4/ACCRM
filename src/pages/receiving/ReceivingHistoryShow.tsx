@@ -10,6 +10,7 @@ import { useUpdateMany, useParsed, useShow, useNavigation} from "@refinedev/core
 import { Typography, Row, Col, Table, Button, Space } from "antd";
 import dayjs from "dayjs";
 import { useParams } from "react-router";
+import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
@@ -175,7 +176,7 @@ export const ReceivingHistoryShow = () => {
         <Col xs={24} md={6}>
           <Title level={5}>Статус</Title>
           <TextField
-            value={record?.status}
+            value={translateStatus(record?.status)}
           />
         </Col>
       </Row>

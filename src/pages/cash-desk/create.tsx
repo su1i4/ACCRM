@@ -33,6 +33,7 @@ import { API_URL } from "../../App";
 import TextArea from "antd/lib/input/TextArea";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -67,6 +68,12 @@ export const CashDeskCreate: React.FC = () => {
     },
     resource: "cash-desk",
     redirect: "list",
+    //@ts-ignore
+    defaultValues: {
+      type: "income",
+      type_operation: "Извне",
+      date: dayjs()
+    }
   });
 
   const [isAgent, setIsAgent] = useState(false);
@@ -134,6 +141,13 @@ export const CashDeskCreate: React.FC = () => {
     ],
   });
 
+  // Make sure type field is set early and won't be lost
+  useEffect(() => {
+    if (form) {
+      form.setFieldValue("type", "income");
+    }
+  }, [form]);
+
   useEffect(() => {
     if (formProps.form) {
       if (isAgent) {
@@ -145,13 +159,14 @@ export const CashDeskCreate: React.FC = () => {
       } else {
         const currentValues: any = formProps.form.getFieldsValue();
 
-        // Keep only `income` and `type_operation`, reset others
+        // Keep the type field when resetting
         const resetValues = Object.keys(currentValues).reduce(
           (acc: any, key: any) => {
             if (
               key === "income" ||
               key === "type_operation" ||
-              key === "date"
+              key === "date" ||
+              key === "type" // Add type to preserved fields
             ) {
               acc[key] = currentValues[key]; // Keep existing values
             } else {
@@ -330,7 +345,14 @@ export const CashDeskCreate: React.FC = () => {
 
   return (
     <Create
-      saveButtonProps={saveButtonProps}
+      saveButtonProps={{
+        ...saveButtonProps,
+        onClick: () => {
+          // Ensure type field is set before submitting
+          form.setFieldValue("type", "income");
+          saveButtonProps.onClick && saveButtonProps.onClick();
+        },
+      }}
       title={<h3 style={{ margin: 0 }}>Добавить приход</h3>}
     >
       <Form
@@ -339,9 +361,27 @@ export const CashDeskCreate: React.FC = () => {
         style={{ marginBottom: 0 }}
         initialValues={{
           type: "income",
-          // Не устанавливаем дату здесь, а делаем это через useEffect
+        }}
+        onFinish={(values) => {
+          // Ensure type is included in submitted values
+          const finalValues = {
+            ...values,
+            type: "income",
+          };
+          
+          // Call the original onFinish
+          formProps.onFinish && formProps.onFinish(finalValues);
         }}
       >
+        {/* Hidden form field for type */}
+        <Form.Item
+          name="type"
+          hidden={true}
+          initialValue="income"
+        >
+          <Input />
+        </Form.Item>
+
         <Row gutter={[16, 2]}>
           <Col span={6}>
             <Form.Item
@@ -441,16 +481,6 @@ export const CashDeskCreate: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              {/* <Col span={isAgent ? 6 : 8}>
-                <Form.Item
-                  label="Трек-код"
-                  name="trackCode"
-                  rules={[{ required: false, message: "Укажите имя" }]}
-                  style={{ marginBottom: 5 }}
-                >
-                  <Input />
-                </Form.Item>
-              </Col> */}
             </>
           )}
           <Col span={isAgent ? 7 : 12}>
@@ -685,7 +715,11 @@ export const CashDeskCreate: React.FC = () => {
               ).toFixed(2)}`;
             }}
           />
-          <Table.Column dataIndex="status" title="Статус" />
+          <Table.Column
+            dataIndex="status"
+            title="Статус"
+            render={(value) => translateStatus(value)}
+          />
           <Table.Column
             dataIndex="employee"
             title="Сотрудник"

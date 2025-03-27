@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { SearchOutlined, SettingOutlined } from "@ant-design/icons";
 import { useCustom } from "@refinedev/core";
 import { API_URL } from "../../App";
+import { translateStatus } from "../../lib/utils";
 
 const ReceivingShowReceived = () => {
   const { id } = useParams();
@@ -21,12 +22,12 @@ const ReceivingShowReceived = () => {
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ 
+      s: JSON.stringify({
         $and: [
           ...searchFilters,
           { shipment_id: Number(id) },
-          { status: { $in: ["Выдали", "Готов к выдаче"] } }
-        ]
+          { status: { $in: ["Выдали", "Готов к выдаче"] } },
+        ],
       }),
       sort: `${sortField},${sortDirection}`,
     };
@@ -89,11 +90,13 @@ const ReceivingShowReceived = () => {
 
   const handleSearch = (value: string) => {
     setSearchFilters([
-      { $or: [
-        { trackCode: { $contL: value } },
-        { "counterparty.name": { $contL: value } },
-        { "counterparty.clientCode": { $contL: value } }
-      ]}
+      {
+        $or: [
+          { trackCode: { $contL: value } },
+          { "counterparty.name": { $contL: value } },
+          { "counterparty.clientCode": { $contL: value } },
+        ],
+      },
     ]);
   };
 
@@ -142,7 +145,7 @@ const ReceivingShowReceived = () => {
           dataIndex="counterparty"
           title="Код клиента"
           render={(value) => {
-            return `${value?.clientPrefix}-${value?.clientCode}`
+            return `${value?.clientPrefix}-${value?.clientCode}`;
           }}
         />
         <Table.Column
@@ -156,7 +159,11 @@ const ReceivingShowReceived = () => {
           render={(value) => value?.branch?.name}
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="status" title="Статус" />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
       </Table>
     </Show>
   );
