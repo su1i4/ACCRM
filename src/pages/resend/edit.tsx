@@ -1,58 +1,85 @@
-import React, { useState, useEffect } from "react";
-import { Create, Title, useForm, useSelect, useTable } from "@refinedev/antd";
-import { useCustom, useUpdateMany } from "@refinedev/core";
+import { useState, useEffect } from "react";
+import { Edit, useForm, useSelect, useTable } from "@refinedev/antd";
+import {
+  useUpdateMany,
+  useOne,
+  useNavigation,
+  useCustom,
+} from "@refinedev/core";
 import {
   Form,
   Input,
-  DatePicker,
   Row,
-  Col,
-  Table,
   Flex,
   Select,
-  Dropdown,
+  Col,
+  Table,
   Button,
   Space,
+  Dropdown,
   Card,
+  DatePicker,
 } from "antd";
-import { catchDateTable, translateStatus } from "../../lib/utils";
-import { API_URL } from "../../App";
-import { useSearchParams } from "react-router";
-import { CustomTooltip } from "../../shared";
+import { useParams, useSearchParams } from "react-router";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
+  FileAddOutlined,
   SaveOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
+import { API_URL } from "../../App";
+import { CustomTooltip } from "../../shared";
+import { translateStatus } from "../../lib/utils";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+// const { tableProps, refetch: refetchGoods } = useTable({
+//   resource: "goods-processing",
+//   syncWithLocation: false,
+//   filters: {
+//     permanent: [
+//       {
+//         field: "shipment_id",
+//         operator: "eq",
+//         value: Number(id),
+//       },
+//       {
+//         field: "status",
+//         operator: "eq",
+//         value: "В пути",
+//       },
+//     ],
+//   },
+// });
 
-const ShipmentCreate = () => {
+const ResendEdit = () => {
+  const { id } = useParams();
+  const { push } = useNavigation();
+
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<
     "id" | "counterparty.name" | "operation_id"
   >("id");
-  const [filters, setFilters] = useState<any[]>([]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
 
   const buildQueryParams = () => {
     return {
       s: JSON.stringify({
-        $and: [...filters, { status: { eq: "В складе" } }],
+        $and: [
+          ...searchFilters,
+          { shipment_id: { $eq: Number(id) } },
+          { status: { $eq: "В пути" } },
+        ],
       }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: currentPage * pageSize,
     };
   };
 
@@ -64,41 +91,77 @@ const ShipmentCreate = () => {
     },
   });
 
+  const [sorterVisible, setSorterVisible] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [totalWeight, setTotalWeight] = useState<number>(0);
 
-  const { mutate: updateManyGoods } = useUpdateMany({
-    resource: "goods-processing",
+  // Получаем данные текущей отправки для редактирования
+  const { data: shipmentData, isLoading: isLoadingShipment } = useOne({
+    resource: "shipments",
+    id: id ? parseInt(id) : 0,
+    queryOptions: {
+      enabled: !!id,
+    },
   });
 
-  interface IShipment {
-    id?: number;
-    type: string;
-    boxCode: string;
-    branch_id: number;
-    weight: string;
-    length: string;
-    width: string;
-    height: string;
-    cube: string;
-    density: string;
-    created_at: any;
-  }
+  /**
+   * Хук для массового обновления (updateMany) товаров.
+   */
+  const { mutate: updateManyGoods } = useUpdateMany({
+    resource: "goods-processing",
+    mutationOptions: {
+      onSuccess(data, variables, context) {
+        push(`/resend/show/${id}`);
+      },
+    },
+  });
 
+  /**
+   * Хук формы для редактирования "shipments".
+   */
   const {
     formProps,
     saveButtonProps: originalSaveButtonProps,
     form,
-  } = useForm<IShipment>({
+    formLoading,
+  } = useForm({
     resource: "shipments",
-    onMutationSuccess: async (createdShipment) => {
-      const newShipmentId = createdShipment.data.id;
+    action: "edit",
+    id,
+    redirect: false,
+    onMutationSuccess: async (updatedShipment) => {
+      // Получаем ID отправки
+      const shipmentId = updatedShipment.data.id;
+
+      // Удаляем старые связи (товары, у которых больше не выбраны чекбоксы)
+      const currentAssignedGoods =
+        tableProps?.dataSource
+          ?.filter((item: any) => item.shipment_id === parseInt(id as string))
+          .map((item: any) => item.id) || [];
+
+      // Находим товары, которые были откреплены (были в отправке, но сейчас не выбраны)
+      const unassignedGoods = currentAssignedGoods.filter(
+        (goodId: number) => !selectedRowKeys.includes(goodId)
+      );
+
+      // Обновляем открепленные товары (возвращаем в статус "В складе")
+      if (unassignedGoods.length > 0) {
+        updateManyGoods({
+          ids: unassignedGoods,
+          values: {
+            shipment_id: null,
+            status: "В складе",
+          },
+        });
+      }
+
+      // Обновляем выбранные товары (привязываем к отправке)
       if (selectedRowKeys.length > 0) {
         updateManyGoods({
           ids: selectedRowKeys,
           values: {
-            shipment_id: newShipmentId,
+            shipment_id: shipmentId,
             status: "В пути",
           },
         });
@@ -106,38 +169,31 @@ const ShipmentCreate = () => {
     },
   });
 
-  const modifiedFormProps = {
-    ...formProps,
-    onFinish: async (values: IShipment) => {
-      const { cube, ...dataToSubmit } = values;
-      if (dataToSubmit.created_at) {
-        const offsetMinutes = 360;
+  const allValues = Form.useWatch([], form);
 
-        dataToSubmit.created_at = dayjs(dataToSubmit.created_at)
-          .add(offsetMinutes, "minute")
-          .format("YYYY-MM-DD HH:mm:ss");
-      }
-      return formProps.onFinish?.(dataToSubmit);
-    },
-  };
-
+  // Модифицируем props кнопки сохранения, чтобы добавить проверку на наличие товаров
   const saveButtonProps = {
     ...originalSaveButtonProps,
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-      if (selectedRowKeys.length === 0) {
-        return form
-          .validateFields()
-          .then(() => {
-            form.setFields([
-              {
-                name: "_goods",
-                errors: ["Необходимо выбрать хотя бы один товар для отправки"],
-              },
-            ]);
-          })
-          .catch((errorInfo) => {});
-      }
+      // if (selectedRowKeys.length === 0) {
+      //   // Показываем предупреждение, если товары не выбраны
+      //   return form
+      //     .validateFields()
+      //     .then(() => {
+      //       // Если форма валидна, но товары не выбраны - показываем ошибку
+      //       form.setFields([
+      //         {
+      //           name: "_goods",
+      //           errors: ["Необходимо выбрать хотя бы один товар для отправки"],
+      //         },
+      //       ]);
+      //     })
+      //     .catch((errorInfo) => {
+      //       // Стандартная обработка ошибок валидации формы
+      //     });
+      // }
 
+      // Если товары выбраны, вызываем оригинальный обработчик
       if (originalSaveButtonProps.onClick) {
         originalSaveButtonProps.onClick(e);
       }
@@ -145,6 +201,35 @@ const ShipmentCreate = () => {
     disabled: isLoading,
   };
 
+  // Получаем данные о связанных товарах
+  //@ts-ignore
+
+  // После загрузки данных автоматически выбираем товары, которые уже привязаны к отправке
+  useEffect(() => {
+    if (tableProps?.dataSource && id) {
+      const assignedGoods = tableProps.dataSource
+        .filter((item: any) => item.shipment_id === parseInt(id as string))
+        .map((item: any) => item.id);
+
+      setSelectedRowKeys(assignedGoods);
+      setSelectedRows(
+        tableProps.dataSource.filter((item: any) =>
+          assignedGoods.includes(item.id)
+        )
+      );
+    }
+  }, [data, id]);
+
+  // Заполняем форму данными отправки после их загрузки
+  useEffect(() => {
+    if (shipmentData?.data && form) {
+      form.setFieldsValue({
+        ...shipmentData.data,
+      });
+    }
+  }, [shipmentData, form]);
+
+  // Рассчитываем общий вес при изменении выбранных строк
   useEffect(() => {
     if (selectedRows.length > 0) {
       const sum = selectedRows.reduce((total, row) => {
@@ -152,35 +237,41 @@ const ShipmentCreate = () => {
         return total + weight;
       }, 0);
 
-      form.setFieldsValue({ weight: sum.toFixed(2) });
+      setTotalWeight(sum);
+      form.setFieldsValue({ weight: sum });
+
+      // Расчитываем "куб" и "плотность"
+      const length = form.getFieldValue("length") || 0;
+      const width = form.getFieldValue("width") || 0;
+      const height = form.getFieldValue("height") || 0;
+
+      const cube = (length * width * height) / 1000000;
+      form.setFieldsValue({ cube });
+
+      if (cube > 0) {
+        const boxWeight = Number(form.getFieldValue("box_weight") || 0);
+        const density = (sum + boxWeight) / cube;
+        form.setFieldsValue({ density });
+      }
+    } else {
+      setTotalWeight(0);
+      form.setFieldsValue({ weight: 0 });
 
       const length = form.getFieldValue("length") || 0;
       const width = form.getFieldValue("width") || 0;
       const height = form.getFieldValue("height") || 0;
 
-      const cube = ((length * width * height) / 1000000).toFixed(5);
-      form.setFieldsValue({ cube });
+      if (length && width && height) {
+        const cube = (length * width * height) / 1000000;
+        form.setFieldsValue({ cube });
 
-      if (parseFloat(cube) > 0) {
-        const density = (sum / parseFloat(cube)).toFixed(5);
-        form.setFieldsValue({ density: density });
+        form.setFieldsValue({ density: 0 });
+      } else {
+        form.setFieldsValue({ cube: 0, density: 0 });
       }
-    } else {
-      form.setFieldsValue({ weight: "0", cube: "0", density: "0" });
     }
   }, [selectedRows, form]);
 
-  const currentDateDayjs = dayjs();
-
-  useEffect(() => {
-    if (formProps.form) {
-      formProps.form.setFieldsValue({
-        created_at: currentDateDayjs,
-      });
-    }
-  }, []);
-
-  // Обновляем куб и плотность при изменении размеров
   useEffect(() => {
     const updateCalculations = () => {
       const length = form.getFieldValue("length") || 0;
@@ -188,29 +279,37 @@ const ShipmentCreate = () => {
       const height = form.getFieldValue("height") || 0;
 
       if (length && width && height) {
-        const cube = ((length * width * height) / 1000000).toFixed(5);
+        const cube = (length * width * height) / 1000000;
         form.setFieldsValue({ cube });
 
-        const weight = form.getFieldValue("weight") || 0;
-        if (parseFloat(cube) > 0 && parseFloat(weight) > 0) {
-          const density = (parseFloat(weight) / parseFloat(cube)).toFixed(5);
-          form.setFieldsValue({ density: density });
+        const itemWeight = parseFloat(form.getFieldValue("weight") || 0);
+        const boxWeight = parseFloat(form.getFieldValue("box_weight") || 0);
+        const totalWeight = itemWeight + boxWeight;
+
+        if (cube > 0 && totalWeight > 0) {
+          const density = totalWeight / cube;
+          form.setFieldsValue({ density });
         }
       }
     };
 
-    // Задержка для обеспечения обновления после заполнения полей формы
     const timeoutId = setTimeout(updateCalculations, 100);
     return () => clearTimeout(timeoutId);
   }, [
     form.getFieldValue("length"),
     form.getFieldValue("width"),
     form.getFieldValue("height"),
+    form.getFieldValue("box_weight"),
   ]);
 
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
     optionLabel: "name",
+  });
+
+  const { selectProps: userSelectProps } = useSelect({
+    resource: "users",
+    optionLabel: "firstName",
   });
 
   const type = [
@@ -229,8 +328,6 @@ const ShipmentCreate = () => {
     "Аксессуары",
   ];
 
-  const [sorterVisible, setSorterVisible] = useState(false);
-
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
       searchparams.set("page", String(currentPage));
@@ -243,36 +340,9 @@ const ShipmentCreate = () => {
       setPageSize(Number(size));
     }
     refetch();
-  }, [filters, sortDirection, currentPage, pageSize]);
-
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    searchparams.set("page", pagination.current);
-    searchparams.set("size", pagination.pageSize);
-    setSearchParams(searchparams);
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
-
-    // Обрабатываем сортировку, если она пришла из таблицы
-    if (sorter && sorter.field) {
-      setSortField(
-        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
-      );
-      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
-    }
-  };
+  }, [searchFilters, sortDirection, currentPage, pageSize]);
 
   const dataSource = data?.data?.data || [];
-
-  const tableProps = {
-    dataSource: dataSource,
-    loading: isLoading,
-    pagination: {
-      current: currentPage,
-      pageSize: pageSize,
-      total: data?.data?.total || 0,
-    },
-    onChange: handleTableChange,
-  };
 
   const datePickerContent = (
     <DatePicker.RangePicker
@@ -280,15 +350,17 @@ const ShipmentCreate = () => {
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
-          // Fixed: Use consistent filter format
-          setFilters([
-            {
-              created_at: {
-                $gte: dateStrings[0],
-                $lte: dateStrings[1],
+          setFilters(
+            [
+              {
+                created_at: {
+                  $gte: dateStrings[0],
+                  $lte: dateStrings[1],
+                },
               },
-            },
-          ]);
+            ],
+            "replace"
+          );
         }
       }}
     />
@@ -356,14 +428,57 @@ const ShipmentCreate = () => {
     </Card>
   );
 
-  //@ts-ignore
+  const setFilters = (
+    filters: any[],
+    mode: "replace" | "append" = "append"
+  ) => {
+    if (mode === "replace") {
+      setSearchFilters(filters);
+    } else {
+      setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
+    }
+    // We'll refetch in useEffect after state updates
+  };
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+
+    // Обрабатываем сортировку, если она пришла из таблицы
+    if (sorter && sorter.field) {
+      setSortField(
+        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
+      );
+      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+    }
+  };
+
+  // Формируем пропсы для таблицы из данных useCustom
+  const tableProps = {
+    dataSource: dataSource,
+    loading: isLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
+  };
+
+  console.log("lox");
+
   return (
-    //@ts-ignore
-    <Create
+    <Edit
+      //@ts-ignore
       saveButtonProps={{ ...saveButtonProps, style: { display: "none" } }}
+      headerButtons={() => false}
+      isLoading={formLoading || isLoadingShipment}
+      goBack={false}
     >
-      {/* @ts-ignore */}
-      <Form {...modifiedFormProps} layout="vertical">
+      <Form {...formProps} layout="vertical">
         {/* Скрытое поле для отображения ошибки выбора товаров */}
         <Form.Item name="_goods" style={{ display: "none" }}>
           <Input />
@@ -371,7 +486,7 @@ const ShipmentCreate = () => {
 
         <Row style={{ width: "100%" }}>
           <Flex gap={10}>
-            <Form.Item
+            {/* <Form.Item
               label="Дата отправки"
               name="created_at"
               style={{ marginBottom: 5 }}
@@ -382,7 +497,7 @@ const ShipmentCreate = () => {
                 placeholder="Выберите дату"
                 showTime
               />
-            </Form.Item>
+            </Form.Item> */}
             <Form.Item
               style={{ minWidth: 200 }}
               label="Тип"
@@ -415,7 +530,7 @@ const ShipmentCreate = () => {
               style={{ width: 250 }}
               name="branch_id"
               label="Пункт назначения"
-              rules={[{ required: true, message: "Введите Пункт назначения" }]}
+              rules={[{ required: true, message: "Введите Пунк назначения" }]}
             >
               <Select {...branchSelectProps} />
             </Form.Item>
@@ -528,7 +643,7 @@ const ShipmentCreate = () => {
               <Input disabled />
             </Form.Item>
             <Form.Item
-              style={{ width: 120 }}
+              style={{ width: 150 }}
               label="Плотность"
               name="density"
               rules={[{ required: true }]}
@@ -545,51 +660,49 @@ const ShipmentCreate = () => {
           </Flex>
         </Row>
 
-        <Row
-          gutter={[16, 16]}
-          align="middle"
-          style={{ marginBottom: 16, position: "sticky", top: 80, zIndex: 100 }}
+        <Flex
+          gap={10}
+          style={{ marginBottom: 10, position: "sticky", top: 80, zIndex: 100 }}
         >
-          <Col>
-            <Space size="middle">
-              <CustomTooltip title="Сортировка">
-                <Dropdown
-                  overlay={sortContent}
-                  trigger={["click"]}
-                  placement="bottomLeft"
-                  open={sorterVisible}
-                  onOpenChange={(visible) => {
-                    setSorterVisible(visible);
-                  }}
-                >
-                  <Button
-                    icon={
-                      sortDirection === "ASC" ? (
-                        <ArrowUpOutlined />
-                      ) : (
-                        <ArrowDownOutlined />
-                      )
-                    }
-                  ></Button>
-                </Dropdown>
-              </CustomTooltip>
-            </Space>
-          </Col>
-          <Col flex="auto">
-            <Input
-              placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
-              prefix={<SearchOutlined />}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (!value) {
-                  setFilters([{ trackCode: { $contL: "" } }]);
-                  return;
+          <CustomTooltip title="Сортировка">
+            <Dropdown
+              overlay={sortContent}
+              trigger={["click"]}
+              placement="bottomLeft"
+              open={sorterVisible}
+              onOpenChange={(visible) => {
+                setSorterVisible(visible);
+              }}
+            >
+              <Button
+                icon={
+                  sortDirection === "ASC" ? (
+                    <ArrowUpOutlined />
+                  ) : (
+                    <ArrowDownOutlined />
+                  )
                 }
-                setCurrentPage(1);
-                searchparams.set("page", "1");
+              ></Button>
+            </Dropdown>
+          </CustomTooltip>
+          <Input
+            style={{ width: "90%" }}
+            placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
+            prefix={<SearchOutlined />}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!value) {
+                setFilters([{ trackCode: { $contL: "" } }], "replace");
                 setSearchParams(searchparams);
+                return;
+              }
 
-                setFilters([
+              searchparams.set("page", "1");
+              searchparams.set("size", String(pageSize));
+              setSearchParams(searchparams);
+              setSearch(value);
+              setFilters(
+                [
                   {
                     $or: [
                       { trackCode: { $contL: value } },
@@ -597,34 +710,28 @@ const ShipmentCreate = () => {
                       { "counterparty.name": { $contL: value } },
                     ],
                   },
-                ]);
-              }}
-            />
-          </Col>
-          <Col>
-            <Dropdown
-              overlay={datePickerContent}
-              trigger={["click"]}
-              placement="bottomRight"
-            >
-              <Button
-                icon={<CalendarOutlined />}
-                className="date-picker-button"
-              >
-                Дата
-              </Button>
-            </Dropdown>
-          </Col>
-          <Col>
-            <Button type="primary" icon={<SaveOutlined />} {...saveButtonProps}>
-              Сохранить
+                ],
+                "replace"
+              );
+            }}
+          />
+          <Dropdown
+            overlay={datePickerContent}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button icon={<CalendarOutlined />} className="date-picker-button">
+              Дата
             </Button>
-          </Col>
-        </Row>
-
+          </Dropdown>
+          <Button type="primary" icon={<SaveOutlined />} {...saveButtonProps}>
+            Сохранить
+          </Button>
+        </Flex>
         <Row gutter={16}>
           <Col span={24}>
-            {form.getFieldError("_goods").length > 0 && (
+            {/* Показываем сообщение об ошибке, если форма была отправлена без выбора товаров */}
+            {form.getFieldError("_goods")?.length > 0 && (
               <div style={{ color: "#ff4d4f", marginBottom: "12px" }}>
                 {form.getFieldError("_goods")[0]}
               </div>
@@ -635,14 +742,15 @@ const ShipmentCreate = () => {
               rowKey="id"
               rowSelection={{
                 type: "checkbox",
-                preserveSelectedRowKeys: true,
+                selectedRowKeys: selectedRowKeys,
                 onChange: (keys, rows) => {
                   setSelectedRowKeys(keys as number[]);
                   setSelectedRows(rows);
 
+                  // Сбрасываем ошибку при выборе товаров
                   if (
                     keys.length > 0 &&
-                    form.getFieldError("_goods").length > 0
+                    form.getFieldError("_goods")?.length > 0
                   ) {
                     form.setFields([{ name: "_goods", errors: [] }]);
                   }
@@ -651,11 +759,20 @@ const ShipmentCreate = () => {
               locale={{
                 emptyText: "Нет доступных товаров для отправки",
               }}
-              scroll={{ x: "max-content" }}
+              pagination={{ showSizeChanger: true }}
             >
-              {catchDateTable("Дата приемки", "В складе")}
+              <Table.Column
+                dataIndex="created_at"
+                title="Дата"
+                render={(value) => {
+                  return `${value?.split("T")[0]} ${value
+                    ?.split("T")[1]
+                    ?.slice(0, 5)}`;
+                }}
+              />
               <Table.Column dataIndex="cargoType" title="Тип груза" />
               <Table.Column dataIndex="trackCode" title="Треккод" />
+
               <Table.Column
                 dataIndex="counterparty"
                 title="Код получателя"
@@ -663,29 +780,27 @@ const ShipmentCreate = () => {
                   return value?.clientPrefix + "-" + value?.clientCode;
                 }}
               />
-              <Table.Column
-                dataIndex="counterparty"
-                title="ФИО Получателя"
-                render={(value) => value?.name}
-              />
-              <Table.Column
-                dataIndex="counterparty"
-                title="Пункт назначения"
-                render={(value) => value?.branch?.name}
-              />
-              <Table.Column dataIndex="weight" title="Вес" />
+
               <Table.Column
                 dataIndex="status"
                 title="Статус"
                 render={(value) => translateStatus(value)}
               />
+              <Table.Column
+                dataIndex="counterparty"
+                render={(value) =>
+                  `${value?.branch?.name},${value?.under_branch?.address || ""}`
+                }
+                title="Пункт назначения, Пвз"
+              />
+              <Table.Column dataIndex="weight" title="Вес" />
               <Table.Column dataIndex="comments" title="Комментарий" />
             </Table>
           </Col>
         </Row>
       </Form>
-    </Create>
+    </Edit>
   );
 };
 
-export default ShipmentCreate;
+export default ResendEdit;

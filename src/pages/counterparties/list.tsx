@@ -234,8 +234,14 @@ export const CounterpartyList: React.FC = () => {
             {...branchSelectProps}
             placeholder="Выберите филиал"
             style={{ width: 300 }}
-            value={selectedBranch?.id}
+            value={selectedBranch?.id || undefined}
+            allowClear
             onChange={(branch) => {
+              if (!branch) {
+                setSelectedBranch(null);
+                setFilters([], "replace");
+                return;
+              }
               setSelectedBranch(branch);
               setFilters(
                 [
@@ -277,7 +283,13 @@ export const CounterpartyList: React.FC = () => {
           width={120}
         />
         <Table.Column dataIndex="name" title="Фио" />
-        <Table.Column dataIndex="address" title="Адрес" />
+        <Table.Column
+          dataIndex="address"
+          title="Пвз"
+          render={(value, record) =>
+            `${record?.branch?.name}, ${record?.under_branch?.address || ""}`
+          }
+        />
         <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
         <Table.Column
           dataIndex="branch"

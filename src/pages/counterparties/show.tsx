@@ -78,8 +78,12 @@ export const CounterpartyShow: React.FC = () => {
           <Title level={5}>ФИО</Title>
           <TextField value={record?.name} />
 
-          <Title level={5}>Адрес</Title>
-          <TextField value={record?.address} />
+          <Title level={5}>Пвз</Title>
+          <TextField
+            value={`${record?.branch?.name}-${
+              record?.under_branch?.address|| ""
+            }`}
+          />
 
           <Title level={5}>Номер телефона</Title>
           <TextField value={record?.phoneNumber} />

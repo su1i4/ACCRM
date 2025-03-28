@@ -52,7 +52,7 @@ export const UnderBranchList = () => {
         {...tableProps}
         rowKey="id"
       >
-        <Table.Column dataIndex="id" title={"ID"} />
+        {/* <Table.Column dataIndex="id" title={"ID"} /> */}
         <Table.Column
           dataIndex="branch"
           title={"Филиал"}
@@ -60,7 +60,6 @@ export const UnderBranchList = () => {
         />
         <Table.Column dataIndex="work_schedule" title={"Рабочее время"} />
         <Table.Column dataIndex="address" title={"Адрес"} />
-
         <Table.Column
           dataIndex="currency_id"
           title="Валюта"

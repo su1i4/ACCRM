@@ -26,6 +26,7 @@ import {
   ArrowUpOutlined,
   CalendarOutlined,
   FileAddOutlined,
+  SaveOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { API_URL } from "../../App";
@@ -373,7 +374,6 @@ const ShipmentEdit = () => {
         >
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -431,7 +431,6 @@ const ShipmentEdit = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
-    // We'll refetch in useEffect after state updates
   };
 
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
@@ -441,7 +440,6 @@ const ShipmentEdit = () => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
-    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -467,7 +465,7 @@ const ShipmentEdit = () => {
   return (
     <Edit
       //@ts-ignore
-      saveButtonProps={saveButtonProps}
+      saveButtonProps={{ ...saveButtonProps, style: { display: "none" } }}
       headerButtons={() => false}
       isLoading={formLoading || isLoadingShipment}
     >
@@ -653,7 +651,10 @@ const ShipmentEdit = () => {
           </Flex>
         </Row>
 
-        <Flex gap={10} style={{ marginBottom: 10 }}>
+        <Flex
+          gap={10}
+          style={{ marginBottom: 10, position: "sticky", top: 80, zIndex: 100 }}
+        >
           <CustomTooltip title="Создать">
             <Button
               icon={<FileAddOutlined />}
@@ -720,6 +721,9 @@ const ShipmentEdit = () => {
               Дата
             </Button>
           </Dropdown>
+          <Button type="primary" icon={<SaveOutlined />} {...saveButtonProps}>
+            Сохранить
+          </Button>
         </Flex>
         <Row gutter={16}>
           <Col span={24}>

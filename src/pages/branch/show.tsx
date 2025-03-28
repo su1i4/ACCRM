@@ -1,4 +1,4 @@
-import { DateField, MarkdownField, Show, TextField } from "@refinedev/antd";
+import { DateField, DeleteButton, EditButton, MarkdownField, Show, TextField } from "@refinedev/antd";
 import { useOne, useShow } from "@refinedev/core";
 import { Typography } from "antd";
 
@@ -10,17 +10,26 @@ export const BranchShow = () => {
 
   const record = data?.data;
 
-
-
   return (
-    <Show isLoading={isLoading}>
+    <Show
+      headerButtons={({ deleteButtonProps, editButtonProps }) => (
+        <>
+          {editButtonProps && (
+            <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
+          )}
+          {deleteButtonProps && (
+            <DeleteButton {...deleteButtonProps} meta={{ foo: "bar" }} />
+          )}
+        </>
+      )}
+      isLoading={isLoading}
+    >
       <Title level={5}>{"ID"}</Title>
       <TextField value={record?.id} />
       <Title level={5}>{"Филиал"}</Title>
       <TextField value={record?.name} />
-        <Title level={5}>{"Тариф"}</Title>
-        <TextField value={record?.prefix} />
-
+      <Title level={5}>{"Тариф"}</Title>
+      <TextField value={record?.prefix} />
     </Show>
   );
 };

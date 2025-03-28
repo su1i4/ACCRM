@@ -25,7 +25,13 @@ const ShipmentList = () => {
     page: currentPage,
     limit: pageSize,
     offset: currentPage * pageSize,
-    s: JSON.stringify({ $and: [...filters, { status: { $eq: "В пути" } }] }),
+    s: JSON.stringify({
+      $and: [
+        ...filters,
+        { status: { $eq: "В пути" } },
+        { reshipment: { $eq: false } },
+      ],
+    }),
   });
 
   const { data, isLoading, refetch } = useCustom<any>({

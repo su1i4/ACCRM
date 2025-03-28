@@ -1,22 +1,35 @@
 import React, { useState } from "react";
-import {
-  DeleteButton,
-  EditButton,
-  Show,
-  TextField,
-  useTable,
-} from "@refinedev/antd";
+import { Show, TextField } from "@refinedev/antd";
 import {
   useUpdateMany,
-  useParsed,
   useShow,
+  useCustom,
   useNavigation,
 } from "@refinedev/core";
-import { Typography, Row, Col, Table, Button, Space } from "antd";
-import dayjs from "dayjs";
-import { useParams } from "react-router";
+import {
+  Typography,
+  Row,
+  Col,
+  Table,
+  Button,
+  Space,
+  Card,
+  Form,
+  Dropdown,
+  Input,
+  Modal,
+} from "antd";
+import { useParams, useSearchParams } from "react-router";
 import { API_URL } from "../../App";
 import { translateStatus } from "../../lib/utils";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { CustomTooltip } from "../../shared";
+import dayjs from "dayjs";
+import { ResendModal } from "./modal/resend-modal";
 
 const { Title } = Typography;
 
@@ -30,30 +43,43 @@ const ReceivingShow = () => {
   const { data, isLoading } = queryResult;
   const record = data?.data;
 
-  const { tableProps } = useTable({
-    resource: "goods-processing",
-    syncWithLocation: false,
-    initialSorter: [
-      {
-        field: "id",
-        order: "desc",
-      },
-    ],
-    filters: {
-      permanent: [
-        {
-          field: "shipment_id",
-          operator: "eq",
-          value: Number(id),
-        },
-        {
-          field: "status",
-          operator: "eq",
-          value: "В пути",
-        },
-      ],
+  const [searchparams, setSearchParams] = useSearchParams();
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
+  const [open, setOpen] = useState(false);
+
+  const buildQueryParams = () => {
+    return {
+      s: JSON.stringify({
+        $and: [
+          ...searchFilters,
+          { status: { $eq: "В пути" } },
+          { shipment_id: { $eq: Number(id) } },
+        ],
+      }),
+      sort: `${sortField},${sortDirection}`,
+      limit: pageSize,
+      page: currentPage,
+      offset: (currentPage - 1) * pageSize,
+    };
+  };
+
+  const {
+    data: ReceivingData,
+    isLoading: ReceivingLoading,
+    refetch,
+  } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
     },
   });
+
+  const { push } = useNavigation();
 
   const postIds = async (ids: Record<string, number[]>) => {
     const token = localStorage.getItem("access_token");
@@ -66,22 +92,25 @@ const ReceivingShow = () => {
       },
       body: JSON.stringify(ids),
     });
+    refetch();
+    push("/receiving");
   };
-  // -----------------------
-  // 1. Состояние для выделенных строк
-  // -----------------------
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [transformData, setTransformData] = useState({});
 
-  // Настройка антовского rowSelection
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [transformData, setTransformData] = useState<Record<string, number[]>>(
+    {}
+  );
+
   const rowSelection = {
     selectedRowKeys,
     onChange: (newSelectedKeys: React.Key[], newSelectedRows: any[]) => {
       setSelectedRowKeys(newSelectedKeys);
+      setSelectedRows(newSelectedRows);
 
       let tpsIds: Record<string, number[]> = {};
 
-      newSelectedRows.forEach((item: any) => {
+      newSelectedRows.forEach((item) => {
         const clientCode = item.counterparty?.clientCode;
         const itemId = item.id;
 
@@ -102,11 +131,6 @@ const ReceivingShow = () => {
     },
   };
 
-  console.log(transformData, "transformData");
-
-  // -----------------------
-  // 2. Массовое обновление
-  // -----------------------
   const { mutate, isLoading: isUpdating } = useUpdateMany();
 
   const handleSetReadyToIssue = () => {
@@ -126,11 +150,113 @@ const ReceivingShow = () => {
     );
   };
 
-  const { push } = useNavigation();
+  const handleFilter = (values: any) => {
+    const filters: any[] = [{ status: { $eq: "Готов к выдаче" } }];
+    if (values.trackCode) {
+      filters.push({
+        $or: [
+          { trackCode: { $contL: values.trackCode } },
+          { "counterparty.clientCode": { $contL: values.trackCode } },
+          { "counterparty.name": { $contL: values.trackCode } },
+        ],
+      });
+    }
+    if (values.dateRange) {
+      filters.push({
+        created_at: {
+          $gte: dayjs(values.dateRange[0]).format("YYYY-MM-DD"),
+          $lte: dayjs(values.dateRange[1]).format("YYYY-MM-DD"),
+        },
+      });
+    }
+    setSearchFilters(filters);
+  };
+
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <Modal open={open}></Modal>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
+        </div>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "counterparty.name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("counterparty.name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По фио{" "}
+          {sortField === "counterparty.name" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
+
+  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+    searchparams.set("page", pagination.current);
+    searchparams.set("size", pagination.pageSize);
+    setSearchParams(searchparams);
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+
+    // Обрабатываем сортировку, если она пришла из таблицы
+    if (sorter && sorter.field) {
+      setSortField(
+        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
+      );
+      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+    }
+  };
+
+  const dataSource = ReceivingData?.data?.data || [];
+
+  const tableProps = {
+    dataSource: dataSource,
+    loading: isLoading || ReceivingLoading,
+    pagination: {
+      current: currentPage,
+      pageSize: pageSize,
+      total: data?.data?.total || 0,
+    },
+    onChange: handleTableChange,
+  };
 
   return (
     <Show headerButtons={() => false} isLoading={isLoading}>
-      {/* Данные о текущем рейсе */}
+      <ResendModal
+        filterId={Number(id)}
+        open={open}
+        handleClose={() => setOpen(false)}
+        selectedRowKeys={selectedRowKeys}
+        onSuccess={() => refetch()}
+      />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Номер рейса</Title>
@@ -213,18 +339,80 @@ const ReceivingShow = () => {
         Товары в этом рейсе
       </Title>
 
-      {/* Кнопки массового изменения статуса */}
-      <Space style={{ marginBottom: 16 }}>
-        <Button
-          onClick={handleSetReadyToIssue}
-          disabled={selectedRowKeys.length === 0 || isUpdating}
-        >
-          Принять
-        </Button>
-      </Space>
+      <Row
+        style={{
+          marginBottom: 15,
+          position: "sticky",
+          top: 80,
+          zIndex: 100,
+        }}
+      >
+        <Col span={24}>
+          <Form layout="inline" onFinish={handleFilter}>
+            <Space style={{ marginRight: 10, backgroundColor: "white" }}>
+              <Button
+                onClick={handleSetReadyToIssue}
+                disabled={selectedRowKeys.length === 0 || isUpdating}
+              >
+                Принять
+              </Button>
+            </Space>
+            <Space style={{ marginRight: 10, backgroundColor: "white" }}>
+              <Button
+                onClick={() => setOpen(true)}
+                disabled={selectedRowKeys.length === 0 || isUpdating}
+              >
+                Перенаправить
+              </Button>
+            </Space>
+            <CustomTooltip title="Сортировка">
+              <Dropdown overlay={sortContent} trigger={["click"]}>
+                <Button
+                  style={{ marginRight: 8 }}
+                  icon={
+                    sortDirection === "ASC" ? (
+                      <ArrowUpOutlined />
+                    ) : (
+                      <ArrowDownOutlined />
+                    )
+                  }
+                />
+              </Dropdown>
+            </CustomTooltip>
+            <Form.Item name="trackCode">
+              <Input
+                style={{ width: 600 }} // Fixed width issue
+                placeholder="Поиск по трек-коду, ФИО получателя или по коду получателя"
+                prefix={<SearchOutlined />}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (!value) {
+                    setSearchFilters([]);
+                    return;
+                  }
+                  setSearchFilters([
+                    {
+                      $or: [
+                        { trackCode: { $contL: value } },
+                        { "counterparty.clientCode": { $contL: value } },
+                        { "counterparty.name": { $contL: value } },
+                      ],
+                    },
+                  ]);
+                }}
+              />
+            </Form.Item>
+          </Form>
+        </Col>
+      </Row>
 
       {/* Таблица со списком товаров и чекбоксами */}
-      <Table {...tableProps} rowKey="id" rowSelection={rowSelection}>
+      <Table
+        // pagination={{ showSizeChanger: true }}
+        {...tableProps}
+        rowKey="id"
+        rowSelection={rowSelection}
+      >
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"

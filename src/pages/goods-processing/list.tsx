@@ -446,7 +446,7 @@ export const GoogsProcessingList = () => {
       <Table
         {...tableProps}
         rowKey="id"
-        scroll={{ x: "max-content" }}
+        scroll={{ x: 1200 }}
         onRow={(record) => ({
           onDoubleClick: () => {
             show("goods-processing", record.id as number);

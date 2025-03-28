@@ -351,7 +351,7 @@ export const RemainingStockProcessingList = () => {
         </Col>
         <Col flex="auto">
           <Input
-            style={{ width: 500 }}
+            style={{ width: 600 }}
             placeholder="Поиск по трек-коду, ФИО получателя или по коду получателя"
             prefix={<SearchOutlined />}
             onChange={(e) => {
@@ -361,7 +361,9 @@ export const RemainingStockProcessingList = () => {
                   [
                     {
                       status: {
-                        $in: ["В Складе", "Готов к выдаче"],
+                        $in: selectedBranch
+                          ? ["Готов к выдаче"]
+                          : ["В Складе", "Готов к выдаче"],
                       },
                     },
                   ],
@@ -371,6 +373,13 @@ export const RemainingStockProcessingList = () => {
               }
               setFilters(
                 [
+                  {
+                    status: {
+                      $in: selectedBranch
+                        ? ["Готов к выдаче"]
+                        : ["В Складе", "Готов к выдаче"],
+                    },
+                  },
                   {
                     $or: [
                       { trackCode: { $contL: value } },
@@ -389,9 +398,10 @@ export const RemainingStockProcessingList = () => {
             {...branchSelectProps}
             placeholder="Выберите филиал"
             style={{ width: 300 }}
-            value={selectedBranch}
+            value={selectedBranch || undefined} // Убедитесь, что пустое значение не передается как null
+            allowClear // Разрешает очистку
             onChange={(e) => {
-              setSelectedBranch(e);
+              setSelectedBranch(e || null); // Сбрасываем в null при очистке
               if (!e) {
                 setFilters(
                   [
@@ -409,7 +419,7 @@ export const RemainingStockProcessingList = () => {
                 [
                   {
                     status: {
-                      $in: ["В Складе", "Готов к выдаче"],
+                      $in: ["Готов к выдаче"],
                     },
                   },
                   {
@@ -455,7 +465,7 @@ export const RemainingStockProcessingList = () => {
           dataSource={dataSource}
           loading={isLoading}
           rowKey="id"
-          scroll={{ x: "max-content" }}
+          scroll={{ x: 1200 }}
           pagination={{
             current: currentPage,
             pageSize: pageSize,

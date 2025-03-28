@@ -247,13 +247,13 @@ const ShipmentAdd = () => {
           >
             Назад
           </Button>
-          <Button type="primary" onClick={handleSave} loading={formLoading}>
-            Сохранить
-          </Button>
         </Flex>
       )}
     >
-      <Flex gap={10} style={{ marginBottom: 10 }}>
+      <Flex
+        gap={10}
+        style={{ marginBottom: 10, position: "sticky", top: 80, zIndex: 100 }}
+      >
         <CustomTooltip title="Сортировка">
           <Dropdown
             overlay={sortContent}
@@ -313,6 +313,9 @@ const ShipmentAdd = () => {
             Дата
           </Button>
         </Dropdown>
+        <Button type="primary" onClick={handleSave} loading={formLoading}>
+          Сохранить
+        </Button>
       </Flex>
       <Table
         {...tableProps}

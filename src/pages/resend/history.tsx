@@ -1,17 +1,18 @@
 import {
   ArrowDownOutlined,
+  ArrowLeftOutlined,
   ArrowUpOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { List } from "@refinedev/antd";
-import { useNavigation, useCustom } from "@refinedev/core";
+import { useNavigation, useCustom, useBreadcrumb } from "@refinedev/core";
 import { Button, Flex, Input, Table } from "antd";
 import { useState, useEffect } from "react";
 import { API_URL } from "../../App";
 import { catchDateTable, translateStatus } from "../../lib/utils";
 import { useSearchParams } from "react-router";
 
-export const ShipmentHistory = () => {
+export const ResendHistory = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,7 +28,7 @@ export const ShipmentHistory = () => {
       $and: [
         ...filters,
         { status: { $eq: "Выгрузили" } },
-        { reshipment: { $eq: false } },
+        { reshipment: { $eq: true } },
       ],
     }),
   });
@@ -80,6 +81,14 @@ export const ShipmentHistory = () => {
   return (
     <List headerButtons={() => false}>
       <Flex gap={10} style={{ width: "100%", marginBottom: 10 }}>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => {
+            push("/resend");
+          }}
+        >
+          Назад
+        </Button>
         <Button
           icon={
             sortDirection === "ASC" ? (

@@ -1,10 +1,10 @@
 import {
-    ShoppingCartOutlined,
-    WalletOutlined,
-    UsergroupAddOutlined,
-    SettingOutlined,
-    RobotOutlined,
-  } from "@ant-design/icons";
+  ShoppingCartOutlined,
+  WalletOutlined,
+  UsergroupAddOutlined,
+  SettingOutlined,
+  RobotOutlined,
+} from "@ant-design/icons";
 
 export const routes = [
   {
@@ -62,6 +62,18 @@ export const routes = [
     meta: {
       canDelete: true,
       label: "Отправка",
+      parent: "Продукты",
+    },
+  },
+  {
+    name: "resend",
+    list: "/resend",
+    create: "/resend/create",
+    edit: "/resend/edit/:id",
+    show: "/resend/show/:id",
+    meta: {
+      canDelete: true,
+      label: "Переотправка",
       parent: "Продукты",
     },
   },

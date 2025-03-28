@@ -418,7 +418,9 @@ export const IssueProcessingList = () => {
           </div>
         </div>
       </Modal>
-      <Row style={{ marginBottom: 16 }}>
+      <Row
+        style={{ marginBottom: 16, position: "sticky", top: 80, zIndex: 100 }}
+      >
         <Col span={24}>
           <Form layout="inline" onFinish={handleFilter}>
             <CustomTooltip title="Сортировка">
@@ -478,8 +480,14 @@ export const IssueProcessingList = () => {
       </Row>
 
       {/* Кнопки для действий */}
-      <Flex gap={10} style={{ marginBottom: 10 }}>
+      <Flex
+        gap={10}
+        style={{ marginBottom: 10, position: "sticky", top: 120, zIndex: 100 }}
+      >
         <Button
+          style={{
+            backgroundColor: selectedRowKeys.length ? undefined : "gainsboro", // Используем undefined вместо false
+          }}
           type="primary"
           icon={<CheckOutlined />}
           onClick={handleAcceptSelected}
@@ -487,6 +495,7 @@ export const IssueProcessingList = () => {
         >
           Выдать выбранные посылки
         </Button>
+
         <Button type="primary" onClick={() => push("received")}>
           Выданные посылки
         </Button>
@@ -519,7 +528,7 @@ export const IssueProcessingList = () => {
           </Typography.Text>
           |
           <Typography.Text>
-            Общий вес: <strong>{totalWeight} кг</strong>
+            Общий вес: <strong>{totalWeight.toFixed(3)} кг</strong>
           </Typography.Text>
           |
           <Typography.Text>
@@ -537,7 +546,7 @@ export const IssueProcessingList = () => {
           selectedRowKeys,
           onChange: handleRowSelectionChange,
         }}
-        scroll={{ x: 2000 }}
+        scroll={{ x: 1200 }}
       >
         <Table.Column
           dataIndex="created_at"

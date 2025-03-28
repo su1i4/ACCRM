@@ -461,7 +461,7 @@ export const AcceptedGoodsList = () => {
       <Table
         {...tableProps}
         rowKey="id"
-        scroll={{ x: "max-content" }}
+        scroll={{ x: 1200 }}
         onRow={(record) => ({
           onDoubleClick: () => {
             show("accepted-goods", record.id as number);

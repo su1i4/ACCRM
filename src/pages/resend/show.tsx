@@ -6,18 +6,19 @@ import {
   TextField,
   useTable,
 } from "@refinedev/antd";
-import { useMany, useShow } from "@refinedev/core";
+import { useOne, useShow } from "@refinedev/core";
 import { Typography, Row, Col, Table } from "antd";
-import dayjs from "dayjs";
 import { useParams } from "react-router";
 import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
-const ShipmentShow = () => {
-  const { queryResult } = useShow({});
-  const { data, isLoading } = queryResult;
+const ResendShow = () => {
   const { id } = useParams();
+  const { data, isLoading } = useOne({
+    resource: "shipments",
+    id,
+  });
   const record = data?.data;
 
   const { tableProps } = useTable({
@@ -42,6 +43,9 @@ const ShipmentShow = () => {
           value: "В пути",
         },
       ],
+    },
+    queryOptions: {
+      enabled: !isLoading && !!record, // Исправлено: запрос включается только когда данные загружены
     },
   });
 
@@ -153,9 +157,9 @@ const ShipmentShow = () => {
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) => {
-            return `${value?.split("T")[0]} ${value
-              ?.split("T")[1]
-              ?.slice(0, 5)}`;
+            return value
+              ? `${value?.split("T")[0]} ${value?.split("T")[1]?.slice(0, 5)}`
+              : "-";
           }}
         />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
@@ -165,7 +169,7 @@ const ShipmentShow = () => {
           dataIndex="counterparty"
           title="Код получателя"
           render={(value) => {
-            return value?.clientPrefix + "-" + value?.clientCode;
+            return value ? value?.clientPrefix + "-" + value?.clientCode : "-";
           }}
         />
 
@@ -177,16 +181,17 @@ const ShipmentShow = () => {
         <Table.Column
           dataIndex="counterparty"
           render={(value) =>
-            `${value?.branch?.name},${value?.under_branch?.address || ""}`
+            value
+              ? `${value?.branch?.name},${value?.under_branch?.address || ""}`
+              : "-"
           }
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
         <Table.Column dataIndex="comments" title="Комментарий" />
-        {/* Добавьте остальные необходимые колонки */}
       </Table>
     </Show>
   );
 };
 
-export default ShipmentShow;
+export default ResendShow;

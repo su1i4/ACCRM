@@ -113,6 +113,12 @@ import { NotificationsList } from "./pages/notifications/list";
 import { NotificationsCreate } from "./pages/notifications/create";
 import { AcceptedGoodsEdit } from "./pages/accepted-goods/edit";
 import { ScrollRestoration } from "./hooks/save-scroll";
+import ResendList from "./pages/resend/list";
+import ResendCreate from "./pages/resend/create";
+import ResendShow from "./pages/resend/show";
+import ResendEdit from "./pages/resend/edit";
+import { ResendHistory } from "./pages/resend/history";
+import { ResendHistoryShow } from "./pages/resend/history-show";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -293,6 +299,18 @@ function App() {
                     <Route
                       path="history/show/:id"
                       element={<ShipmentHistoryShow />}
+                    />
+                  </Route>
+
+                  <Route path="/resend">
+                    <Route index element={<ResendList />} />
+                    <Route path="create" element={<ResendCreate />} />
+                    <Route path="show/:id" element={<ResendShow />} />
+                    <Route path="edit/:id" element={<ResendEdit />} />
+                    <Route path="history" element={<ResendHistory />} />
+                    <Route
+                      path="history/show/:id"
+                      element={<ResendHistoryShow />}
                     />
                   </Route>
 

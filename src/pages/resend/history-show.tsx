@@ -14,10 +14,10 @@ import { translateStatus } from "../../lib/utils";
 
 const { Title } = Typography;
 
-const ShipmentShow = () => {
-  const { queryResult } = useShow({});
-  const { data, isLoading } = queryResult;
+export const ResendHistoryShow = () => {
   const { id } = useParams();
+  const { queryResult } = useShow({ resource: "shipments", id });
+  const { data, isLoading } = queryResult;
   const record = data?.data;
 
   const { tableProps } = useTable({
@@ -37,9 +37,19 @@ const ShipmentShow = () => {
           value: Number(id),
         },
         {
-          field: "status",
-          operator: "eq",
-          value: "В пути",
+          operator: "or",
+          value: [
+            {
+              field: "status",
+              operator: "eq",
+              value: "Выдали",
+            },
+            {
+              field: "status",
+              operator: "eq",
+              value: "Готов к выдаче",
+            },
+          ],
         },
       ],
     },
@@ -90,9 +100,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Вес</Title>
-          <TextField
-            value={Number(record?.weight) + Number(record?.box_weight)}
-          />
+          <TextField value={record?.weight} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Размеры (Д × Ш × В)</Title>
@@ -111,7 +119,7 @@ const ShipmentShow = () => {
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Количество посылок</Title>
-          <TextField value={record?.goodsCount} />
+          <TextField value={record?.count} />
         </Col>
         <Col xs={24} md={6}>
           <Title level={5}>Дата</Title>
@@ -133,25 +141,16 @@ const ShipmentShow = () => {
           <Title level={5}>Статус</Title>
           <TextField value={translateStatus(record?.status)} />
         </Col>
-        <Col xs={24} md={6}>
-          <Title level={5}>Номер фуры</Title>
-          <TextField value={record?.truck_number || "-"} />
-        </Col>
       </Row>
 
       <Title level={4} style={{ marginTop: 24 }}>
         Товары в этом рейсе
       </Title>
-      <Table
-        pagination={{ showSizeChanger: true }}
-        {...tableProps}
-        rowKey="id"
-        scroll={{ x: 1000 }}
-      >
+      <Table {...tableProps} rowKey="id">
         {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"
-          title="Дата приемки"
+          title="Дата"
           render={(value) => {
             return `${value?.split("T")[0]} ${value
               ?.split("T")[1]
@@ -159,7 +158,7 @@ const ShipmentShow = () => {
           }}
         />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
-        <Table.Column dataIndex="trackCode" title="Трек-код" />
+        <Table.Column dataIndex="trackCode" title="Треккод" />
 
         <Table.Column
           dataIndex="counterparty"
@@ -182,11 +181,8 @@ const ShipmentShow = () => {
           title="Пункт назначения, Пвз"
         />
         <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="comments" title="Комментарий" />
         {/* Добавьте остальные необходимые колонки */}
       </Table>
     </Show>
   );
 };
-
-export default ShipmentShow;

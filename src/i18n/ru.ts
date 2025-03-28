@@ -91,6 +91,13 @@ export const i18nProvider_ru = {
       "under-branch.titles.edit": "Изменить пвз",
       "under-branch.titles.show": "Просмотр пвз",
       "notifications.deleteSuccess": "Успешно удалено",
+      "resend.titles.list": "Переотправка",
+      "resend.titles.create": "Создание переотправки",
+      "undefined.titles.list": "История переотправлений",
+      "resend.titles.show": "Просмотр переотправки",
+      "resend.titles.edit": "Изменить переотправку",
+      "branch.titles.show": "Просмотр филиала",
+      "branch.titles.edit": "Изменить филиал",
     };
     return translations[key] || key;
   },
