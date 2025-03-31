@@ -177,7 +177,7 @@ const ResendList = () => {
           ) : (
             <>
               <Typography.Text style={{ fontSize: 14 }}>
-                Общий вес: <strong>{statistic?.data?.totalWeight} кг</strong>
+                Общий вес: <strong>{Number(statistic?.data?.totalWeight).toFixed(2)} кг</strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
                 {/* @ts-ignore */}

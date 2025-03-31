@@ -30,7 +30,7 @@ interface ResendModalProps {
   handleClose: () => void;
   onSuccess?: () => void;
   selectedRowKeys: any[];
-  filterId: number;
+  filterId?: number;
 }
 
 export const ResendModal = ({

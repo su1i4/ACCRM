@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   DeleteButton,
   EditButton,
@@ -6,10 +6,14 @@ import {
   TextField,
   useTable,
 } from "@refinedev/antd";
-import { useOne, useShow } from "@refinedev/core";
-import { Typography, Row, Col, Table } from "antd";
+import { useCustom, useOne, useShow } from "@refinedev/core";
+import { Typography, Row, Col, Table, Button, Flex, Modal } from "antd";
 import { useParams } from "react-router";
 import { translateStatus } from "../../lib/utils";
+import { PrinterOutlined } from "@ant-design/icons";
+import { useReactToPrint } from "react-to-print";
+import dayjs from "dayjs";
+import { API_URL } from "../../App";
 
 const { Title } = Typography;
 
@@ -49,10 +53,47 @@ const ResendShow = () => {
     },
   });
 
+  const { data: branchesData } = useCustom<any>({
+    url: `${API_URL}/branch`,
+    method: "get",
+  });
+
+  const { data: underBranchesData } = useCustom<any>({
+    url: `${API_URL}/under-branch`,
+    method: "get",
+  });
+
+  const branches = branchesData?.data || [];
+  const under_branches = branchesData?.data || [];
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    //@ts-ignore
+    contentRef,
+    documentTitle: `Выдача накладная ${dayjs().format("DD.MM.YYYY HH:MM")}`,
+    onPrintError: (error) => console.error("Print Error:", error),
+  });
+
+  const [printOpen, setPrintOpen] = useState(false);
+
+  const handleClose = () => {
+    setPrintOpen(false);
+  };
+
+  console.log(
+    branches.find((item: any) => item.id === record?.branch_id),
+    record?.branch_id,
+    branches,
+    "this is console.log"
+  );
+
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (
         <>
+          <Button onClick={() => setPrintOpen(true)} icon={<PrinterOutlined />}>
+            Распечатать
+          </Button>
           {editButtonProps && (
             <EditButton {...editButtonProps} meta={{ foo: "bar" }} />
           )}
@@ -63,6 +104,36 @@ const ResendShow = () => {
       )}
       isLoading={isLoading}
     >
+      <Modal
+        open={printOpen}
+        onCancel={handleClose}
+        onClose={handleClose}
+        onOk={() => handlePrint()}
+        okText="Распечатать"
+        cancelText="Отменить"
+      >
+        <div ref={contentRef} style={{ padding: 10 }}>
+          <Flex vertical gap={10} style={{ width: "100%" }}>
+            <Flex justify="center" >
+              <img
+                style={{
+                  width: "70px",
+                }}
+                src="../../public/alfa-china.png"
+              />
+            </Flex>
+            <p style={{ color: "black" }}>г.{' '}
+              {
+                branches.find((item: any) => item.id === record?.branch_id)
+                  ?.name
+              }
+            </p>
+            <p>
+
+            </p>
+          </Flex>
+        </div>
+      </Modal>
       <Row gutter={[16, 16]}>
         <Col xs={24} md={6}>
           <Title level={5}>Номер рейса</Title>

@@ -119,6 +119,7 @@ import ResendShow from "./pages/resend/show";
 import ResendEdit from "./pages/resend/edit";
 import { ResendHistory } from "./pages/resend/history";
 import { ResendHistoryShow } from "./pages/resend/history-show";
+import ReceivingAll from "./pages/receiving/ReceivingAll";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -331,6 +332,7 @@ function App() {
                     />
                     <Route path="edit/:id" element={<ReceivingEdit />} />
                     <Route path="history" element={<ReceivingHistory />} />
+                    <Route path="all" element={<ReceivingAll />} />
                     <Route
                       path="history/show/:id"
                       element={<ReceivingHistoryShow />}

@@ -1,10 +1,5 @@
-import {
-  List,
-} from "@refinedev/antd";
-import {
-  useNavigation,
-  useCustom,
-} from "@refinedev/core";
+import { List } from "@refinedev/antd";
+import { useNavigation, useCustom } from "@refinedev/core";
 import { Button, Table, Flex, Input } from "antd";
 import {
   ArrowDownOutlined,
@@ -17,7 +12,7 @@ import { useSearchParams } from "react-router";
 import { translateStatus } from "../../lib/utils";
 
 const ReceivingList = () => {
-  const [searchparams, setSearchParams] = useSearchParams()
+  const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -121,6 +116,7 @@ const ReceivingList = () => {
             ]);
           }}
         />
+        <Button onClick={() => push("/receiving/all")}>Получить все</Button>
         <Button onClick={() => push("/receiving/history")}>
           История получений
         </Button>
@@ -184,7 +180,11 @@ const ReceivingList = () => {
           dataIndex="branch"
           title={"Пункт назначения"}
         />
-        <Table.Column dataIndex="status" title="Статус" render={(value) => translateStatus(value)} />
+        <Table.Column
+          dataIndex="status"
+          title="Статус"
+          render={(value) => translateStatus(value)}
+        />
         {/* {operationStatus()} */}
         <Table.Column
           dataIndex="employee"

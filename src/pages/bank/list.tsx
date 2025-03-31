@@ -64,7 +64,7 @@ export const BankList = () => {
                   src="/balance_yen.png"
                   alt="logo"
                 />
-                <strong>Юань:</strong> {bank.balance_usd}
+                <strong>Юань:</strong> {bank.balance_cny}
               </p>
 
               <Button

@@ -196,9 +196,6 @@ const ShipmentEdit = () => {
     disabled: isLoading,
   };
 
-  // Получаем данные о связанных товарах
-  //@ts-ignore
-
   // После загрузки данных автоматически выбираем товары, которые уже привязаны к отправке
   useEffect(() => {
     if (tableProps?.dataSource && id) {
