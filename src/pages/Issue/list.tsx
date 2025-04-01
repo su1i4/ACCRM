@@ -41,7 +41,7 @@ import { API_URL } from "../../App";
 import type { Key } from "react";
 import { CustomTooltip, operationStatus } from "../../shared";
 import { useSearchParams } from "react-router";
-import { translateStatus } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -548,14 +548,7 @@ export const IssueProcessingList = () => {
         }}
         scroll={{ x: 1200 }}
       >
-        <Table.Column
-          dataIndex="created_at"
-          title={"Дата поступления"}
-          width={120}
-          render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
-          }
-        />
+        {catchDateTable("Дата приемки", "Готов к выдаче")}
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column

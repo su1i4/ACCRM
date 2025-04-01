@@ -1,5 +1,5 @@
-import React from "react";
-import { Create, getValueFromEvent, useForm, useSelect } from "@refinedev/antd";
+import { useEffect } from "react";
+import { Create, useForm, useSelect } from "@refinedev/antd";
 import {
   Form,
   Input,
@@ -9,11 +9,17 @@ import {
   Upload,
   Row,
   Col,
-  Flex,
 } from "antd";
-import { CalendarOutlined } from "@ant-design/icons";
-import { EntityMetadata } from "typeorm";
 import { API_URL } from "../../App"; // Импорт для типа (если вы можете получить реальные метаданные TypeORM)
+import dayjs from "dayjs";
+
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Bishkek");
 
 export const entityFields = [
   { name: "trackCode", label: "Трек-код", type: "varchar", required: true },
@@ -77,6 +83,7 @@ interface GoodsFormValues {
   comments?: string;
   counterparty_id?: string | number;
   discount_custom?: number;
+  created_at?: any;
   photo?: {
     file?: {
       response?: {
@@ -89,9 +96,7 @@ interface GoodsFormValues {
 export const GoodsCreate = () => {
   const { formProps, saveButtonProps, form } = useForm<GoodsFormValues>({
     onMutationSuccess: (data, variables: GoodsFormValues, context) => {
-      // При успешной отправке, проверяем данные перед их отправкой на сервер
       if (variables.photo) {
-        // Убедимся, что структура photo соответствует ожидаемой
         const cleanedPhoto = {
           file: {
             response: {
@@ -104,22 +109,15 @@ export const GoodsCreate = () => {
     },
   });
 
-  const { selectProps: branchSelectProps } = useSelect({
-    resource: "branch",
-    optionLabel: "name",
-  });
-
   const { selectProps: counterpartySelectProps } = useSelect({
     resource: "counterparty",
     optionLabel: (record: any) => {
       return `${record?.name}, ${record?.clientPrefix}-${record?.clientCode}`;
     },
     onSearch: (value) => {
-      // Check if the search value contains only digits
       const isOnlyDigits = /^\d+$/.test(value);
 
       if (isOnlyDigits) {
-        // If only digits, search by clientCode
         return [
           {
             field: "clientCode",
@@ -128,7 +126,6 @@ export const GoodsCreate = () => {
           },
         ];
       } else {
-        // If contains any non-digit characters, search by name
         return [
           {
             field: "name",
@@ -140,39 +137,63 @@ export const GoodsCreate = () => {
     },
   });
 
+  const currentDateDayjs = dayjs().tz("Asia/Bishkek");
+
+  useEffect(() => {
+    if (formProps.form) {
+      formProps.form.setFieldsValue({
+        created_at: currentDateDayjs,
+      });
+    }
+  }, []);
+
+  const handleFormSubmit = (values: any) => {
+    const submitValues: GoodsFormValues = { ...values };
+
+    if (submitValues.created_at) {
+      if (typeof submitValues.created_at === "object") {
+        if (submitValues.created_at.$d) {
+          submitValues.created_at =
+            submitValues.created_at.format("YYYY-MM-DDTHH:mm:ss") + ".100Z";
+        } else if (submitValues.created_at instanceof Date) {
+          submitValues.created_at = submitValues.created_at.toISOString();
+        }
+      }
+    }
+
+    if (formProps.onFinish) {
+      formProps.onFinish(submitValues);
+    }
+  };
+
   return (
     <Create saveButtonProps={saveButtonProps}>
-      <Form
-        {...formProps}
-        layout="horizontal"
-        onFinish={(values: any) => {
-          // Создаем копию всех значений
-          const submitValues: GoodsFormValues = { ...values };
-
-          // Если есть фото, гарантируем точную структуру
-          if (submitValues.photo) {
-            submitValues.photo = {
-              file: {
-                response: {
-                  filePath: submitValues.photo.file?.response?.filePath,
-                },
-              },
-            };
-          }
-
-          // Вызываем оригинальный обработчик formProps.onFinish
-          if (formProps.onFinish) {
-            formProps.onFinish(submitValues);
-          }
-        }}
-      >
+      <Form {...formProps} layout="horizontal" onFinish={handleFormSubmit}>
         <Row gutter={16}>
-          {" "}
-          {/* Добавляем отступы между колонками */}
+          <Form.Item
+            label="Дата создание"
+            name="created_at"
+            style={{ marginBottom: 5 }}
+            rules={[
+              {
+                required: true,
+              },
+            ]}
+          >
+            <DatePicker
+              style={{ width: "100%" }}
+              format="YYYY-MM-DD HH:mm"
+              placeholder="Выберите дату"
+              onChange={(time) => {
+                if (time) {
+                  form.setFieldValue("created_at", time);
+                }
+              }}
+              showTime
+            />
+          </Form.Item>
           {entityFields.map((field, index) => (
             <Col span={8} key={field.name}>
-              {" "}
-              {/* Разбиваем строку на 3 части (24 / 8 = 3) */}
               <Form.Item
                 label={field.label}
                 name={field.name}
@@ -213,19 +234,6 @@ export const GoodsCreate = () => {
               </Form.Item>
             </Col>
           ))}
-          {/*<Col span={8} >*/}
-          {/*    <Form.Item*/}
-          {/*        label={"Филиал"}*/}
-          {/*        name={["branch_id"]}*/}
-          {/*        rules={[*/}
-          {/*            {*/}
-          {/*                required: true,*/}
-          {/*            },*/}
-          {/*        ]}*/}
-          {/*    >*/}
-          {/*    <Select {...branchSelectProps}  />*/}
-          {/*    </Form.Item>*/}
-          {/*</Col>*/}
           <Col span={12}>
             <Form.Item
               label={"Код Клиента"}
@@ -263,6 +271,7 @@ export const GoodsCreate = () => {
                   accept=".png,.jpg,.jpeg"
                   onChange={(info) => {
                     if (info.file.status === "done") {
+                      console.log(info, 'info')
                       const photoValue = info.file.response.filePath;
                       form.setFieldsValue({
                         photo: photoValue,

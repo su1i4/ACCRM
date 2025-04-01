@@ -5,9 +5,12 @@ import { Form, Input, DatePicker, Row, Flex, Select, Button } from "antd";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { useEffect } from "react";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+dayjs.tz.setDefault("Asia/Bishkek");
 
 interface IShipment {
   id?: number;
@@ -38,14 +41,28 @@ const ResendCreate = () => {
     onFinish: async (values: IShipment) => {
       const { cube, ...dataToSubmit } = values;
       if (dataToSubmit.created_at) {
-        const offsetMinutes = 360;
-        dataToSubmit.created_at = dayjs(dataToSubmit.created_at)
-          .add(offsetMinutes, "minute")
-          .format("YYYY-MM-DD HH:mm:ss");
+        if (typeof dataToSubmit.created_at === "object") {
+          if (dataToSubmit.created_at.$d) {
+            dataToSubmit.created_at =
+              dataToSubmit.created_at.format("YYYY-MM-DDTHH:mm:ss") + ".100Z";
+          } else if (dataToSubmit.created_at instanceof Date) {
+            dataToSubmit.created_at = dataToSubmit.created_at.toISOString();
+          }
+        }
       }
       return formProps.onFinish?.(dataToSubmit);
     },
   };
+
+  const currentDateDayjs = dayjs().tz("Asia/Bishkek");
+
+  useEffect(() => {
+    if (formProps.form) {
+      formProps.form.setFieldsValue({
+        created_at: currentDateDayjs,
+      });
+    }
+  }, []);
 
   const { selectProps: branchSelectProps } = useSelect({
     resource: "branch",
@@ -100,6 +117,7 @@ const ResendCreate = () => {
               label="Дата отправки"
               name="created_at"
               style={{ marginBottom: 5 }}
+              rules={[{ required: true }]}
             >
               <DatePicker
                 style={{ width: "100%" }}

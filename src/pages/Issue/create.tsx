@@ -1,8 +1,6 @@
-import React from 'react';
-import {Create, getValueFromEvent, useForm, useSelect} from "@refinedev/antd";
+import {Create, useForm, useSelect} from "@refinedev/antd";
 import {Form, Input, InputNumber, Select, DatePicker, Upload, Row, Col} from "antd";
-import { EntityMetadata } from 'typeorm';
-import {API_URL} from "../../App"; // Импорт для типа (если вы можете получить реальные метаданные TypeORM)
+import {API_URL} from "../../App";
 
 
 const entityFields = [

@@ -177,7 +177,7 @@ export const CashDeskList: React.FC = () => {
     }
   };
 
-  const { push } = useNavigation();
+  const { push, show } = useNavigation();
 
   // @ts-ignore
   return (
@@ -274,10 +274,19 @@ export const CashDeskList: React.FC = () => {
         </Col>
       </Row>
 
-      <Table {...tableProps} rowKey="id">
+      <Table
+        {...tableProps}
+        rowKey="id"
+        scroll={{ x: 1000 }}
+        onRow={(record) => ({
+          onDoubleClick: () => {
+            show("income", record.id as number);
+          },
+        })}
+      >
         <Table.Column
           dataIndex="date"
-          title="Дата поступление"
+          title="Дата оплаты"
           render={(date) => dayjs(date).format("DD.MM.YYYY HH:mm")}
         />
 
@@ -291,18 +300,22 @@ export const CashDeskList: React.FC = () => {
             return bank?.name;
           }}
         />
-
+        <Table.Column dataIndex="method_payment" title="Метод оплаты" />
         <Table.Column
           dataIndex="type_operation"
           title="Вид прихода"
           render={(value) => typeOperationMap[value] || value}
         />
 
-        <Table.Column dataIndex="id" title="Трек-код" />
+        <Table.Column
+          dataIndex="counterparty"
+          title="Код клиента"
+          render={(value) => `${value?.clientPrefix}-${value?.clientCode}`}
+        />
 
         <Table.Column
           dataIndex="counterparty"
-          title="Контрагент"
+          title="Фио клиента"
           render={(counterparty) => (counterparty ? counterparty.name : "")}
         />
 

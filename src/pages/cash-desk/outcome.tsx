@@ -137,7 +137,11 @@ export const CashDeskOutcomeList: React.FC = () => {
 
   return (
     <List headerButtons={() => null}>
-      <MyCreateModalOutcome open={open} onClose={() => setOpen(false)} />
+      <MyCreateModalOutcome
+        onSuccess={() => refetch()}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
 
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
@@ -254,12 +258,6 @@ export const CashDeskOutcomeList: React.FC = () => {
         />
 
         <Table.Column dataIndex="id" title="Трек-код" />
-
-        <Table.Column
-          dataIndex="counterparty"
-          title="Контрагент"
-          render={(counterparty) => (counterparty ? counterparty.name : "")}
-        />
 
         <Table.Column dataIndex="amount" title="Сумма" />
 

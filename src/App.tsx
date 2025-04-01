@@ -120,6 +120,7 @@ import ResendEdit from "./pages/resend/edit";
 import { ResendHistory } from "./pages/resend/history";
 import { ResendHistoryShow } from "./pages/resend/history-show";
 import ReceivingAll from "./pages/receiving/ReceivingAll";
+import { IncomeShow } from "./pages/cash-desk/incomeShow";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -413,7 +414,7 @@ function App() {
                   <Route path="/income">
                     <Route index element={<CashDeskList />} />
                     <Route path="create" element={<CashDeskCreate />} />
-                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
+                    <Route path="show/:id" element={<IncomeShow />} />
                     {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
                   </Route>
 

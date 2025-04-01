@@ -34,12 +34,21 @@ import TextArea from "antd/lib/input/TextArea";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { translateStatus } from "../../lib/utils";
+import { useNavigate } from "react-router";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+export enum CurrencyType {
+  Usd = "Доллар",
+  Rub = "Рубль",
+  Som = "Сом",
+  Cny = "Юань",
+}
+
 export const CashDeskCreate: React.FC = () => {
   const { push } = useNavigation();
+  const navigate = useNavigate()
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
 
@@ -63,17 +72,18 @@ export const CashDeskCreate: React.FC = () => {
             operation_id: id,
           },
         });
+      }else{
+        navigate('/income')
       }
-      if (selectedRowKeys.length === 0) push("/income");
     },
     resource: "cash-desk",
-    redirect: "list",
+    redirect: false,
     //@ts-ignore
     defaultValues: {
       type: "income",
       type_operation: "Извне",
-      date: dayjs()
-    }
+      date: dayjs(),
+    },
   });
 
   const [isAgent, setIsAgent] = useState(false);
@@ -141,7 +151,6 @@ export const CashDeskCreate: React.FC = () => {
     ],
   });
 
-  // Make sure type field is set early and won't be lost
   useEffect(() => {
     if (form) {
       form.setFieldValue("type", "income");
@@ -159,18 +168,17 @@ export const CashDeskCreate: React.FC = () => {
       } else {
         const currentValues: any = formProps.form.getFieldsValue();
 
-        // Keep the type field when resetting
         const resetValues = Object.keys(currentValues).reduce(
           (acc: any, key: any) => {
             if (
               key === "income" ||
               key === "type_operation" ||
               key === "date" ||
-              key === "type" // Add type to preserved fields
+              key === "type"
             ) {
-              acc[key] = currentValues[key]; // Keep existing values
+              acc[key] = currentValues[key];
             } else {
-              acc[key] = undefined; // Reset other fields
+              acc[key] = undefined;
             }
             return acc;
           },
@@ -234,13 +242,6 @@ export const CashDeskCreate: React.FC = () => {
   ];
 
   const incomeTypes = ["Извне", "Контрагент"];
-
-  enum CurrencyType {
-    Usd = "Доллар",
-    Rub = "Рубль",
-    Som = "Сом",
-    Eur = "Евро",
-  }
 
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     setCurrentPage(pagination.current);
@@ -363,22 +364,15 @@ export const CashDeskCreate: React.FC = () => {
           type: "income",
         }}
         onFinish={(values) => {
-          // Ensure type is included in submitted values
           const finalValues = {
             ...values,
             type: "income",
           };
-          
-          // Call the original onFinish
+
           formProps.onFinish && formProps.onFinish(finalValues);
         }}
       >
-        {/* Hidden form field for type */}
-        <Form.Item
-          name="type"
-          hidden={true}
-          initialValue="income"
-        >
+        <Form.Item name="type" hidden={true} initialValue="income">
           <Input />
         </Form.Item>
 
@@ -402,7 +396,6 @@ export const CashDeskCreate: React.FC = () => {
               label="Банк"
               name={["bank_id"]}
               rules={[{ required: true, message: "Пожалуйста, выберите Банк" }]}
-              // Настройка отступов между лейблом и инпутом
               style={{ marginBottom: 5 }}
             >
               <Select

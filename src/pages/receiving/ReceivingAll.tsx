@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import { Show, TextField, List } from "@refinedev/antd";
+import {
+  Show,
+  TextField,
+  List,
+  ShowButton,
+  DeleteButton,
+} from "@refinedev/antd";
 import {
   useUpdateMany,
   useShow,
   useCustom,
   useNavigation,
+  BaseRecord,
 } from "@refinedev/core";
 import {
   Typography,
@@ -21,11 +28,12 @@ import {
 } from "antd";
 import { data, useParams, useSearchParams } from "react-router";
 import { API_URL } from "../../App";
-import { translateStatus } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 import {
   ArrowDownOutlined,
   ArrowLeftOutlined,
   ArrowUpOutlined,
+  CheckOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { CustomTooltip } from "../../shared";
@@ -40,6 +48,8 @@ const ReceivingAll = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
   const [open, setOpen] = useState(false);
+  const [quckShipment, setQuickShipment] = useState(false);
+  const [customKeys, setCustomKeys] = useState<number[]>([]);
 
   const buildQueryParams = () => {
     return {
@@ -79,7 +89,6 @@ const ReceivingAll = () => {
       body: JSON.stringify(ids),
     });
     refetch();
-    push("/receiving");
   };
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
@@ -90,6 +99,7 @@ const ReceivingAll = () => {
 
   const rowSelection = {
     selectedRowKeys,
+    preserveSelectedRowKeys: true,
     onChange: (newSelectedKeys: React.Key[], newSelectedRows: any[]) => {
       setSelectedRowKeys(newSelectedKeys);
       setSelectedRows(newSelectedRows);
@@ -238,8 +248,12 @@ const ReceivingAll = () => {
     <List headerButtons={() => false} title="Принять все">
       <ResendModal
         open={open}
-        handleClose={() => setOpen(false)}
-        selectedRowKeys={selectedRowKeys}
+        handleClose={() => {
+          setOpen(false);
+          setQuickShipment(false);
+          setCustomKeys([]);
+        }}
+        selectedRowKeys={quckShipment ? customKeys : selectedRowKeys}
         onSuccess={() => refetch()}
       />
 
@@ -264,6 +278,7 @@ const ReceivingAll = () => {
                 marginRight: 10,
                 backgroundColor: "white",
                 marginLeft: 10,
+                borderRadius: 10,
               }}
             >
               <Button
@@ -273,7 +288,13 @@ const ReceivingAll = () => {
                 Принять
               </Button>
             </Space>
-            <Space style={{ marginRight: 10, backgroundColor: "white" }}>
+            <Space
+              style={{
+                marginRight: 10,
+                backgroundColor: "white",
+                borderRadius: 10,
+              }}
+            >
               <Button
                 onClick={() => setOpen(true)}
                 disabled={selectedRowKeys.length === 0 || isUpdating}
@@ -328,17 +349,26 @@ const ReceivingAll = () => {
         {...tableProps}
         rowKey="id"
         rowSelection={rowSelection}
+        scroll={{ x: 1200 }}
       >
         <Table.Column
-          dataIndex="created_at"
-          title="Дата приемки"
-          width={120}
-          render={(value) => {
-            return `${value?.split("T")[0]} ${value
-              ?.split("T")[1]
-              ?.slice(0, 5)}`;
-          }}
+          title="Действие"
+          dataIndex="actions"
+          render={(_, record: BaseRecord) =>
+            !rowSelection.selectedRowKeys.includes(record.id as number) && (
+              <Button
+                onClick={() => {
+                  setCustomKeys([record?.id as number]);
+                  setQuickShipment(true);
+                  setOpen(true);
+                }}
+              >
+                Перенаправить
+              </Button>
+            )
+          }
         />
+        {catchDateTable("Дата приемки", "В пути")}
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column dataIndex="trackCode" title="Треккод" />
         <Table.Column
@@ -358,7 +388,7 @@ const ReceivingAll = () => {
           render={(value) => (
             <p
               style={{
-                width: "200px",
+                width: "120px",
                 textOverflow: "ellipsis",
                 overflow: "hidden",
               }}

@@ -98,6 +98,7 @@ export const i18nProvider_ru = {
       "resend.titles.edit": "Изменить переотправку",
       "branch.titles.show": "Просмотр филиала",
       "branch.titles.edit": "Изменить филиал",
+      "income.titles.show": 'Просмотр прихода'
     };
     return translations[key] || key;
   },

@@ -8,3 +8,12 @@
 .gradient-submenu > .ant-menu-submenu-title .ant-menu-submenu-arrow::after {
   background: white !important;
 }
+
+.no-scroll-modal .ant-modal {
+  position: fixed;
+  top: 3%;
+  left: 5%;
+  margin: 0;
+  padding-bottom: 0;
+}
+

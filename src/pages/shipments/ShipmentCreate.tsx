@@ -33,6 +33,8 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+dayjs.tz.setDefault("Asia/Bishkek");
+
 const ShipmentCreate = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -110,13 +112,18 @@ const ShipmentCreate = () => {
     ...formProps,
     onFinish: async (values: IShipment) => {
       const { cube, ...dataToSubmit } = values;
-      if (dataToSubmit.created_at) {
-        const offsetMinutes = 360;
 
-        dataToSubmit.created_at = dayjs(dataToSubmit.created_at)
-          .add(offsetMinutes, "minute")
-          .format("YYYY-MM-DD HH:mm:ss");
+      if (dataToSubmit.created_at) {
+        if (typeof dataToSubmit.created_at === "object") {
+          if (dataToSubmit.created_at.$d) {
+            dataToSubmit.created_at =
+              dataToSubmit.created_at.format("YYYY-MM-DDTHH:mm:ss") + ".100Z";
+          } else if (dataToSubmit.created_at instanceof Date) {
+            dataToSubmit.created_at = dataToSubmit.created_at.toISOString();
+          }
+        }
       }
+
       return formProps.onFinish?.(dataToSubmit);
     },
   };
@@ -170,7 +177,7 @@ const ShipmentCreate = () => {
     }
   }, [selectedRows, form]);
 
-  const currentDateDayjs = dayjs();
+  const currentDateDayjs = dayjs().tz("Asia/Bishkek");
 
   useEffect(() => {
     if (formProps.form) {
@@ -375,6 +382,7 @@ const ShipmentCreate = () => {
               label="Дата отправки"
               name="created_at"
               style={{ marginBottom: 5 }}
+              rules={[{ required: true }]}
             >
               <DatePicker
                 style={{ width: "100%" }}

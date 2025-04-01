@@ -13,7 +13,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { API_URL } from "../../App";
-import { translateStatus } from "../../lib/utils";
+import { catchDateTable, translateStatus } from "../../lib/utils";
 import { useState } from "react";
 import { useCustom } from "@refinedev/core";
 import { useSearchParams } from "react-router";
@@ -209,15 +209,8 @@ export const IssueProcessingListReceived = () => {
         </Col>
       </Row>
       <Table {...tableProps} scroll={{ x: 1300 }}>
-        <Table.Column
-          dataIndex="created_at"
-          title={"Дата"}
-          width={120}
-          render={(value) =>
-            value ? dayjs(value).format("DD.MM.YYYY HH:MM") : ""
-          }
-        />
-        <Table.Column dataIndex="trackCode" title="Треккод" />
+        {catchDateTable("Дата выдачи", "Выдали")}
+        <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
           dataIndex="counterparty"
@@ -232,13 +225,33 @@ export const IssueProcessingListReceived = () => {
           render={(value) => value?.name}
         />
         <Table.Column
-          render={(value) => value?.name}
-          dataIndex="branch"
-          title={"Пункт назначения"}
+          dataIndex="counterparty"
+          render={(value) => (
+            <p
+              style={{
+                width: "200px",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
+            </p>
+          )}
+          title="Пункт назначения, Пвз"
         />
-        <Table.Column dataIndex="weight" title="Вес" />
-        <Table.Column dataIndex="amount" title="Сумма" />
-        <Table.Column dataIndex="paymentMethod" title="Способ оплаты" />
+        <Table.Column
+          dataIndex="weight"
+          title="Вес"
+          minWidth={100}
+          render={(value) => value + " кг"}
+        />
+
+        <Table.Column
+          dataIndex="amount"
+          title="Сумма"
+          minWidth={100}
+          render={(value) => value + " $"}
+        />
         <Table.Column
           dataIndex="employee"
           title="Сотрудник"

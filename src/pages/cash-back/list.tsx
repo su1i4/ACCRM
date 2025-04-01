@@ -1,12 +1,9 @@
 import React, { useState } from "react";
-import { List, useTable, EditButton, ShowButton, DeleteButton } from "@refinedev/antd";
-import {Space, Table, Form, Input, Button, Row, Col, Dropdown, Select} from "antd";
-import {BaseKey, BaseRecord} from "@refinedev/core";
+import { List, useTable } from "@refinedev/antd";
+import {Space, Table, Form, Input, Button, Row, Col, Select} from "antd";
+import {BaseKey} from "@refinedev/core";
 import { MyCreateModal } from "./modal/create-modal";
 import {
-    ArrowDownOutlined,
-    ArrowUpOutlined, CalendarOutlined,
-    EditOutlined,
     FileAddOutlined,
     SearchOutlined, SyncOutlined,
     UnorderedListOutlined
@@ -20,21 +17,12 @@ export const CashBackList: React.FC = () => {
     });
 
     const [open, setOpen] = useState(false);
-    const [filterForm] = Form.useForm();
-    const [openEdit, setOpenEdit] = useState(false);
-    const [editId, setEditId] = useState<number | null>(null);
-
-    const handleEditClick = (id: BaseKey | undefined) => {
-        // @ts-ignore
-        setEditId(id);
-        setOpenEdit(true);
-    };
 
     // @ts-ignore
     return (
         <List headerButtons={() => null}>
             {/* Передаем open и setOpen в модальное окно */}
-            <MyCreateModal open={open} onClose={() => setOpen(false)} />
+            {/* <MyCreateModal open={open} onClose={() => setOpen(false)} /> */}
             {/*<MyEditModal id={editId} open={openEdit} onClose={() => setOpenEdit(false)} />*/}
 
             {/* Верхняя панель с фильтром и кнопкой создания */}

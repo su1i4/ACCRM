@@ -176,7 +176,7 @@ const ReceivingList = () => {
         <Table.Column dataIndex="density" title={"Плотность"} />¥
         <Table.Column dataIndex="type" title={"Тип"} />
         <Table.Column
-          render={(value) => value.name}
+          render={(value) => value?.name}
           dataIndex="branch"
           title={"Пункт назначения"}
         />

@@ -104,6 +104,7 @@ const ReceivingShow = () => {
 
   const rowSelection = {
     selectedRowKeys,
+    preserveSelectedRowKeys: true,
     onChange: (newSelectedKeys: React.Key[], newSelectedRows: any[]) => {
       setSelectedRowKeys(newSelectedKeys);
       setSelectedRows(newSelectedRows);
