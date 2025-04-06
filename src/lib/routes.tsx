@@ -4,6 +4,7 @@ import {
   UsergroupAddOutlined,
   SettingOutlined,
   RobotOutlined,
+  OrderedListOutlined,
 } from "@ant-design/icons";
 
 export const routes = [
@@ -36,12 +37,20 @@ export const routes = [
     },
   },
   {
+    name: "Задачи",
+    icon: <OrderedListOutlined />,
+    meta: {
+      label: "Задачи",
+    },
+  },
+  {
     name: "Настройки",
     icon: <SettingOutlined />,
     meta: {
       label: "Настройки",
     },
   },
+
   {
     name: "accepted-goods",
     list: "/accepted-goods",
@@ -51,6 +60,17 @@ export const routes = [
       canDelete: true,
       label: "Принятые товары",
       parent: "Продукты",
+    },
+  },
+  {
+    name: "tasks",
+    list: "/tasks",
+    show: "/tasks/show/:id",
+    edit: "/tasks/edit/:id",
+    meta: {
+      canDelete: true,
+      label: "Задачи для китайца",
+      parent: "Задачи",
     },
   },
   {

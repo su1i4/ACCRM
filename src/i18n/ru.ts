@@ -98,7 +98,9 @@ export const i18nProvider_ru = {
       "resend.titles.edit": "Изменить переотправку",
       "branch.titles.show": "Просмотр филиала",
       "branch.titles.edit": "Изменить филиал",
-      "income.titles.show": 'Просмотр прихода'
+      "income.titles.show": 'Просмотр прихода',
+      "tasks.titles.list": "Задачи для китайца",
+      "bank.titles.edit": "Редактирование банка"
     };
     return translations[key] || key;
   },

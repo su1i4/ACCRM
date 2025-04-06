@@ -1,8 +1,9 @@
 import React from "react";
 import { List, useTable } from "@refinedev/antd";
-import { Card, Row, Col, Button } from "antd";
+import { Card, Row, Col, Button, Flex } from "antd";
 import { type BaseRecord, useNavigation } from "@refinedev/core";
-import { MoneyCollectOutlined } from "@ant-design/icons";
+import { EditOutlined, MoneyCollectOutlined } from "@ant-design/icons";
+import Title from "antd/lib/typography/Title";
 
 interface IBank extends BaseRecord {
   name?: string;
@@ -22,15 +23,22 @@ export const BankList = () => {
     <List>
       <Row gutter={[16, 16]}>
         {dataSource?.map((bank) => (
-          <Col
-            key={bank.id}
-            xs={24}
-            sm={12}
-            md={8}
-            lg={6}
-          >
+          <Col key={bank.id} xs={24} sm={12} md={8} lg={6}>
             <Card
-              title={bank.name}
+              title={
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  style={{ height: "100%" }}
+                >
+                  <Title level={5}>{bank.name}</Title>
+                  <EditOutlined
+                    onClick={() => {
+                      push(`/bank/edit/${bank.id}`);
+                    }}
+                  />
+                </Flex>
+              }
               style={{ borderRadius: 8 }}
               bodyStyle={{ padding: "16px" }}
             >

@@ -663,7 +663,7 @@ const ShipmentCreate = () => {
             >
               {catchDateTable("Дата приемки", "В складе")}
               <Table.Column dataIndex="cargoType" title="Тип груза" />
-              <Table.Column dataIndex="trackCode" title="Треккод" />
+              <Table.Column dataIndex="trackCode" title="Трек-код" />
               <Table.Column
                 dataIndex="counterparty"
                 title="Код получателя"

@@ -21,8 +21,6 @@ export const BankCreate = () => {
         >
           <Input />
         </Form.Item>
-
-
       </Form>
     </Create>
   );

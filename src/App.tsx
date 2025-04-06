@@ -53,7 +53,7 @@ import ReceivingEdit from "./pages/receiving/ReceivingEdit";
 import { i18nProvider_ru } from "./i18n/ru";
 import { IssueProcessingList } from "./pages/Issue";
 import { CashBackList } from "./pages/cash-back";
-import { BankCreate, BankList, BankShow } from "./pages/bank";
+import { BankCreate, BankEdit, BankList, BankShow } from "./pages/bank";
 import { CashDeskCreate, CashDeskList } from "./pages/cash-desk";
 import { CashDeskOutcomeList } from "./pages/cash-desk/outcome";
 import { RemainingStockProcessingList } from "./pages/remaining-stock";
@@ -121,6 +121,10 @@ import { ResendHistory } from "./pages/resend/history";
 import { ResendHistoryShow } from "./pages/resend/history-show";
 import ReceivingAll from "./pages/receiving/ReceivingAll";
 import { IncomeShow } from "./pages/cash-desk/incomeShow";
+import { TasksList } from "./pages/tasks/list";
+import { TasksCreate } from "./pages/tasks/create";
+import { TasksyShow } from "./pages/tasks/show";
+import { TasksEdit } from "./pages/tasks/edit";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -323,6 +327,13 @@ function App() {
                     <Route path="edit/:id" element={<CounterpartyEdit />} />
                   </Route>
 
+                  <Route path="/tasks">
+                    <Route index element={<TasksList />} />
+                    <Route path="create" element={<TasksCreate />} />
+                    <Route path="show/:id" element={<TasksyShow />} />
+                    <Route path="edit/:id" element={<TasksEdit />} />
+                  </Route>
+
                   <Route path="/receiving">
                     <Route index element={<ReceivingList />} />
                     <Route path="create" element={<ReceivingCreate />} />
@@ -408,7 +419,7 @@ function App() {
                     <Route index element={<BankList />} />
                     <Route path="create" element={<BankCreate />} />
                     <Route path="show/:id" element={<BankShow />} />
-                    <Route path="edit/:id" element={<ReceivingEdit />} />
+                    <Route path="edit/:id" element={<BankEdit />} />
                   </Route>
 
                   <Route path="/income">

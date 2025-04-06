@@ -48,7 +48,7 @@ export enum CurrencyType {
 
 export const CashDeskCreate: React.FC = () => {
   const { push } = useNavigation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<BaseRecord[]>([]);
 
@@ -72,8 +72,8 @@ export const CashDeskCreate: React.FC = () => {
             operation_id: id,
           },
         });
-      }else{
-        navigate('/income')
+      } else {
+        navigate("/income");
       }
     },
     resource: "cash-desk",
@@ -93,6 +93,13 @@ export const CashDeskCreate: React.FC = () => {
   const [filters, setFilters] = useState<any>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const { data: currency = { data: [] } } = useCustom<any>({
+    url: `${API_URL}/currency`,
+    method: "get",
+  });
+
+  console.log(currency, "this is currwncy1");
 
   const { data, isLoading, refetch } = useCustom<any>({
     url: `${API_URL}/goods-processing`,
@@ -160,11 +167,19 @@ export const CashDeskCreate: React.FC = () => {
   useEffect(() => {
     if (formProps.form) {
       if (isAgent) {
+        let rate = 0;
+        const currentValue: any = formProps.form.getFieldValue("type_currency");
+        if (currentValue) {
+          rate =
+            currency.data?.find((item: any) => item.name === currentValue)
+              ?.rate || 0;
+        }
         const totalAmount = selectedRows.reduce(
           (acc, row) => acc + Number(row.amount),
           0
         );
-        formProps.form.setFieldsValue({ amount: totalAmount });
+        const transformAmount = rate > 0 ? rate * totalAmount : totalAmount;
+        formProps.form.setFieldsValue({ amount: transformAmount });
       } else {
         const currentValues: any = formProps.form.getFieldsValue();
 
@@ -188,7 +203,7 @@ export const CashDeskCreate: React.FC = () => {
         formProps.form.setFieldsValue(resetValues);
       }
     }
-  }, [isAgent, selectedRows]);
+  }, [isAgent, selectedRows, currency.data]);
 
   const { selectProps: bankSelectProps } = useSelect({
     resource: "bank",
@@ -489,6 +504,24 @@ export const CashDeskCreate: React.FC = () => {
                     .toLowerCase()
                     .includes(input.toLowerCase())
                 }
+                onChange={(value) => {
+                  if (isAgent && value) {
+                    let rate = 0;
+                    if (value) {
+                      rate =
+                        currency.data?.find((item: any) => item.name === value)
+                          ?.rate || 0;
+                    }
+                    const totalAmount = selectedRows.reduce(
+                      (acc, row) => acc + Number(row.amount),
+                      0
+                    );
+                    const transformAmount =
+                      rate > 0 ? rate * totalAmount : totalAmount;
+                    //@ts-ignore
+                    formProps.form.setFieldsValue({ amount: transformAmount });
+                  }
+                }}
                 options={Object.values(CurrencyType).map((item: any) => ({
                   label: `${item}`,
                   value: item,
