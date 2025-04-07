@@ -14,6 +14,7 @@ import {
   Checkbox,
   Typography,
   Image,
+  message,
 } from "antd";
 import {
   SearchOutlined,
@@ -156,7 +157,6 @@ export const AcceptedGoodsList = () => {
         >
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -200,15 +200,7 @@ export const AcceptedGoodsList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedKeys);
-    },
-  };
 
   const { mutateAsync: update } = useUpdate();
 
@@ -217,13 +209,11 @@ export const AcceptedGoodsList = () => {
   const clickAll = () => {
     setMainChecked(!mainChecked);
     if (!mainChecked) {
-      // Выбираем только те строки, где visible: false
       const allFalseIds = dataSource
         .filter((item: any) => !item.visible)
         .map((item: any) => item.id);
       setSelectedRowKeys(allFalseIds);
     } else {
-      // Снимаем все выделения
       setSelectedRowKeys([]);
     }
   };
@@ -231,7 +221,6 @@ export const AcceptedGoodsList = () => {
   console.log(selectedRowKeys);
 
   const handleCheckboxChange = (record: any) => {
-    // Если запись уже visible: true, не позволяем её изменить
     if (record.visible) return;
 
     const newSelectedKeys = selectedRowKeys.includes(record.id)
@@ -239,7 +228,6 @@ export const AcceptedGoodsList = () => {
       : [...selectedRowKeys, record.id];
     setSelectedRowKeys(newSelectedKeys);
 
-    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
     const allFalseItems = dataSource.filter((item: any) => !item.visible);
     const allFalseSelected = allFalseItems.every((item: any) =>
       newSelectedKeys.includes(item.id)
@@ -248,31 +236,41 @@ export const AcceptedGoodsList = () => {
   };
 
   const handleSaveChanges = async () => {
+    if (selectedRowKeys.length === 0) return;
     const filteredItems = dataSource.filter(
       (item: any) => !item.visible && selectedRowKeys.includes(item.id)
     );
     const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
-      // Если запись уже visible: true, оставляем её true
-      visible: item.visible ? true : selectedRowKeys.includes(item.id),
+      visible: true,
     }));
 
     try {
+
       await Promise.all(
         selectedItems.map((item: any) =>
           update({
             resource: "goods-processing",
             id: item.id,
             values: { visible: item.visible },
+            successNotification: false,
+            errorNotification: false,
           })
         )
       );
+
+      // Показываем только одно уведомление об успехе
+      message.success(`Успешно обновлено ${selectedItems.length} записей`);
+
+      // Обновляем список
       refetch();
+
       // Сбрасываем выбранные строки
       setSelectedRowKeys([]);
       setMainChecked(false);
     } catch (error) {
       console.error("Ошибка при обновлении", error);
+      message.error("Произошла ошибка при обновлении");
     }
   };
 
