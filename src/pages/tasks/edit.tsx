@@ -1,7 +1,6 @@
 import React from "react";
-import { Edit, useForm, useSelect, useTable } from "@refinedev/antd";
+import { Edit, useForm, useTable } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
-import InputMask from "react-input-mask";
 import PhoneInput from "react-phone-input-2";
 
 export const TasksEdit: React.FC = () => {

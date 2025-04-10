@@ -102,6 +102,7 @@ export const ResendModal = ({
     setPageSize(pagination.pageSize);
   };
 
+  // Обновленный rowSelection без изменения типа (оставляем radio)
   const rowSelection = {
     type: "radio" as const,
     selectedRowKeys: selectedRowKeysLocal,
@@ -109,6 +110,14 @@ export const ResendModal = ({
       setSelectedShipment(selectedRows[0]?.id || null);
       setSelectedRowKeysLocal(selectedRowKeys);
     },
+  };
+
+  // Обработчик выбора строки
+  const handleRowSelect = (record: any) => {
+    // Устанавливаем выбранный shipment
+    setSelectedShipment(record.id);
+    // Устанавливаем выбранный ключ строки
+    setSelectedRowKeysLocal([record.id]);
   };
 
   const tableProps = {
@@ -121,6 +130,10 @@ export const ResendModal = ({
       total: data?.data?.total || 0,
     },
     onChange: handleTableChange,
+    // Подсветка выбранной строки
+    rowClassName: (record: any) => {
+      return selectedRowKeysLocal.includes(record.id) ? 'ant-table-row-selected' : '';
+    },
   };
 
   const { mutate: updateManyGoods } = useUpdateMany({
@@ -255,9 +268,15 @@ export const ResendModal = ({
         >
           <Table
             onRow={(record) => ({
+              onClick: () => {
+                // Выбор строки при клике
+                handleRowSelect(record);
+              },
               onDoubleClick: () => {
                 show("resend", record.id as number);
               },
+              // Добавляем стили при наведении для улучшения UX
+              style: { cursor: 'pointer' }
             })}
             {...tableProps}
             rowKey="id"
