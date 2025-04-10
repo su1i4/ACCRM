@@ -123,7 +123,7 @@ import ReceivingAll from "./pages/receiving/ReceivingAll";
 import { IncomeShow } from "./pages/cash-desk/incomeShow";
 import { TasksList } from "./pages/tasks/list";
 import { TasksCreate } from "./pages/tasks/create";
-import { TasksyShow } from "./pages/tasks/show";
+// import { TasksyShow } from "./pages/tasks/show";
 import { TasksEdit } from "./pages/tasks/edit";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
@@ -330,7 +330,7 @@ function App() {
                   <Route path="/tasks">
                     <Route index element={<TasksList />} />
                     <Route path="create" element={<TasksCreate />} />
-                    <Route path="show/:id" element={<TasksyShow />} />
+                    {/* <Route path="show/:id" element={<TasksyShow />} /> */}
                     <Route path="edit/:id" element={<TasksEdit />} />
                   </Route>
 
