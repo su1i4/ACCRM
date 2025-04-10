@@ -33,10 +33,8 @@ export const AcceptedGoodsEdit = () => {
 
   const record = queryResult?.data?.data;
 
-  // Handle initializing the file list when the record is loaded
   useEffect(() => {
     if (record?.photo) {
-      // If the photo is a string URL
       if (typeof record.photo === "string") {
         setFileList([
           {
@@ -49,7 +47,6 @@ export const AcceptedGoodsEdit = () => {
           },
         ]);
       }
-      // If photo is already an array of file objects
       else if (Array.isArray(record.photo)) {
         setFileList(record.photo);
       }
@@ -62,11 +59,9 @@ export const AcceptedGoodsEdit = () => {
       return `${record?.name}, ${record?.clientPrefix}-${record?.clientCode}`;
     },
     onSearch: (value) => {
-      // Check if the search value contains only digits
       const isOnlyDigits = /^\d+$/.test(value);
 
       if (isOnlyDigits) {
-        // If only digits, search by clientCode
         return [
           {
             field: "clientCode",
@@ -75,7 +70,6 @@ export const AcceptedGoodsEdit = () => {
           },
         ];
       } else {
-        // If contains any non-digit characters, search by name
         return [
           {
             field: "name",

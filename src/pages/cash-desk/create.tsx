@@ -99,8 +99,6 @@ export const CashDeskCreate: React.FC = () => {
     method: "get",
   });
 
-  console.log(currency, "this is currwncy1");
-
   const { data, isLoading, refetch } = useCustom<any>({
     url: `${API_URL}/goods-processing`,
     method: "get",
@@ -110,7 +108,10 @@ export const CashDeskCreate: React.FC = () => {
           $and: [
             {
               "counterparty.id": {
-                $eq: form?.getFieldValue("counterparty_id"),
+                $eq:
+                  form?.getFieldValue("counterparty_id") === undefined
+                    ? 0
+                    : form?.getFieldValue("counterparty_id"),
               },
               operation_id: {
                 $eq: null,
@@ -127,7 +128,6 @@ export const CashDeskCreate: React.FC = () => {
     },
   });
 
-  // Сохраняем выбранный id клиента
   const [selectedCounterpartyId, setSelectedCounterpartyId] = useState<
     string | null
   >(null);
@@ -210,11 +210,7 @@ export const CashDeskCreate: React.FC = () => {
     optionLabel: "name",
   });
 
-  const {
-    data: counterpartyData,
-    isLoading: isCounterpartyLoading,
-    isError: isCounterpartyError,
-  } = useOne({
+  const { data: counterpartyData } = useOne({
     resource: "counterparty",
     id: selectedCounterpartyId ?? "",
     queryOptions: {
@@ -298,7 +294,6 @@ export const CashDeskCreate: React.FC = () => {
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
-          // Fixed: Use consistent filter format
           setFilters([
             {
               created_at: {
@@ -325,7 +320,6 @@ export const CashDeskCreate: React.FC = () => {
         >
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -678,6 +672,7 @@ export const CashDeskCreate: React.FC = () => {
           rowSelection={{
             type: "checkbox",
             selectedRowKeys,
+            preserveSelectedRowKeys: true,
             onChange: handleRowSelectionChange,
           }}
         >

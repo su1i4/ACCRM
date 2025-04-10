@@ -1,12 +1,11 @@
 import { Show, TextField, DateField } from "@refinedev/antd";
-import { useCustom, useOne, useShow } from "@refinedev/core";
+import { useCustom, useOne } from "@refinedev/core";
 import {
   Button,
   Card,
   Col,
   DatePicker,
   Dropdown,
-  Flex,
   Input,
   Row,
   Space,
@@ -14,30 +13,28 @@ import {
   Typography,
 } from "antd";
 import { useEffect, useState } from "react";
-import { useNavigation, useParams, useSearchParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { API_URL } from "../../App";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
-  FileAddOutlined,
   SearchOutlined,
-  SettingOutlined,
 } from "@ant-design/icons";
-import { CustomTooltip, operationStatus } from "../../shared";
-import { translateStatus } from "../../lib/utils";
+import { CustomTooltip } from "../../shared";
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const { Title } = Typography;
 
 export const IncomeShow: React.FC = () => {
   const { id } = useParams();
-  const {
-    data: incomeData,
-    isLoading: incomeLoading,
-    isError,
-  } = useOne({
-    resource: "counterparty",
+  const { data: incomeData, isLoading: incomeLoading } = useOne({
+    resource: "cash-desk",
     id: id,
   });
 
@@ -48,9 +45,7 @@ export const IncomeShow: React.FC = () => {
   const [sortField, setSortField] = useState<
     "id" | "counterparty.name" | "operation_id"
   >("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { trackCode: { $contL: "" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,10 +72,7 @@ export const IncomeShow: React.FC = () => {
   });
 
   const [sorterVisible, setSorterVisible] = useState(false);
-  const [settingVisible, setSettingVisible] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Fixed: Update filters function that properly formats filters
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -90,11 +82,8 @@ export const IncomeShow: React.FC = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
-
-    // We'll refetch in useEffect after state updates
   };
 
-  // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
       searchparams.set("page", String(currentPage));
@@ -134,7 +123,6 @@ export const IncomeShow: React.FC = () => {
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
-          // Fixed: Use consistent filter format
           setFilters(
             [
               {
@@ -213,7 +201,6 @@ export const IncomeShow: React.FC = () => {
     </Card>
   );
 
-  // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     searchparams.set("page", pagination.current);
     searchparams.set("size", pagination.pageSize);
@@ -221,7 +208,6 @@ export const IncomeShow: React.FC = () => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
-    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -245,27 +231,32 @@ export const IncomeShow: React.FC = () => {
 
   return (
     <Show headerButtons={() => false} isLoading={incomeLoading}>
-      <Title level={5}>ID</Title>
-      <TextField value={record?.id} />
-      <Title level={5}>Код клиента</Title>
-      <TextField value={record?.code} />
-      <Title level={5}>Имя</Title>
-      <TextField value={record?.name} />
-      <Title level={5}>Номер телефона</Title>
-      <TextField value={record?.phoneNumber} />
-      <Title level={5}>Email</Title>
-      <TextField value={record?.email} />
-      <Title level={5}>Сумма заказов</Title>
-      <TextField value={record?.totalOrders} />
-      <Title level={5}>Комментарий</Title>
-      <TextField value={record?.comment} />
-
-      {record?.createdAt && (
-        <>
-          <Title level={5}>Дата создания</Title>
-          <DateField value={record?.createdAt} />
-        </>
-      )}
+      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Col span={4}>
+          <Title level={5}>Дата прихода</Title>
+          <TextField
+            value={dayjs(record?.created_at).utc().format("DD.MM.YYYY HH:mm")}
+          />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Код клиента</Title>
+          <TextField
+            value={`${record?.counterparty?.clientCode}-${record?.counterparty?.clientPrefix}`}
+          />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Фио клиента</Title>
+          <TextField value={record?.counterparty?.name} />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Номер клиента</Title>
+          <TextField value={record?.counterparty?.phoneNumber} />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Сумма оплаты</Title>
+          <TextField value={`${record?.amount}-${record?.type_currency}`} />
+        </Col>
+      </Row>
       <Row
         gutter={[16, 16]}
         align="middle"
