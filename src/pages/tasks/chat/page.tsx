@@ -217,7 +217,8 @@ const ChatPage: React.FC<ChatPageProps> = ({
   };
 
   const renderMessage = (messageContent: any, messageType: any) => {
-    const COMMON_URL = API_URL.replace("api", "") + messageContent;
+    const COMMON_URL = API_URL + "/" + messageContent;
+    console.log(COMMON_URL);
     if (messageType === "photo") {
       return (
         <div style={{ maxWidth: "100%", marginTop: 5, position: "relative" }}>
@@ -282,7 +283,7 @@ const ChatPage: React.FC<ChatPageProps> = ({
             style={{
               maxWidth: "100%",
               maxHeight: "300px",
-              minHeight: '200px',
+              minHeight: "200px",
               borderRadius: "8px",
             }}
             onError={(e) => {
@@ -297,7 +298,7 @@ const ChatPage: React.FC<ChatPageProps> = ({
               target.parentNode?.replaceChild(errorDiv, target);
             }}
           >
-            <source src={API_URL.replace("api", "") + messageContent} />
+            <source src={COMMON_URL} />
             Your browser does not support the video tag.
           </video>
         </div>
