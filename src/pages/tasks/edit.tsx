@@ -22,8 +22,6 @@ export const TasksEdit: React.FC = () => {
   //   },
   // });
 
-  console.log(formProps.initialValues?.branch_id);
-
   return (
     <Edit
       headerButtons={() => false}

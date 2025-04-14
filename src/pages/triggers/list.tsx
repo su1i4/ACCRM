@@ -11,7 +11,6 @@ export const TriggersList = () => {
   const { show } = useNavigation();
 
   const handleCopy = (text: string) => {
-    console.log(navigator.clipboard, 'navigator.clipboard')
     navigator.clipboard.writeText(text).then(
       () => message.success("Текст скопирован в буфер обмена!"),
       () => message.error("Не удалось скопировать текст")

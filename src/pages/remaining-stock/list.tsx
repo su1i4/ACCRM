@@ -252,7 +252,6 @@ export const RemainingStockProcessingList = () => {
   };
 
   const handleOk = () => {
-    console.log("Добавление новой спецификации");
     setIsModalVisible1(false);
   };
 
@@ -298,7 +297,6 @@ export const RemainingStockProcessingList = () => {
   };
 
   const handleConfirm = (id: any) => {
-    console.log(selectedRecord);
     mutate({
       id: id,
       values: {
@@ -479,8 +477,6 @@ export const RemainingStockProcessingList = () => {
           rowSelection={{
             type: "checkbox",
             onChange: (selectedRowKeys, selectedRows) => {
-              console.log("selectedRowKeys:", selectedRowKeys);
-              console.log("selectedRows:", selectedRows);
             },
           }}
         >

@@ -325,8 +325,6 @@ export const GoogsProcessingList = () => {
     onChange: handleTableChange,
   };
 
-  console.log(pageSize, "this is page size");
-
   return (
     <List headerButtons={() => false}>
       <Row

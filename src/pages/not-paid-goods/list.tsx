@@ -208,8 +208,6 @@ export const NotPaidGoodsList = () => {
     }
   };
 
-  console.log(selectedRowKeys);
-
   const handleCheckboxChange = (record: any) => {
     // Если запись уже visible: true, не позволяем её изменить
     if (record.visible) return;

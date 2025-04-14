@@ -22,8 +22,6 @@ export const CurrencyList: React.FC = () => {
     },
   });
 
-  console.log(tableProps);
-
   const { show, push } = useNavigation();
 
   return (

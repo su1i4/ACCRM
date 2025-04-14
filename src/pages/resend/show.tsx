@@ -79,14 +79,7 @@ const ResendShow = () => {
   const handleClose = () => {
     setPrintOpen(false);
   };
-
-  console.log(
-    branches.find((item: any) => item.id === record?.branch_id),
-    record?.branch_id,
-    branches,
-    "this is console.log"
-  );
-
+  
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (

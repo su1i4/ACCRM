@@ -125,6 +125,10 @@ import { TasksList } from "./pages/tasks/list";
 import { TasksCreate } from "./pages/tasks/create";
 // import { TasksyShow } from "./pages/tasks/show";
 import { TasksEdit } from "./pages/tasks/edit";
+import TasksyShow from "./pages/tasks/show";
+import { liveProvider } from "./contexts/liveProvider";
+import { TasksArchive } from "./pages/tasks/archive";
+import { IncomeShowReport } from "./pages/reports/income-report/show";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -164,6 +168,11 @@ function App() {
     } catch (error) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("email");
+      localStorage.removeItem("role");
+      localStorage.removeItem("firstName");
+      localStorage.removeItem("lastName");
+      localStorage.removeItem("id");
       window.location.href = "/login";
       return null;
     }
@@ -203,6 +212,7 @@ function App() {
         <ColorModeContextProvider>
           <AntdApp>
             <Refine
+              liveProvider={liveProvider}
               dataProvider={dataProvider}
               notificationProvider={useNotificationProvider}
               routerProvider={routerBindings}
@@ -224,7 +234,9 @@ function App() {
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
                 useNewQueryKeys: true,
+                liveMode: "auto",
               }}
+              onLiveEvent={(event) => {}}
             >
               <Routes>
                 <Route
@@ -330,8 +342,9 @@ function App() {
                   <Route path="/tasks">
                     <Route index element={<TasksList />} />
                     <Route path="create" element={<TasksCreate />} />
-                    {/* <Route path="show/:id" element={<TasksyShow />} /> */}
+                    <Route path="show/:id" element={<TasksyShow />} />
                     <Route path="edit/:id" element={<TasksEdit />} />
+                    <Route path="archive" element={<TasksArchive />} />
                   </Route>
 
                   <Route path="/receiving">
@@ -371,7 +384,6 @@ function App() {
                     <Route path="show/:id" element={<ReportShow />} />
                     <Route path="edit/:id" element={<ReportEdit />} />
 
-                    {/* Маршруты для отдельных отчетов */}
                     <Route
                       path="cargo-received"
                       element={<CargoReceivedReport />}
@@ -389,6 +401,10 @@ function App() {
                     <Route
                       path="incoming-funds"
                       element={<IncomingFundsReport />}
+                    />
+                    <Route
+                      path="incoming-funds/:id"
+                      element={<IncomeShowReport />}
                     />
                     <Route
                       path="expense-finance"

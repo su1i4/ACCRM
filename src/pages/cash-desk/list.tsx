@@ -3,7 +3,6 @@ import { List, useTable } from "@refinedev/antd";
 import {
   Space,
   Table,
-  Form,
   Input,
   Button,
   Row,
@@ -14,7 +13,6 @@ import {
   Image,
 } from "antd";
 import { useCustom, useNavigation } from "@refinedev/core";
-import { MyCreateModal } from "./modal/create-modal";
 import {
   FileAddOutlined,
   SearchOutlined,

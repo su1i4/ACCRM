@@ -40,3 +40,18 @@ export const regularData = () => {
 
 export const translateStatus = (status: string) =>
   status === "В Складе" ? "На Cкладе" : status;
+
+export const translateTaskStatus = (status: string) => {
+  switch (status) {
+    case "new":
+      return "Новый";
+    case "in_progress":
+      return "В процессе";
+    case "cancelled":
+      return "Отменён";
+    case "completed":
+      return "Завершён";
+    default:
+      return "-";
+  }
+};

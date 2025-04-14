@@ -271,7 +271,6 @@ export const GoodsCreate = () => {
                   accept=".png,.jpg,.jpeg"
                   onChange={(info) => {
                     if (info.file.status === "done") {
-                      console.log(info, 'info')
                       const photoValue = info.file.response.filePath;
                       form.setFieldsValue({
                         photo: photoValue,

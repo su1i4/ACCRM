@@ -468,8 +468,6 @@ const ResendEdit = () => {
     onChange: handleTableChange,
   };
 
-  console.log("lox");
-
   return (
     <Edit
       //@ts-ignore

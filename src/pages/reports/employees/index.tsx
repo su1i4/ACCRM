@@ -1,215 +1,327 @@
-import React, { useState } from "react";
-import { List } from "@refinedev/antd";
-import { 
-  Card, 
-  Table, 
-  DatePicker, 
-  Button, 
-  Row, 
-  Col, 
-  Select, 
-  Form, 
-  Typography,
+List;
+import React, { useState, useEffect } from "react";
+import { List, useTable, useSelect } from "@refinedev/antd";
+import {
   Space,
-  Avatar,
-  Tag
+  Table,
+  Input,
+  Button,
+  Row,
+  Col,
+  Dropdown,
+  Card,
+  Select,
 } from "antd";
-import { useCustom } from "@refinedev/core";
-import { 
-  SearchOutlined, 
-  FileExcelOutlined, 
-  PrinterOutlined,
-  UserOutlined
+import { BaseRecord, useNavigation, useCustom } from "@refinedev/core";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  FileAddOutlined,
+  SearchOutlined,
+  SyncOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 import { API_URL } from "../../../App";
 
-const { RangePicker } = DatePicker;
-const { Title } = Typography;
+export const EmployeesReport: React.FC = () => {
+  const [sortField, setSortField] = useState<"name" | "clientCode" | "id">(
+    "id"
+  );
+  const [selectedBranch, setSelectedBranch] = useState<any>(null);
+  const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
+  const [sorterVisible, setSorterVisible] = useState(false);
 
-export const EmployeesReport = () => {
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
-  const [branch, setBranch] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any[]>([]);
-
-  // Получение списка филиалов
-  const { data: branchesData } = useCustom<any>({
-    url: `${API_URL}/branch`,
-    method: "get",
+  const { tableProps: defaultTableProps, setFilters } = useTable({
+    resource: "counterparty",
+    syncWithLocation: false,
+    pagination: {
+      mode: "off",
+    },
   });
 
-  const branches = branchesData?.data?.data || [];
+  const [open, setOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
-  const fetchReport = () => {
-    if (!dateRange) return;
-
-    setLoading(true);
-    
-    const [startDate, endDate] = dateRange;
-    
-    const params = {
-      startDate: startDate.format("YYYY-MM-DD"),
-      endDate: endDate.format("YYYY-MM-DD"),
-      ...(branch && { branchId: branch }),
+  const buildQueryParams = () => {
+    const params: any = {
+      sort: `${sortField},${sortDirection}`,
     };
 
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          `${API_URL}/reports/employees?${new URLSearchParams(params as any).toString()}`
-        );
-        const result = await response.json();
-        setData(result?.data || []);
-      } catch (error) {
-        console.error("Error fetching report data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (searchValue) {
+      params.s = JSON.stringify({
+        $or: [
+          { name: { $contL: searchValue } },
+          { clientCode: { $contL: searchValue } },
+          { clientPrefix: { $contL: searchValue } },
+        ],
+      });
+    }
 
-    fetchData();
+    if (selectedBranch) {
+      params.s = JSON.stringify({
+        $or: [{ branch_id: { $eq: selectedBranch } }],
+      });
+    }
+
+    return params;
   };
 
-  const columns = [
-    {
-      title: "Сотрудник",
-      dataIndex: "employee",
-      key: "employee",
-      render: (employee: any) => (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
-            src={employee.photo} 
-            icon={<UserOutlined />} 
-            style={{ marginRight: 8 }}
-          />
-          <span>{employee.firstName} {employee.lastName}</span>
+  const { data, isLoading, refetch } = useCustom<any>({
+    url: `${API_URL}/counterparty`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
+
+  useEffect(() => {
+    refetch();
+  }, [sortDirection, sortField, searchValue]);
+
+  useEffect(() => {
+    refetch();
+  }, []);
+
+  const dataSource = data?.data || [];
+  const tableProps = {
+    ...defaultTableProps,
+    dataSource: dataSource,
+    loading: isLoading,
+  };
+
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+
+  const { show } = useNavigation();
+
+  const sortContent = (
+    <Card style={{ width: 200, padding: "0px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div
+          style={{
+            marginBottom: "8px",
+            color: "#666",
+            fontSize: "14px",
+            textAlign: "center",
+          }}
+        >
+          Сортировать по
         </div>
-      ),
-    },
-    {
-      title: "Должность",
-      dataIndex: ["employee", "position"],
-      key: "position",
-    },
-    {
-      title: "Филиал",
-      dataIndex: "branch",
-      key: "branch",
-    },
-    {
-      title: "Количество операций",
-      dataIndex: "operationsCount",
-      key: "operationsCount",
-      sorter: (a: any, b: any) => a.operationsCount - b.operationsCount,
-    },
-    {
-      title: "Сумма операций",
-      dataIndex: "totalAmount",
-      key: "totalAmount",
-      sorter: (a: any, b: any) => a.totalAmount - b.totalAmount,
-      render: (value: number) => `${value.toFixed(2)} сом`,
-    },
-    {
-      title: "Эффективность",
-      dataIndex: "efficiency",
-      key: "efficiency",
-      sorter: (a: any, b: any) => a.efficiency - b.efficiency,
-      render: (value: number) => {
-        let color = 'red';
-        if (value >= 80) {
-          color = 'green';
-        } else if (value >= 60) {
-          color = 'orange';
-        }
-        return <Tag color={color}>{value}%</Tag>;
-      },
-    },
-  ];
+        {/* Сортировка по имени */}
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          Дате создания{" "}
+          {sortField === "id" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "name" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("name");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+            // setSorterVisible(false);
+          }}
+        >
+          Имени {sortField === "name" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "clientCode" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("clientCode");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+            // setSorterVisible(false);
+          }}
+        >
+          Коду клиента{" "}
+          {sortField === "clientCode" && (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+      </div>
+    </Card>
+  );
 
-  const exportToExcel = () => {
-    // Логика экспорта в Excel
-    console.log("Экспорт в Excel");
-  };
-
-  const printReport = () => {
-    // Логика печати отчета
-    window.print();
-  };
+  const { selectProps: branchSelectProps } = useSelect({
+    resource: "branch",
+    optionLabel: "name",
+  });
 
   return (
-    <List title="Отчет по сотрудникам">
-      <Card>
-        <Form layout="vertical">
-          <Row gutter={16}>
-            <Col xs={24} sm={12} md={8} lg={8}>
-              <Form.Item label="Период">
-                <RangePicker
-                  style={{ width: "100%" }}
-                  onChange={(dates) => {
-                    setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs]);
+    <List title="Отчет по контрагентам" headerButtons={() => null}>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Space size="middle">
+            <Dropdown
+              overlay={sortContent}
+              trigger={["click"]}
+              placement="bottomLeft"
+              open={sorterVisible}
+              onOpenChange={(visible) => {
+                setSorterVisible(visible);
+              }}
+            >
+              <Button
+                icon={
+                  sortDirection === "ASC" ? (
+                    <ArrowUpOutlined />
+                  ) : (
+                    <ArrowDownOutlined />
+                  )
+                }
+              />
+            </Dropdown>
+          </Space>
+        </Col>
+        <Col flex="auto">
+          <Input
+            placeholder="Поиск по фио или по коду клиента"
+            prefix={<SearchOutlined />}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchValue(value);
+            }}
+            value={searchValue}
+            suffix={
+              searchValue ? (
+                <CloseCircleOutlined
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    setSearchValue("");
                   }}
                 />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={8} lg={8}>
-              <Form.Item label="Филиал">
-                <Select
-                  style={{ width: "100%" }}
-                  placeholder="Выберите филиал"
-                  allowClear
-                  onChange={(value) => setBranch(value)}
-                >
-                  {branches.map((branch: any) => (
-                    <Select.Option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={8} lg={8} style={{ display: "flex", alignItems: "flex-end" }}>
-              <Button 
-                type="primary" 
-                icon={<SearchOutlined />} 
-                onClick={fetchReport}
-                disabled={!dateRange}
-              >
-                Сформировать отчет
-              </Button>
-            </Col>
-          </Row>
-        </Form>
-      </Card>
+              ) : isLoading ? (
+                <SyncOutlined spin />
+              ) : null
+            }
+          />
+        </Col>
+        <Col>
+          <Select
+            {...branchSelectProps}
+            placeholder="Выберите филиал"
+            style={{ width: 300 }}
+            value={selectedBranch?.id || undefined}
+            allowClear
+            onChange={(branch) => {
+              if (!branch) {
+                setSelectedBranch(null);
+                setFilters([], "replace");
+                return;
+              }
+              setSelectedBranch(branch);
+              setFilters(
+                [
+                  {
+                    field: "branch_id",
+                    operator: "eq",
+                    value: branch.id,
+                  },
+                ],
+                "replace"
+              );
+            }}
+          />
+        </Col>
+      </Row>
 
-      <Card style={{ marginTop: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-          <Title level={4}>Эффективность сотрудников</Title>
-          <Space>
-            <Button 
-              icon={<FileExcelOutlined />} 
-              onClick={exportToExcel}
-              disabled={data.length === 0}
-            >
-              Экспорт в Excel
-            </Button>
-            <Button 
-              icon={<PrinterOutlined />} 
-              onClick={printReport}
-              disabled={data.length === 0}
-            >
-              Печать
-            </Button>
-          </Space>
-        </div>
-        <Table 
-          dataSource={data} 
-          columns={columns} 
-          loading={loading}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
+      <Table
+        onRow={(record) => ({
+          onDoubleClick: () => {
+            show("counterparty", record.id as number);
+          },
+        })}
+        {...tableProps}
+        rowKey="id"
+        locale={{
+          emptyText: searchValue
+            ? "По вашему запросу ничего не найдено"
+            : "Нет данных",
+        }}
+      >
+        <Table.Column dataIndex="id" title="ID" />
+        <Table.Column
+          dataIndex="codeClientAndPrefix"
+          title="Код клиента"
+          render={(_, record: BaseRecord) => {
+            if (!record.clientPrefix || !record.clientCode) return "";
+            return record.clientPrefix + "-" + record.clientCode;
+          }}
+          width={120}
         />
-      </Card>
+        <Table.Column dataIndex="name" title="Фио" />
+        <Table.Column
+          dataIndex="address"
+          title="Пвз"
+          render={(value, record) =>
+            `${record?.branch?.name}, ${record?.under_branch?.address || ""}`
+          }
+        />
+        <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
+        <Table.Column
+          dataIndex="branch"
+          title="Тариф клиента"
+          render={(value, record) => {
+            return `${
+              (Number(value?.tarif) || 0) -
+              (Number(record?.discount?.discount) || 0)
+            }$`;
+          }}
+        />
+        <Table.Column
+          dataIndex="email"
+          title="Почта"
+          render={(value) => {
+            return value ? value : "-";
+          }}
+        />
+        <Table.Column
+          dataIndex="discount"
+          title="Скидка"
+          render={(value) => {
+            return value ? value?.discount + "$" : "0$";
+          }}
+        />
+
+        <Table.Column
+          dataIndex="goods"
+          title="Общий вес кг"
+          render={(value) => {
+            return `${value
+              .reduce((acc: number, curr: any) => acc + Number(curr.weight), 0)
+              .toFixed(2)} кг`;
+          }}
+        />
+        <Table.Column
+          dataIndex="goods"
+          title="Общая сумма USD"
+          render={(value) => {
+            return `${value
+              .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0)
+              .toFixed(2)}$`;
+          }}
+        />
+        <Table.Column
+          dataIndex="comment"
+          title="Комментарий"
+          render={(value) => {
+            return value ? value : "-";
+          }}
+        />
+      </Table>
     </List>
   );
-}; 
+};

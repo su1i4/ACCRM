@@ -24,22 +24,18 @@ export const GoodsShow: React.FC = () => {
   const { queryResult } = useShow();
   const { data } = queryResult;
 
-  // Предполагается, что data.data содержит объект записи, а связанные данные (branch, counterparty) подгружаются через joins
   const record = data?.data;
 
   const PHOTO_URL = API_URL + "/" + record?.photo;
 
-  // Function to handle photo download
   const handleDownloadPhoto = async () => {
     if (record?.photo) {
       try {
         const response = await fetch(PHOTO_URL);
         const blob = await response.blob();
 
-        // Create object URL from blob
         const objectUrl = URL.createObjectURL(blob);
 
-        // Create a link element
         const link = document.createElement("a");
         link.href = objectUrl;
 
@@ -56,40 +52,6 @@ export const GoodsShow: React.FC = () => {
       } catch (error) {
         console.error("Error downloading photo:", error);
       }
-    }
-  };
-
-  // Функции для шаринга через мессенджеры
-  const shareViaWhatsApp = () => {
-    if (record?.photo) {
-      const photoUrl = `${API_URL}/${record.photo}`;
-      const encodedUrl = encodeURIComponent(photoUrl);
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedUrl}`;
-      window.open(whatsappUrl, "_blank");
-    }
-  };
-
-  const shareViaTelegram = () => {
-    if (record?.photo) {
-      const photoUrl = `${API_URL}/${record.photo}`;
-      const encodedUrl = encodeURIComponent(photoUrl);
-      const telegramUrl = `https://t.me/share/url?url=${encodedUrl}`;
-      window.open(telegramUrl, "_blank");
-    }
-  };
-
-  const shareViaWeChat = () => {
-    if (record?.photo) {
-      const photoUrl = `${API_URL}/${record.photo}`;
-      alert("Скопируйте ссылку для отправки в WeChat: " + photoUrl);
-      navigator.clipboard
-        .writeText(photoUrl)
-        .then(() => {
-          alert("Ссылка скопирована в буфер обмена");
-        })
-        .catch((err) => {
-          console.error("Не удалось скопировать ссылку: ", err);
-        });
     }
   };
 

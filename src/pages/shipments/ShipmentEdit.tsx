@@ -457,8 +457,6 @@ const ShipmentEdit = () => {
     onChange: handleTableChange,
   };
 
-  console.log("lox");
-
   return (
     <Edit
       //@ts-ignore

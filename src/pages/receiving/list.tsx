@@ -200,7 +200,6 @@ export const GoogsProcessingList = () => {
   };
 
   const handleOk = () => {
-    console.log("Добавление новой спецификации");
     setIsModalVisible(false);
   };
 
@@ -219,7 +218,6 @@ export const GoogsProcessingList = () => {
           /* новые значения для всех полей */
         },
       });
-      console.log("Массовое изменение элементов:", selectedRowKeys);
     } else {
       alert("Выберите элементы для массового изменения");
     }
@@ -386,8 +384,6 @@ export const GoogsProcessingList = () => {
         rowSelection={{
           type: "checkbox",
           onChange: (selectedRowKeys, selectedRows) => {
-            console.log("selectedRowKeys:", selectedRowKeys);
-            console.log("selectedRows:", selectedRows);
           },
         }}
       >

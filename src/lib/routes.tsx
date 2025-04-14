@@ -69,8 +69,8 @@ export const routes = [
     edit: "/tasks/edit/:id",
     meta: {
       canDelete: true,
-      label: "Задачи для китайца",
-      parent: "Задачи",
+      label: "Задачи",
+      parent: "Автоматизация",
     },
   },
   {

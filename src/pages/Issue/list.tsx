@@ -6,9 +6,6 @@ import {
   useNavigation,
   useUpdateMany,
   useCustom,
-  useShow,
-  useMany,
-  useDataProvider,
 } from "@refinedev/core";
 import {
   Space,
@@ -77,7 +74,9 @@ export const IssueProcessingList = () => {
   };
 
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [sortField, setSortField] = useState<
+    "id" | "counterparty.name" | "updated_at"
+  >("updated_at");
   const [searchFilters, setSearchFilters] = useState<any[]>([
     { status: { $eq: "Готов к выдаче" } },
   ]);
@@ -172,7 +171,6 @@ export const IssueProcessingList = () => {
     });
 
     const result = await response.json();
-    console.log(result, "result");
     return result;
   };
 
@@ -196,7 +194,6 @@ export const IssueProcessingList = () => {
     },
   });
 
-  // Обновление статуса для выбранных записей
   const handleAcceptSelected = async () => {
     if (!selectedRowKeys.length) {
       return;
@@ -211,7 +208,6 @@ export const IssueProcessingList = () => {
     }
   };
 
-  // Обработка выбора строк таблицы
   const handleRowSelectionChange = (
     selectedRowKeys: Key[],
     selectedRows: BaseRecord[],
@@ -221,7 +217,6 @@ export const IssueProcessingList = () => {
     setSelectedRows(selectedRows);
   };
 
-  // Функция фильтрации по трек-коду и диапазону дат
   const handleFilter = (values: any) => {
     const filters: Filter[] = [{ status: { $eq: "Готов к выдаче" } }];
     if (values.trackCode) {
@@ -287,6 +282,20 @@ export const IssueProcessingList = () => {
           По фио{" "}
           {sortField === "counterparty.name" &&
             (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "updated_at" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("updated_at");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По дате обновления{" "}
+          {sortField === "updated_at" && (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
       </div>
     </Card>

@@ -44,9 +44,6 @@ export const NotPaidGoodsShow: React.FC = () => {
   });
   const { data: branch } = dataBranch;
 
-  console.log(API_URL + "/" + record?.photo, "this is lox");
-
-  // Function to handle photo download
   const handleDownloadPhoto = async () => {
     if (record?.photo) {
       try {

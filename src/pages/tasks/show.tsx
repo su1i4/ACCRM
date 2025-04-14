@@ -1,230 +1,192 @@
-// import {
-//   Show,
-//   TextField,
-//   DateField,
-//   EditButton,
-//   DeleteButton,
-// } from "@refinedev/antd";
-// import {
-//   useNavigation,
-//   useParsed,
-//   useShow,
-//   useGetIdentity,
-// } from "@refinedev/core";
-// import { Typography, Row, Col, Button, Tabs } from "antd";
-// import { useState } from "react"; // Импортируем компонент чата
-// import ChatComponent from "./chat";
+import { Show, TextField, useSelect } from "@refinedev/antd";
+import { useMany, useShow } from "@refinedev/core";
+import { Typography, Row, Col, Tabs, Flex, Form, Select, Table } from "antd";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router";
+import ChatPage from "./chat/page";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
-// const { Title } = Typography;
-// const { TabPane } = Tabs;
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
-// export const TasksyShow: React.FC = () => {
-//   const { id } = useParsed();
-//   const { queryResult } = useShow();
-//   const { data, isLoading } = queryResult;
-//   const { data: identity } = useGetIdentity<{ id: number; fullName: string }>();
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
-//   const record = data?.data;
+const { Title } = Typography;
+const { TabPane } = Tabs;
 
-//   const [openEdit, setOpenEdit] = useState(false);
-//   const [editId, setEditId] = useState<number | null>(null);
-//   const [activeTab, setActiveTab] = useState<string>("details");
+export const TasksyShow: React.FC = () => {
+  const { queryResult } = useShow();
+  const { data, isLoading } = queryResult;
+  const record = data?.data;
 
-//   const { push } = useNavigation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [dialogId, setDialogId] = useState(0);
+  const initialTab = searchParams.get("tab") || "details";
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
 
-//   return (
-//     <Show
-//       headerButtons={({ deleteButtonProps, editButtonProps }) => (
-//         <>
-//           <Button
-//             onClick={() => {
-//               if (record?.discount?.id) {
-//                 push(`/discount/edit/${record?.discount?.id}`);
-//               } else {
-//                 setEditId(Number(record?.id));
-//                 setOpenEdit(true);
-//               }
-//             }}
-//           >
-//             {record?.discount?.id ? "Изменить скидку" : "Добавить скидку"}
-//           </Button>
-//           {editButtonProps && <EditButton {...editButtonProps} />}
-//           {deleteButtonProps && <DeleteButton {...deleteButtonProps} />}
-//         </>
-//       )}
-//       isLoading={isLoading}
-//     >
-//       {/* <DiscountModal
-//         id={editId || 0}
-//         open={openEdit}
-//         onClose={() => setOpenEdit(false)}
-//       /> */}
+  const navigate = useNavigate();
 
-//       <Tabs
-//         activeKey={activeTab}
-//         onChange={(key) => setActiveTab(key)}
-//         style={{ marginBottom: 24 }}
-//       >
-//         <TabPane tab="Детали задачи" key="details">
-//           <Row gutter={[16, 16]}>
-//             {/* Левая колонка */}
-//             <Col xs={24} sm={12}>
-//               <Title level={5}>ID</Title>
-//               <TextField value={record?.id} />
+  useEffect(() => {
+    setSearchParams({ tab: activeTab });
+    setDialogId(data?.data?.dialog?.id);
+  }, [activeTab, setSearchParams, data]);
 
-//               <Title level={5}>Код клиента</Title>
-//               <TextField
-//                 value={`${record?.clientPrefix}-${String(
-//                   record?.clientCode
-//                 ).padStart(4, "0")}`}
-//               />
+  return (
+    <Show
+      isLoading={isLoading}
+      title={
+        <Flex gap={10}>
+          <ArrowLeftOutlined
+            style={{ width: 18, height: 18, marginTop: 1 }}
+            onClick={() => navigate("/tasks")}
+          />
+          <Title style={{ fontSize: 20, lineHeight: "20px" }}>Чат задачи</Title>
+        </Flex>
+      }
+      headerButtons={() => false}
+      goBack={false}
+    >
+      <Tabs activeKey={activeTab} onChange={(key) => setActiveTab(key)}>
+        <TabPane tab="Детали задачи" key="details">
+          <Row gutter={[16, 0]}>
+            <Col span={6}>
+              <Title level={5}>Дата создания</Title>
+              <TextField
+                value={dayjs(record?.createdAt)
+                  .utc()
+                  .format("DD.MM.YYYY HH:mm")}
+              />
+            </Col>
+            <Col span={6}>
+              <Title level={5}>Заголовок</Title>
+              <TextField value={record?.title} />
+            </Col>
+            <Col span={6}>
+              <Title level={5}>Описание</Title>
+              <TextField value={record?.description} />
+            </Col>
+            <Col span={6}>
+              <Title level={5}>Сотрудники</Title>
+              <TextField
+                value={`${record?.counterparty?.clientCode}-${record?.counterparty?.clientPrefix}`}
+              />
+            </Col>
+            <Col span={6} style={{ marginTop: 20 }}>
+              <Title level={5}>Фио клиента</Title>
+              <TextField value={record?.counterparty?.name} />
+            </Col>
+            <Col span={6} style={{ marginTop: 20 }}>
+              <Title level={5}>Код клиента</Title>
+              <TextField
+                value={`${record?.counterparty?.clientCode}-${record?.counterparty?.clientPrefix}`}
+              />
+            </Col>
+            <Col span={6} style={{ marginTop: 20 }}>
+              <Title level={5}>Сотрудники</Title>
+              <Flex vertical>
+                {record?.assignedUsers?.map((item: any) => (
+                  <Typography>{`${item.firstName}-${item.lastName}`}</Typography>
+                ))}
+              </Flex>
+            </Col>
+            <Col span={24}>
+              <Title level={5}>Выбранные товары</Title>
+            </Col>
+            <Table dataSource={record?.goods} rowKey="id" scroll={{ x: 1200 }}>
+              <Table.Column dataIndex="trackCode" title="Трек-код" />
+              <Table.Column dataIndex="cargoType" title="Тип груза" />
+              <Table.Column
+                dataIndex="counterparty"
+                title="Код клиента"
+                render={(value) => {
+                  return value?.clientPrefix + "-" + value?.clientCode;
+                }}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                title="ФИО получателя"
+                render={(value) => value?.name}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                render={(value) => (
+                  <p
+                    style={{
+                      width: "200px",
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {`${value?.branch?.name}, ${
+                      value?.under_branch?.address || ""
+                    }`}
+                  </p>
+                )}
+                title="Пункт назначения, Пвз"
+              />
+              <Table.Column
+                dataIndex="weight"
+                title="Вес"
+                render={(value) => value + " кг"}
+              />
+              <Table.Column
+                dataIndex="counterparty"
+                title="Тариф клиента"
+                render={(value, record) => {
+                  return `${(
+                    Number(value?.branch?.tarif || 0) -
+                    Number(record?.counterparty?.discount?.discount || 0)
+                  ).toFixed(2)}$`;
+                }}
+              />
 
-//               <Title level={5}>ФИО</Title>
-//               <TextField value={record?.name} />
+              <Table.Column
+                dataIndex="amount"
+                title="Сумма"
+                render={(value) => value + " $"}
+              />
+              <Table.Column
+                dataIndex="discount"
+                title="Скидка"
+                render={(value, record) => {
+                  return `${(
+                    Number(value) + Number(record?.discount_custom)
+                  ).toFixed(2)}`;
+                }}
+              />
+              <Table.Column dataIndex="comments" title="Комментарий" />
+            </Table>
+          </Row>
+        </TabPane>
+        <TabPane tab="Чат задачи" key="chat">
+          <div style={{ height: "calc(100vh - 300px)", position: "relative" }}>
+            {dialogId ? (
+              <ChatPage
+                messages_load={record?.dialog?.message || []}
+                loading={isLoading}
+                dialog_id={dialogId}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                }}
+              >
+                <Typography.Text type="secondary">
+                  Загрузка чата...
+                </Typography.Text>
+              </div>
+            )}
+          </div>
+        </TabPane>
+      </Tabs>
+    </Show>
+  );
+};
 
-//               <Title level={5}>Пвз</Title>
-//               <TextField
-//                 value={`${record?.branch?.name}-${
-//                   record?.under_branch?.address || ""
-//                 }`}
-//               />
-
-//               <Title level={5}>Номер телефона</Title>
-//               <TextField value={record?.phoneNumber} />
-
-//               <Title level={5}>Email</Title>
-//               <TextField value={record?.email || "-"} />
-//             </Col>
-
-//             {/* Правая колонка */}
-//             <Col xs={24} sm={12}>
-//               <Title level={5}>Тариф клиента</Title>
-//               <TextField
-//                 value={`${
-//                   Number(record?.branch?.tarif) -
-//                   Number(record?.discount?.discount || 0)
-//                 }$`}
-//               />
-
-//               <Title level={5}>Скидка</Title>
-//               <TextField value={record?.discount?.discount || "0$"} />
-
-//               {/* <Title level={5}>Общий вес (кг)</Title>
-//               <TextField value={`${totalWeight} кг`} />
-
-//               <Title level={5}>Общая сумма (USD)</Title>
-//               <TextField value={`${totalAmount} $`} /> */}
-
-//               <Title level={5}>Комментарий</Title>
-//               <TextField value={record?.comment || "-"} />
-
-//               {record?.createdAt && (
-//                 <>
-//                   <Title level={5}>Дата создания</Title>
-//                   <DateField value={record?.createdAt} />
-//                 </>
-//               )}
-//             </Col>
-//           </Row>
-//         </TabPane>
-
-//         <TabPane tab="Чат задачи" key="chat">
-//           <div style={{ height: "600px", position: "relative" }}>
-//             {identity?.id && record?.id && (
-//               <TaskChatWrapper
-//                 userId={identity.id}
-//                 userName={identity.fullName}
-//                 taskId={Number(record.id)}
-//               />
-//             )}
-//           </div>
-//         </TabPane>
-//       </Tabs>
-
-//       {/* Также добавляем иконку чата для быстрого доступа */}
-//       {identity?.id && record?.id && (
-//         <ChatComponent
-//           currentUserId={identity.id}
-//           currentUserName={identity.fullName}
-//           taskId={Number(record.id)}
-//         />
-//       )}
-//     </Show>
-//   );
-// };
-
-// // Обертка для чата в формате встроенного интерфейса
-// const TaskChatWrapper: React.FC<{
-//   userId: number;
-//   userName: string;
-//   taskId: number;
-// }> = ({ userId, userName, taskId }) => {
-//   const [messages, setMessages] = useState<any[]>([]);
-//   const [inputMessage, setInputMessage] = useState("");
-
-//   // Здесь будет встроенная версия чата с полным интерфейсом
-//   return (
-//     <div
-//       className="task-chat-container"
-//       style={{
-//         display: "flex",
-//         flexDirection: "column",
-//         height: "100%",
-//         border: "1px solid #f0f0f0",
-//         borderRadius: "8px",
-//         overflow: "hidden",
-//       }}
-//     >
-//       <div
-//         style={{
-//           padding: "12px 16px",
-//           background: "#fafafa",
-//           borderBottom: "1px solid #f0f0f0",
-//           fontWeight: "bold",
-//         }}
-//       >
-//         Чат задачи #{taskId}
-//       </div>
-
-//       <EmbeddedChatComponent
-//         currentUserId={userId}
-//         currentUserName={userName}
-//         taskId={taskId}
-//       />
-//     </div>
-//   );
-// };
-
-// // Встроенная версия чата (используется во вкладке)
-// const EmbeddedChatComponent: React.FC<{
-//   currentUserId: number;
-//   currentUserName: string;
-//   taskId: number;
-// }> = ({ currentUserId, currentUserName, taskId }) => {
-//   return (
-//     <div
-//       style={{
-//         flex: 1,
-//         display: "flex",
-//         flexDirection: "column",
-//         height: "100%",
-//         position: "relative",
-//       }}
-//     >
-//       <iframe
-//         src={`/_chat?userId=${currentUserId}&userName=${encodeURIComponent(
-//           currentUserName
-//         )}&taskId=${taskId}&embedded=true`}
-//         style={{
-//           border: "none",
-//           width: "100%",
-//           height: "100%",
-//           flex: 1,
-//         }}
-//         title="Task Chat"
-//       />
-//     </div>
-//   );
-// };
-
-// export default TasksyShow;
+export default TasksyShow;

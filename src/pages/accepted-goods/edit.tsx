@@ -15,7 +15,6 @@ import { InboxOutlined } from "@ant-design/icons";
 import { API_URL } from "../../App";
 import { entityFields } from "../goods-processing";
 import { useNavigation, useParsed } from "@refinedev/core";
-import { useParams } from "react-router";
 
 export const AcceptedGoodsEdit = () => {
   const { push } = useNavigation();

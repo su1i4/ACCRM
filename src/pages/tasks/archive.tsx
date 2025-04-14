@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { CreateButton, List } from "@refinedev/antd";
-import { Button, Table } from "antd";
+import { List } from "@refinedev/antd";
+import { Button, Flex, Table } from "antd";
 import { useCustom, useNavigation } from "@refinedev/core";
 import { API_URL } from "../../App";
 
@@ -8,11 +8,12 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { translateTaskStatus } from "../../lib/utils";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const TasksList = () => {
+export const TasksArchive = () => {
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sortField, setSortField] = useState<
     "id" | "counterparty.id" | "operation_id"
@@ -25,6 +26,7 @@ export const TasksList = () => {
     method: "get",
     config: {
       query: {
+        s: JSON.stringify({ $and: [{ status: { $eq: "completed" } }] }),
         sort: `${sortField},${sortDirection}`,
         limit: pageSize,
         page: currentPage,
@@ -38,15 +40,17 @@ export const TasksList = () => {
 
   const tasks = data?.data?.data || [];
 
-  const { push, show } = useNavigation();
+  const { push } = useNavigation();
 
   return (
     <List
+      title="Завершенные задачи"
       headerButtons={() => (
-        <>
-          <Button onClick={() => push("archive")}>Архив</Button>
-          <CreateButton onClick={() => push("/tasks/create")} />
-        </>
+        <Flex gap={8}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => push(`/tasks`)}>
+            Назад
+          </Button>
+        </Flex>
       )}
     >
       <Table
@@ -62,11 +66,6 @@ export const TasksList = () => {
           },
           total: data?.data?.total || 0,
         }}
-        onRow={(record) => ({
-          onDoubleClick: () => {
-            show("tasks", record.id as number);
-          },
-        })}
       >
         <Table.Column
           dataIndex="createdAt"

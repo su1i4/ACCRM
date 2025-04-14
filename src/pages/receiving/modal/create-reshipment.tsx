@@ -144,7 +144,6 @@ export const CreateReshipment: React.FC<{
                 submit();
               })
               .catch((errorInfo) => {
-                console.log("Validation failed:", errorInfo);
               });
           } catch (error) {
             console.error("Error submitting form:", error);

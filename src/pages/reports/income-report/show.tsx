@@ -1,64 +1,65 @@
-import { List } from "@refinedev/antd";
+import { Show, TextField, DateField } from "@refinedev/antd";
+import { useCustom, useOne } from "@refinedev/core";
 import {
-  Space,
-  Table,
-  Input,
   Button,
-  Row,
+  Card,
   Col,
   DatePicker,
   Dropdown,
-  Form,
-  Card,
-  Modal,
-  Checkbox,
+  Input,
+  Row,
+  Space,
+  Table,
   Typography,
-  Image,
-  message,
 } from "antd";
-import {
-  SearchOutlined,
-  CalendarOutlined,
-  ArrowUpOutlined,
-  ArrowDownOutlined,
-  FileAddOutlined,
-  SettingOutlined,
-  EyeOutlined,
-} from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
+import { useParams, useSearchParams } from "react-router";
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CalendarOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { CustomTooltip } from "../../../shared";
 import dayjs from "dayjs";
-import { API_URL } from "../../App";
-import { useSearchParams } from "react-router";
-import { CustomTooltip, operationStatus } from "../../shared";
-
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { translateStatus } from "../../lib/utils";
+import { API_URL } from "../../../App";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const AcceptedGoodsList = () => {
+const { Title } = Typography;
+
+export const IncomeShowReport: React.FC = () => {
+  const { id } = useParams();
+  const { data: incomeData, isLoading: incomeLoading } = useOne({
+    resource: "cash-desk",
+    id: id,
+  });
+
+  const record = incomeData?.data;
+
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [sortField, setSortField] = useState<
+    "id" | "counterparty.name" | "operation_id"
+  >("id");
   const [searchFilters, setSearchFilters] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
-  const [search, setSearch] = useState("");
-  const [sumData, setSumData] = useState<any>(null);
 
   const buildQueryParams = () => {
     return {
       s: JSON.stringify({
-        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+        $and: [...searchFilters, { operation_id: { $eq: id } }],
       }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: currentPage * pageSize,
     };
   };
 
@@ -70,32 +71,7 @@ export const AcceptedGoodsList = () => {
     },
   });
 
-  const getSumData = async () => {
-    const token = localStorage.getItem("access_token");
-
-    const response = await fetch(
-      `${API_URL}/goods-processing/amount-in-weight/В складе`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(selectedRowKeys),
-      }
-    );
-
-    const result = await response.json();
-    setSumData(result);
-  };
-
-  useEffect(() => {
-    getSumData();
-  }, []);
-
   const [sorterVisible, setSorterVisible] = useState(false);
-  const [settingVisible, setSettingVisible] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const setFilters = (
     filters: any[],
@@ -121,6 +97,25 @@ export const AcceptedGoodsList = () => {
     }
     refetch();
   }, [searchFilters, sortDirection, currentPage, pageSize]);
+
+  useEffect(() => {
+    const value = searchparams.get("value");
+    if (value) {
+      setFilters(
+        [
+          {
+            $or: [
+              { trackCode: { $contL: value } },
+              { "counterparty.clientCode": { $contL: value } },
+              { "counterparty.name": { $contL: value } },
+            ],
+          },
+        ],
+        "replace"
+      );
+    }
+    setSearch(value || "");
+  }, []);
 
   const datePickerContent = (
     <DatePicker.RangePicker
@@ -157,6 +152,7 @@ export const AcceptedGoodsList = () => {
         >
           Сортировать по
         </div>
+        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -186,101 +182,25 @@ export const AcceptedGoodsList = () => {
           {sortField === "counterparty.name" &&
             (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
+        <Button
+          type="text"
+          style={{
+            textAlign: "left",
+            fontWeight: sortField === "operation_id" ? "bold" : "normal",
+          }}
+          onClick={() => {
+            setSortField("operation_id");
+            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
+          }}
+        >
+          По статусу оплаты{" "}
+          {sortField === "operation_id" &&
+            (sortDirection === "ASC" ? "↑" : "↓")}
+        </Button>
       </div>
     </Card>
   );
 
-  const handleOk = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  const dataSource = data?.data?.data || [];
-
-  const { mutateAsync: update } = useUpdate();
-
-  const [mainChecked, setMainChecked] = useState(false);
-
-  const clickAll = () => {
-    setMainChecked(!mainChecked);
-    if (!mainChecked) {
-      const allFalseIds = dataSource
-        .filter((item: any) => !item.visible)
-        .map((item: any) => item.id);
-      setSelectedRowKeys(allFalseIds);
-    } else {
-      setSelectedRowKeys([]);
-    }
-  };
-
-  const handleCheckboxChange = (record: any) => {
-    if (record.visible) return;
-
-    const newSelectedKeys = selectedRowKeys.includes(record.id)
-      ? selectedRowKeys.filter((id) => id !== record.id)
-      : [...selectedRowKeys, record.id];
-    setSelectedRowKeys(newSelectedKeys);
-
-    const allFalseItems = dataSource.filter((item: any) => !item.visible);
-    const allFalseSelected = allFalseItems.every((item: any) =>
-      newSelectedKeys.includes(item.id)
-    );
-    setMainChecked(allFalseSelected);
-  };
-
-  const handleSaveChanges = async () => {
-    if (selectedRowKeys.length === 0) return;
-    const filteredItems = dataSource.filter(
-      (item: any) => !item.visible && selectedRowKeys.includes(item.id)
-    );
-    const selectedItems = filteredItems.map((item: any) => ({
-      id: item.id,
-      visible: true,
-    }));
-
-    try {
-
-      await Promise.all(
-        selectedItems.map((item: any) =>
-          update({
-            resource: "goods-processing",
-            id: item.id,
-            values: { visible: item.visible },
-            successNotification: false,
-            errorNotification: false,
-          })
-        )
-      );
-
-      // Показываем только одно уведомление об успехе
-      message.success(`Успешно обновлено ${selectedItems.length} записей`);
-
-      // Обновляем список
-      refetch();
-
-      // Сбрасываем выбранные строки
-      setSelectedRowKeys([]);
-      setMainChecked(false);
-    } catch (error) {
-      console.error("Ошибка при обновлении", error);
-      message.error("Произошла ошибка при обновлении");
-    }
-  };
-
-  const checkboxContent = (
-    <Card style={{ padding: 10 }}>
-      <Button onClick={handleSaveChanges}>Показать клиенту</Button>
-    </Card>
-  );
-
-  const { show, push } = useNavigation();
-
-  // Создаем функции для пагинации, которые обычно предоставляет tableProps
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
     searchparams.set("page", pagination.current);
     searchparams.set("size", pagination.pageSize);
@@ -288,7 +208,6 @@ export const AcceptedGoodsList = () => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
 
-    // Обрабатываем сортировку, если она пришла из таблицы
     if (sorter && sorter.field) {
       setSortField(
         sorter.field === "counterparty.name" ? "counterparty.name" : "id"
@@ -297,24 +216,7 @@ export const AcceptedGoodsList = () => {
     }
   };
 
-  useEffect(() => {
-    const value = searchparams.get("value");
-    if (value) {
-      setFilters(
-        [
-          {
-            $or: [
-              { trackCode: { $contL: value } },
-              { "counterparty.clientCode": { $contL: value } },
-              { "counterparty.name": { $contL: value } },
-            ],
-          },
-        ],
-        "replace"
-      );
-    }
-    setSearch(value || "");
-  }, []);
+  const dataSource = data?.data?.data || [];
 
   const tableProps = {
     dataSource: dataSource,
@@ -328,7 +230,37 @@ export const AcceptedGoodsList = () => {
   };
 
   return (
-    <List headerButtons={() => false}>
+    <Show
+      title="Просмотр прихода"
+      headerButtons={() => false}
+      isLoading={incomeLoading}
+    >
+      <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+        <Col span={4}>
+          <Title level={5}>Дата прихода</Title>
+          <TextField
+            value={dayjs(record?.created_at).utc().format("DD.MM.YYYY HH:mm")}
+          />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Код клиента</Title>
+          <TextField
+            value={`${record?.counterparty?.clientCode}-${record?.counterparty?.clientPrefix}`}
+          />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Фио клиента</Title>
+          <TextField value={record?.counterparty?.name} />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Номер клиента</Title>
+          <TextField value={record?.counterparty?.phoneNumber} />
+        </Col>
+        <Col span={4}>
+          <Title level={5}>Сумма оплаты</Title>
+          <TextField value={`${record?.amount}-${record?.type_currency}`} />
+        </Col>
+      </Row>
       <Row
         gutter={[16, 16]}
         align="middle"
@@ -336,13 +268,6 @@ export const AcceptedGoodsList = () => {
       >
         <Col>
           <Space size="middle">
-            <CustomTooltip title="Создать">
-              <Button
-                icon={<FileAddOutlined />}
-                style={{}}
-                onClick={() => push("/goods-processing/create")}
-              />
-            </CustomTooltip>
             <CustomTooltip title="Сортировка">
               <Dropdown
                 overlay={sortContent}
@@ -362,19 +287,6 @@ export const AcceptedGoodsList = () => {
                     )
                   }
                 ></Button>
-              </Dropdown>
-            </CustomTooltip>
-            <CustomTooltip title="Показать клиентам">
-              <Dropdown
-                overlay={checkboxContent}
-                trigger={["click"]}
-                placement="bottomLeft"
-                open={settingVisible}
-                onOpenChange={(visible) => {
-                  setSettingVisible(visible);
-                }}
-              >
-                <Button icon={<SettingOutlined />} />
               </Dropdown>
             </CustomTooltip>
           </Space>
@@ -425,77 +337,13 @@ export const AcceptedGoodsList = () => {
             </Button>
           </Dropdown>
         </Col>
-        <Col>
-          <Typography.Text>
-            Общий вес: <strong>{sumData?.totalWeight || 0} кг</strong>
-          </Typography.Text>
-        </Col>
-        <Col>
-          <Typography.Text>
-            Общее кол-во:{" "}
-            <strong>{tableProps?.pagination?.total || 0} шт</strong>
-          </Typography.Text>
-        </Col>
       </Row>
-
-      <Modal
-        title="Новая спецификация"
-        open={isModalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Form layout="vertical">
-          <Form.Item label="Треккод">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Тип груза">
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Table
-        {...tableProps}
-        rowKey="id"
-        scroll={{ x: 1200 }}
-        onRow={(record) => ({
-          onDoubleClick: () => {
-            show("accepted-goods", record.id as number);
-          },
-        })}
-      >
-        <Table.Column
-          dataIndex="visible"
-          title={<Checkbox checked={mainChecked} onChange={clickAll} />}
-          render={(value, record) => {
-            if (value) {
-              return (
-                <CustomTooltip title="Уже видно клиенту">
-                  <EyeOutlined />
-                </CustomTooltip>
-              );
-            } else {
-              return (
-                <Checkbox
-                  checked={selectedRowKeys.includes(record.id)}
-                  onChange={() => handleCheckboxChange(record)}
-                />
-              );
-            }
-          }}
-        />
-        <Table.Column
-          dataIndex="created_at"
-          title="Дата приемки"
-          render={(value) =>
-            value ? dayjs(value).utc().format("DD.MM.YYYY HH:mm") : ""
-          }
-        />
+      <Table {...tableProps} rowKey="id" scroll={{ x: 1200 }}>
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
           dataIndex="counterparty"
-          title="Код получателя"
+          title="Код клиента"
           render={(value) => {
             return value?.clientPrefix + "-" + value?.clientCode;
           }}
@@ -515,10 +363,10 @@ export const AcceptedGoodsList = () => {
                 overflow: "hidden",
               }}
             >
-              {`${value?.branch?.name}`}
+              {`${value?.branch?.name}, ${value?.under_branch?.address || ""}`}
             </p>
           )}
-          title="Пункт назначения"
+          title="Пункт назначения, Пвз"
         />
         <Table.Column
           dataIndex="weight"
@@ -541,32 +389,17 @@ export const AcceptedGoodsList = () => {
           title="Сумма"
           render={(value) => value + " $"}
         />
-        {/* <Table.Column dataIndex="discount" title="Скидка" render={(value, record) => {
-            return `${(Number(value) + Number(record?.discount_custom)).toFixed(2)}`;
-          }} /> */}
         <Table.Column
-          dataIndex="status"
-          title="Статус"
-          render={(value) => translateStatus(value)}
-        />
-        <Table.Column
-          dataIndex="photo"
-          title="Фото"
-          render={(photo) =>
-            photo ? (
-              <Image width={30} height={30} src={API_URL + "/" + photo} />
-            ) : null
-          }
-        />
-        <Table.Column
-          dataIndex="employee"
-          title="Сотрудник"
-          render={(value) => {
-            return `${value?.firstName}-${value?.lastName}`;
+          dataIndex="discount"
+          title="Скидка"
+          render={(value, record) => {
+            return `${(Number(value) + Number(record?.discount_custom)).toFixed(
+              2
+            )}`;
           }}
         />
         <Table.Column dataIndex="comments" title="Комментарий" />
       </Table>
-    </List>
+    </Show>
   );
 };
