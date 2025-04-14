@@ -11,8 +11,8 @@ import {
   Select,
   Card,
   Image,
-  Descriptions,
-  Typography,
+  DatePicker,
+  message,
 } from "antd";
 import { useCustom, useNavigation } from "@refinedev/core";
 import {
@@ -21,12 +21,14 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   DownloadOutlined,
+  CalendarOutlined,
+  FileExcelOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { API_URL } from "../../../App";
 import { typeOperationMap } from "../../bank";
-
-const { Text } = Typography;
+import * as XLSX from "xlsx";
 
 export const IncomingFundsReport: React.FC = () => {
   const { tableProps: bankTableProps } = useTable({
@@ -98,7 +100,6 @@ export const IncomingFundsReport: React.FC = () => {
         >
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -132,13 +133,38 @@ export const IncomingFundsReport: React.FC = () => {
     </Card>
   );
 
-  // Создаем функции для пагинации
+  const datePickerContent = (
+    <DatePicker.RangePicker
+      style={{ width: "350px" }}
+      placeholder={["Начальная дата", "Конечная дата"]}
+      showTime={{ format: "HH:mm" }}
+      format="YYYY-MM-DD HH:mm"
+      onChange={(dates, dateStrings) => {
+        if (dates && dateStrings[0] && dateStrings[1]) {
+          // Fixed: Use consistent filter format
+          setFilters(
+            [
+              {
+                created_at: {
+                  $gte: dateStrings[0],
+                  $lte: dateStrings[1],
+                },
+              },
+            ],
+            "replace"
+          );
+        } else {
+          setFilters([], "replace");
+        }
+      }}
+    />
+  );
+
   const handleTableChange = (pagination: any) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
   };
 
-  // Формируем пропсы для таблицы из данных useCustom
   const tableProps = {
     dataSource: data?.data?.data || [],
     loading: isLoading,
@@ -155,44 +181,43 @@ export const IncomingFundsReport: React.FC = () => {
       try {
         const photoUrl = `${API_URL}/${photo}`;
 
-        // Fetch the image as a blob
         const response = await fetch(photoUrl);
         const blob = await response.blob();
 
-        // Create object URL from blob
         const objectUrl = URL.createObjectURL(blob);
 
-        // Create a link element
         const link = document.createElement("a");
         link.href = objectUrl;
 
-        // Extract filename from path
         const filename = photo.split("/").pop() || "photo.jpg";
         link.download = filename;
 
-        // Append to the document, click and then remove
         document.body.appendChild(link);
         link.click();
 
-        // Clean up
         setTimeout(() => {
           document.body.removeChild(link);
           URL.revokeObjectURL(objectUrl);
         }, 100);
       } catch (error) {
         console.error("Error downloading photo:", error);
-        // You could add notification here if desired
       }
     }
   };
 
   const { push } = useNavigation();
 
-  // Expandable row render function
   const expandedRowRender = (record: any) => {
-    console.log(record)
+    const dataSource = goods?.data.filter(
+      (item: any) => item.operation_id === record?.id
+    );
     return (
-      <Table dataSource={[]} rowKey="id" scroll={{ x: 1200 }}>
+      <Table
+        dataSource={dataSource}
+        rowKey="id"
+        scroll={{ x: 1200 }}
+        pagination={false}
+      >
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
@@ -257,19 +282,296 @@ export const IncomingFundsReport: React.FC = () => {
     );
   };
 
+  const exportToExcel = () => {
+    const dataSource = data?.data?.data || [];
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    let allExportData = [];
+
+    for (const item of dataSource) {
+      const bank = bankTableProps?.dataSource?.find(
+        (bank) => bank.id === item.bank_id
+      );
+
+      // Add parent row data
+      const parentRow = {
+        "Дата оплаты": item.date
+          ? dayjs(item.date).format("DD.MM.YYYY HH:MM")
+          : "",
+        Банк: bank?.name || "",
+        "Метод оплаты": item.method_payment || "",
+        "Вид прихода":
+          typeOperationMap[item.type_operation] || item.type_operation || "",
+        "Код клиента": item.counterparty
+          ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+          : "",
+        "Фио клиента": item.counterparty ? item.counterparty.name : "",
+        Сумма: item.amount || "",
+        Валюта: item.type_currency || "",
+        Комментарий: item.comment || "",
+        "Тип строки": "Основная",
+        "Трек-код": "",
+        "Тип груза": "",
+        "Пункт назначения": "",
+        Вес: "",
+        "Тариф клиента": "",
+        Скидка: "",
+      };
+
+      allExportData.push(parentRow);
+
+      const childRows =
+        goods?.data.filter((goodItem: any) => goodItem.operation_id === item.id) ||
+        [];
+
+      for (const childItem of childRows) {
+        const childRow = {
+          "Дата оплаты": item.date
+            ? dayjs(item.date).format("DD.MM.YYYY HH:MM")
+            : "",
+          Банк: bank?.name || "",
+          "Метод оплаты": item.method_payment || "",
+          "Вид прихода":
+            typeOperationMap[item.type_operation] || item.type_operation || "",
+          "Код клиента": childItem.counterparty
+            ? `${childItem.counterparty.clientPrefix}-${childItem.counterparty.clientCode}`
+            : "",
+          "Фио клиента": childItem.counterparty
+            ? childItem.counterparty.name
+            : "",
+          Сумма: childItem.amount || "",
+          Валюта: item.type_currency || "",
+          Комментарий: childItem.comments || "",
+          // Add child-specific data
+          "Тип строки": "Детализация",
+          "Трек-код": childItem.trackCode || "",
+          "Тип груза": childItem.cargoType || "",
+          "Пункт назначения": childItem.counterparty
+            ? `${childItem.counterparty.branch?.name || ""}, ${
+                childItem.counterparty.under_branch?.address || ""
+              }`
+            : "",
+          Вес: childItem.weight ? `${childItem.weight} кг` : "",
+          "Тариф клиента":
+            childItem.counterparty && childItem.counterparty.branch
+              ? `${(
+                  Number(childItem.counterparty.branch.tarif || 0) -
+                  Number(childItem.counterparty?.discount?.discount || 0)
+                ).toFixed(2)}$`
+              : "",
+          Скидка: `${(
+            Number(childItem.discount || 0) +
+            Number(childItem.discount_custom || 0)
+          ).toFixed(2)}`,
+        };
+
+        allExportData.push(childRow);
+      }
+    }
+
+    // Create Excel file
+    const worksheet = XLSX.utils.json_to_sheet(allExportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Отчет по входящим средствам"
+    );
+
+    // Set column widths for better readability
+    const columnsWidths = [
+      { wch: 18 }, // Дата оплаты
+      { wch: 15 }, // Банк
+      { wch: 15 }, // Метод оплаты
+      { wch: 15 }, // Вид прихода
+      { wch: 12 }, // Код клиента
+      { wch: 20 }, // Фио клиента
+      { wch: 10 }, // Сумма
+      { wch: 10 }, // Валюта
+      { wch: 30 }, // Комментарий
+      { wch: 12 }, // Тип строки
+      { wch: 15 }, // Трек-код
+      { wch: 15 }, // Тип груза
+      { wch: 30 }, // Пункт назначения
+      { wch: 10 }, // Вес
+      { wch: 15 }, // Тариф клиента
+      { wch: 10 }, // Скидка
+    ];
+    worksheet["!cols"] = columnsWidths;
+
+    // Save file
+    XLSX.writeFile(workbook, "incoming_funds_report.xlsx");
+
+    message.success("Отчет успешно экспортирован");
+  };
+
+  // Modify the exportToGoogleSheets function to include expandable data
+  const exportToGoogleSheets = () => {
+    const dataSource = data?.data?.data || [];
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    try {
+      // Create array to hold all export data (parent and child rows)
+      let allExportData = [];
+
+      // Process each parent row
+      for (const item of dataSource) {
+        const bank = bankTableProps?.dataSource?.find(
+          (bank) => bank.id === item.bank_id
+        );
+
+        // Add parent row data
+        const parentRow = {
+          "Дата оплаты": item.date
+            ? dayjs(item.date).format("DD.MM.YYYY HH:MM")
+            : "",
+          Банк: bank?.name || "",
+          "Метод оплаты": item.method_payment || "",
+          "Вид прихода":
+            typeOperationMap[item.type_operation] || item.type_operation || "",
+          "Код клиента": item.counterparty
+            ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+            : "",
+          "Фио клиента": item.counterparty ? item.counterparty.name : "",
+          Сумма: item.amount || "",
+          Валюта: item.type_currency || "",
+          Комментарий: item.comment || "",
+          // Add empty values for child-specific columns to maintain consistent structure
+          "Тип строки": "Основная",
+          "Трек-код": "",
+          "Тип груза": "",
+          "Пункт назначения": "",
+          Вес: "",
+          "Тариф клиента": "",
+          Скидка: "",
+        };
+
+        allExportData.push(parentRow);
+
+        // Find and add child rows
+        const childRows =
+          goods?.data.filter((goodItem: any) => goodItem.operation_id === item.id) ||
+          [];
+
+        for (const childItem of childRows) {
+          const childRow = {
+            "Дата оплаты": item.date
+              ? dayjs(item.date).format("DD.MM.YYYY HH:MM")
+              : "",
+            Банк: bank?.name || "",
+            "Метод оплаты": item.method_payment || "",
+            "Вид прихода":
+              typeOperationMap[item.type_operation] ||
+              item.type_operation ||
+              "",
+            "Код клиента": childItem.counterparty
+              ? `${childItem.counterparty.clientPrefix}-${childItem.counterparty.clientCode}`
+              : "",
+            "Фио клиента": childItem.counterparty
+              ? childItem.counterparty.name
+              : "",
+            Сумма: childItem.amount || "",
+            Валюта: item.type_currency || "",
+            Комментарий: childItem.comments || "",
+            // Add child-specific data
+            "Тип строки": "Детализация",
+            "Трек-код": childItem.trackCode || "",
+            "Тип груза": childItem.cargoType || "",
+            "Пункт назначения": childItem.counterparty
+              ? `${childItem.counterparty.branch?.name || ""}, ${
+                  childItem.counterparty.under_branch?.address || ""
+                }`
+              : "",
+            Вес: childItem.weight ? `${childItem.weight} кг` : "",
+            "Тариф клиента":
+              childItem.counterparty && childItem.counterparty.branch
+                ? `${(
+                    Number(childItem.counterparty.branch.tarif || 0) -
+                    Number(childItem.counterparty?.discount?.discount || 0)
+                  ).toFixed(2)}$`
+                : "",
+            Скидка: `${(
+              Number(childItem.discount || 0) +
+              Number(childItem.discount_custom || 0)
+            ).toFixed(2)}`,
+          };
+
+          allExportData.push(childRow);
+        }
+      }
+
+      // Create CSV for Google Sheets
+      const worksheet = XLSX.utils.json_to_sheet(allExportData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+
+      // Create Blob and link for download
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      // Create element for download
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "incoming_funds_report.csv");
+      document.body.appendChild(link);
+
+      // Simulate click for download
+      link.click();
+
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      message.success("Файл готов для импорта в Google Sheets");
+    } catch (error) {
+      console.error("Ошибка при экспорте в Google Sheets:", error);
+      message.error("Ошибка при экспорте данных");
+    }
+  };
+
   // @ts-ignore
   return (
-    <List headerButtons={() => null}>
-      {/* <MyCreateModal open={open} onClose={() => setOpen(false)} /> */}
-
+    <List
+      title="Отчет по приходам"
+      headerButtons={() => (
+        <Space>
+          <Button
+            icon={<FileExcelOutlined />}
+            onClick={exportToExcel}
+            type="primary"
+            ghost
+            style={{
+              backgroundColor: "white",
+              borderColor: "#4285F4",
+              color: "#4285F4",
+            }}
+          >
+            XLSX
+          </Button>
+          <Button
+            icon={<FileOutlined />}
+            onClick={exportToGoogleSheets}
+            type="primary"
+            ghost
+            style={{
+              backgroundColor: "white",
+              borderColor: "#4285F4",
+              color: "#4285F4",
+            }}
+          >
+            CSV
+          </Button>
+        </Space>
+      )}
+    >
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => push("create")}
-            />
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -350,6 +652,17 @@ export const IncomingFundsReport: React.FC = () => {
             }))}
           />
         </Col>
+        <Col>
+          <Dropdown
+            overlay={datePickerContent}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button icon={<CalendarOutlined />} className="date-picker-button">
+              Дата
+            </Button>
+          </Dropdown>
+        </Col>
       </Row>
 
       <Table
@@ -358,12 +671,13 @@ export const IncomingFundsReport: React.FC = () => {
         scroll={{ x: 1000 }}
         expandable={{
           expandedRowRender,
-          rowExpandable: (record) => true,
+          rowExpandable: (record: any) => !!record?.counterparty,
           expandRowByClick: true,
         }}
         onRow={(record) => ({
           onClick: (e) => {},
         })}
+        loading={isLoading || goodsLoading}
       >
         <Table.Column
           dataIndex="date"

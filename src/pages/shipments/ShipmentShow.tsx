@@ -43,6 +43,9 @@ const ShipmentShow = () => {
         },
       ],
     },
+    queryOptions: {
+      
+    }
   });
 
   return (

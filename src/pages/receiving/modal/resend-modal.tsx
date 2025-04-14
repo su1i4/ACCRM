@@ -132,7 +132,9 @@ export const ResendModal = ({
     onChange: handleTableChange,
     // Подсветка выбранной строки
     rowClassName: (record: any) => {
-      return selectedRowKeysLocal.includes(record.id) ? 'ant-table-row-selected' : '';
+      return selectedRowKeysLocal.includes(record.id)
+        ? "ant-table-row-selected"
+        : "";
     },
   };
 
@@ -140,7 +142,7 @@ export const ResendModal = ({
     resource: "goods-processing",
     mutationOptions: {
       onSuccess: (data, variables, context) => {
-        refetch()
+        refetch();
         notificationApi.success({
           message: "Успешно обновлено!",
           description: `${selectedRowKeys.length} товаров отправлено в рейс #${selectedShipment}`,
@@ -169,15 +171,24 @@ export const ResendModal = ({
   });
 
   const handleSave = async () => {
-    if (selectedShipment) {
-      updateManyGoods({
-        ids: selectedRowKeys,
-        values: {
-          shipment_id: selectedShipment,
-        },
-      });
+    if (selectedRowKeys.length > 0) {
+      try {
+        await Promise.all(
+          selectedRowKeys.map(async (key) => {
+            await updateManyGoods({
+              ids: [key],
+              values: {
+                id: Number(key),
+                shipment_id: selectedShipment,
+                status: "В пути",
+              },
+            });
+          })
+        );
+      } catch (error) {
+        console.error("Ошибка при сохранении:", error);
+      }
     } else {
-      alert("Пожалуйста, выберите рейс");
     }
   };
 
@@ -276,7 +287,7 @@ export const ResendModal = ({
                 show("resend", record.id as number);
               },
               // Добавляем стили при наведении для улучшения UX
-              style: { cursor: 'pointer' }
+              style: { cursor: "pointer" },
             })}
             {...tableProps}
             rowKey="id"
