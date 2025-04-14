@@ -40,7 +40,6 @@ export const TasksCreate: React.FC = () => {
       s: JSON.stringify({
         $and: [
           ...searchFilters,
-          { status: { $eq: "В складе" } },
           {
             "counterparty.id": {
               $eq:
