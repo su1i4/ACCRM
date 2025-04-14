@@ -70,8 +70,6 @@ export const IncomingFundsReport: React.FC = () => {
     method: "get",
   });
 
-  console.log(goods?.data?.filter((item: any) => !!item.operation_id), "goods");
-
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -192,7 +190,7 @@ export const IncomingFundsReport: React.FC = () => {
 
   // Expandable row render function
   const expandedRowRender = (record: any) => {
-
+    console.log(record)
     return (
       <Table dataSource={[]} rowKey="id" scroll={{ x: 1200 }}>
         <Table.Column dataIndex="trackCode" title="Трек-код" />

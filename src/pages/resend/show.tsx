@@ -58,13 +58,7 @@ const ResendShow = () => {
     method: "get",
   });
 
-  const { data: underBranchesData } = useCustom<any>({
-    url: `${API_URL}/under-branch`,
-    method: "get",
-  });
-
   const branches = branchesData?.data || [];
-  const under_branches = branchesData?.data || [];
 
   const contentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -79,7 +73,7 @@ const ResendShow = () => {
   const handleClose = () => {
     setPrintOpen(false);
   };
-  
+
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (
@@ -107,7 +101,7 @@ const ResendShow = () => {
       >
         <div ref={contentRef} style={{ padding: 10 }}>
           <Flex vertical gap={10} style={{ width: "100%" }}>
-            <Flex justify="center" >
+            <Flex justify="center">
               <img
                 style={{
                   width: "70px",
@@ -115,15 +109,14 @@ const ResendShow = () => {
                 src="../../public/alfa-china.png"
               />
             </Flex>
-            <p style={{ color: "black" }}>г.{' '}
+            <p style={{ color: "black" }}>
+              г.{" "}
               {
                 branches.find((item: any) => item.id === record?.branch_id)
                   ?.name
               }
             </p>
-            <p>
-
-            </p>
+            <p></p>
           </Flex>
         </div>
       </Modal>
@@ -211,8 +204,14 @@ const ResendShow = () => {
         Товары в этом рейсе
       </Title>
       <Table
-        pagination={{ showSizeChanger: true }}
         {...tableProps}
+        pagination={{
+          ...tableProps.pagination,
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100", "200"],
+          defaultPageSize: 100,
+          pageSize: 100,
+        }}
         rowKey="id"
         scroll={{ x: 1000 }}
       >

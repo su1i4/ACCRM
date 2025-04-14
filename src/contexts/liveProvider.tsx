@@ -4,7 +4,7 @@ let socket: Socket | null = null;
 
 function getSocket() {
   if (!socket) {
-    socket = io("wss://alfacrm.kg/api/", {
+    socket = io("wss://alfacrm.kg", {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       timeout: 5000,
