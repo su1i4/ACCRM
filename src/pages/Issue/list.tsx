@@ -557,7 +557,8 @@ export const IssueProcessingList = () => {
         }}
         scroll={{ x: 1200 }}
       >
-        {catchDateTable("Дата приемки", "Готов к выдаче")}
+        {catchDateTable("Дата приемки в Китае", "В Складе")}
+        {catchDateTable("Дата получения", "Готов к выдаче")}
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column

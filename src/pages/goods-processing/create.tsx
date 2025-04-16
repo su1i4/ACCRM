@@ -161,6 +161,18 @@ export const GoodsCreate = () => {
       }
     }
 
+    console.log(submitValues.photo)
+
+    if (submitValues.photo) {
+      submitValues.photo = {
+        file: {
+          response: {
+            filePath: submitValues.photo?.file?.response?.filePath,
+          },
+        },
+      };
+    }
+
     if (formProps.onFinish) {
       formProps.onFinish(submitValues);
     }
@@ -205,7 +217,7 @@ export const GoodsCreate = () => {
                   <InputNumber style={{ width: "100%" }} />
                 ) : field.type === "enum" ? (
                   <Select
-                    mode="tags"
+                    // mode="tags"
                     style={{ width: "100%" }}
                     // @ts-ignore
                     options={field?.enumValues.map((enumValue) => ({
@@ -271,9 +283,14 @@ export const GoodsCreate = () => {
                   accept=".png,.jpg,.jpeg"
                   onChange={(info) => {
                     if (info.file.status === "done") {
-                      const photoValue = info.file.response.filePath;
                       form.setFieldsValue({
-                        photo: photoValue,
+                        photo: {
+                          file: {
+                            response: {
+                              filePath: info.file.response.filePath,
+                            },
+                          },
+                        },
                       });
                     }
                   }}

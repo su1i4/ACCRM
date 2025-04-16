@@ -133,7 +133,7 @@ const ReceivingList = () => {
       >
         <Table.Column
           dataIndex="updated_at"
-          title={"Дата получения"}
+          title="Дата отправки"
           width={120}
           render={(value) => {
             return `${value?.split("T")[0]} ${value
