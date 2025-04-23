@@ -74,6 +74,7 @@ const ShipmentEdit = () => {
           ...searchFilters,
           { shipment_id: { $eq: Number(id) } },
           { status: { $eq: "В пути" } },
+          { is_consolidated: { $eq: false } },
         ],
       }),
       sort: `${sortField},${sortDirection}`,

@@ -41,9 +41,7 @@ export const GoogsProcessingList = () => {
   const [sortField, setSortField] = useState<
     "id" | "counterparty.name" | "operation_id"
   >("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { trackCode: { $contL: "" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
   const [search, setSearch] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,7 +69,6 @@ export const GoogsProcessingList = () => {
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Fixed: Update filters function that properly formats filters
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -81,11 +78,8 @@ export const GoogsProcessingList = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
-
-    // We'll refetch in useEffect after state updates
   };
 
-  // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
       searchparams.set("page", String(currentPage));
@@ -155,7 +149,6 @@ export const GoogsProcessingList = () => {
         >
           Сортировать по
         </div>
-        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -214,15 +207,7 @@ export const GoogsProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
-
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (newSelectedKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedKeys);
-    },
-  };
 
   const { mutateAsync: update } = useUpdate();
 
@@ -231,19 +216,16 @@ export const GoogsProcessingList = () => {
   const clickAll = () => {
     setMainChecked(!mainChecked);
     if (!mainChecked) {
-      // Выбираем только те строки, где visible: false
       const allFalseIds = dataSource
         .filter((item: any) => !item.visible)
         .map((item: any) => item.id);
       setSelectedRowKeys(allFalseIds);
     } else {
-      // Снимаем все выделения
       setSelectedRowKeys([]);
     }
   };
 
   const handleCheckboxChange = (record: any) => {
-    // Если запись уже visible: true, не позволяем её изменить
     if (record.visible) return;
 
     const newSelectedKeys = selectedRowKeys.includes(record.id)
@@ -251,7 +233,6 @@ export const GoogsProcessingList = () => {
       : [...selectedRowKeys, record.id];
     setSelectedRowKeys(newSelectedKeys);
 
-    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
     const allFalseItems = dataSource.filter((item: any) => !item.visible);
     const allFalseSelected = allFalseItems.every((item: any) =>
       newSelectedKeys.includes(item.id)
@@ -265,7 +246,6 @@ export const GoogsProcessingList = () => {
     );
     const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
-      // Если запись уже visible: true, оставляем её true
       visible: item.visible ? true : selectedRowKeys.includes(item.id),
     }));
 

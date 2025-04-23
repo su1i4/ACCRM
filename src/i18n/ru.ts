@@ -103,6 +103,8 @@ export const i18nProvider_ru = {
       "bank.titles.edit": "Редактирование банка",
       "undefined.titles.create": "Создание задачи",
       "tasks.titles.show": "Чат задачи",
+      "grooz.titles.list": "Сборные грузы",
+      "grooz.titles.show": "Просмотр сборных грузов",
     };
     return translations[key] || key;
   },

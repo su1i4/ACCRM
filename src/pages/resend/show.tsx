@@ -74,6 +74,8 @@ const ResendShow = () => {
     setPrintOpen(false);
   };
 
+  const pvz = tableProps?.dataSource || [];
+
   return (
     <Show
       headerButtons={({ deleteButtonProps, editButtonProps }) => (
@@ -98,9 +100,11 @@ const ResendShow = () => {
         onOk={() => handlePrint()}
         okText="Распечатать"
         cancelText="Отменить"
+        style={{maxWidth: 'fit-content'}}
       >
-        <div ref={contentRef} style={{ padding: 10 }}>
-          <Flex vertical gap={10} style={{ width: "100%" }}>
+        <div ref={contentRef} style={{ padding: 10, width: "75mm",
+          height: "150mm", }}>
+          <Flex vertical gap={5} style={{ width: "100%" }}>
             <Flex justify="center">
               <img
                 style={{
@@ -116,7 +120,24 @@ const ResendShow = () => {
                   ?.name
               }
             </p>
-            <p></p>
+            <p>ПВЗ: {pvz[0]?.counterparty?.under_branch?.address}</p>
+            <p>
+              Персональный-код:{" "}
+              {`${pvz[0]?.counterparty?.clientPrefix}-${pvz[0]?.counterparty?.clientCode}`}
+            </p>
+            <p>Фио клиента: {pvz[0]?.counterparty?.name}</p>
+            <p>Номер клиента: {pvz[0]?.counterparty?.phoneNumber}</p>
+            <p>Вес: {record?.weight} кг</p>
+            <p>Количество: {record?.goodsCount}</p>
+            <p>Сумма: {pvz[0]?.amount} $</p>
+            <Flex justify="center">
+              <img
+                style={{
+                  width: "140px",
+                }}
+                src="../../public/qrcode.png"
+              />
+            </Flex>
           </Flex>
         </div>
       </Modal>

@@ -53,7 +53,11 @@ export const AcceptedGoodsList = () => {
   const buildQueryParams = () => {
     return {
       s: JSON.stringify({
-        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+        $and: [
+          ...searchFilters,
+          { status: { $eq: "В складе" } },
+          { is_consolidated: { $eq: false } },
+        ],
       }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
@@ -244,7 +248,6 @@ export const AcceptedGoodsList = () => {
     }));
 
     try {
-
       await Promise.all(
         selectedItems.map((item: any) =>
           update({

@@ -40,7 +40,11 @@ const ShipmentAdd = () => {
   const buildQueryParams = () => {
     return {
       s: JSON.stringify({
-        $and: [...searchFilters, { status: { $eq: "В складе" } }],
+        $and: [
+          ...searchFilters,
+          { status: { $eq: "В складе" } },
+          { is_consolidated: { $eq: false } },
+        ],
       }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,

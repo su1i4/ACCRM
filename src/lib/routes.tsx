@@ -63,6 +63,17 @@ export const routes = [
     },
   },
   {
+    name: "grooz",
+    list: "/grooz",
+    show: "/grooz/show/:id",
+    edit: "/grooz/edit/:id",
+    meta: {
+      canDelete: true,
+      label: "Сборные грузы",
+      parent: "Продукты",
+    },
+  },
+  {
     name: "tasks",
     list: "/tasks",
     show: "/tasks/show/:id",

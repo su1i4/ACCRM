@@ -11,16 +11,8 @@ import {
   Dropdown,
   Card,
   Select,
-  Checkbox,
-  Flex,
 } from "antd";
-import {
-  BaseRecord,
-  useNavigation,
-  useCustom,
-  useUpdate,
-} from "@refinedev/core";
-import { MyCreateModal } from "./modal/create-modal";
+import { BaseRecord, useNavigation, useCustom } from "@refinedev/core";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -28,21 +20,16 @@ import {
   SearchOutlined,
   SyncOutlined,
   CloseCircleOutlined,
-  EditOutlined,
 } from "@ant-design/icons";
-import { MyEditModal } from "./modal/edit-modal";
 import { API_URL } from "../../App";
-import { SmsModal } from "./modal/sms-modal";
 
-export const CounterpartyList: React.FC = () => {
+export const CounterpartyGrooz: React.FC = () => {
   const [sortField, setSortField] = useState<
     "name" | "clientCode" | "id" | "is_consolidated"
   >("id");
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
   const [sorterVisible, setSorterVisible] = useState(false);
-  const [smsId, setSmsId] = useState(0);
-  const [sms, setSms] = useState("");
   const [smsOpen, setSmsOpen] = useState(false);
 
   const { tableProps: defaultTableProps, setFilters } = useTable({
@@ -53,7 +40,6 @@ export const CounterpartyList: React.FC = () => {
     },
   });
 
-  const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
   const buildQueryParams = () => {
@@ -67,13 +53,23 @@ export const CounterpartyList: React.FC = () => {
           { name: { $contL: searchValue } },
           { clientCode: { $contL: searchValue } },
           { clientPrefix: { $contL: searchValue } },
+          { is_consolidated: { $eq: true } },
         ],
       });
     }
 
     if (selectedBranch) {
       params.s = JSON.stringify({
-        $or: [{ branch_id: { $eq: selectedBranch } }],
+        $and: [
+          { branch_id: { $eq: selectedBranch } },
+          { is_consolidated: { $eq: true } },
+        ],
+      });
+    }
+
+    if (!selectedBranch && !searchValue) {
+      params.s = JSON.stringify({
+        $and: [{ is_consolidated: { $eq: true } }],
       });
     }
 
@@ -102,9 +98,6 @@ export const CounterpartyList: React.FC = () => {
     dataSource: dataSource,
     loading: isLoading,
   };
-
-  const [openEdit, setOpenEdit] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
 
   const { show } = useNavigation();
 
@@ -190,57 +183,11 @@ export const CounterpartyList: React.FC = () => {
     optionLabel: "name",
   });
 
-  const { mutate } = useUpdate({
-    resource: "counterparty",
-    mutationOptions: {
-      onSuccess(data, variables, context) {
-        if (data?.data?.is_consolidated == true) {
-          setSmsId(data?.data?.id as number);
-          setSmsOpen(true);
-        }
-        refetch();
-      },
-    },
-  });
-
-  const changeIsValidate = async (id: string, checked: boolean) => {
-    mutate({
-      id: id,
-      values: {
-        is_consolidated: checked,
-      },
-    });
-  };
-
   return (
     <List headerButtons={() => null}>
-      <SmsModal
-        id={smsId}
-        open={smsOpen}
-        onClose={() => setSmsOpen(false)}
-        onSuccess={() => refetch()}
-        sms={sms}
-      />
-      <MyCreateModal
-        open={open}
-        onClose={() => setOpen(false)}
-        onSuccess={() => refetch()}
-      />
-      <MyEditModal
-        id={editId}
-        open={openEdit}
-        onClose={() => setOpenEdit(false)}
-        onSuccess={() => refetch()}
-      />
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 16 }}>
         <Col>
           <Space size="middle">
-            <Button
-              icon={<FileAddOutlined />}
-              style={{}}
-              onClick={() => setOpen(true)}
-            />
-
             <Dropdown
               overlay={sortContent}
               trigger={["click"]}
@@ -317,7 +264,7 @@ export const CounterpartyList: React.FC = () => {
       <Table
         onRow={(record) => ({
           onDoubleClick: () => {
-            show("counterparty", record.id as number);
+            show("grooz", record.id as number);
           },
         })}
         {...tableProps}
@@ -327,33 +274,8 @@ export const CounterpartyList: React.FC = () => {
             ? "По вашему запросу ничего не найдено"
             : "Нет данных",
         }}
+        scroll={{ x: 1000 }}
       >
-        <Table.Column
-          title="Собирать груз"
-          dataIndex="is_consolidated"
-          render={(value, record) => (
-            <Flex align="center" gap={10}>
-              <Checkbox
-                checked={value}
-                onChange={(e) => changeIsValidate(record.id, e.target.checked)}
-              />
-
-              {value && (
-                <EditOutlined
-                  onClick={() => {
-                    setSms(record?.consolidated_message);
-                    setSmsId(record.id);
-                    setSmsOpen(true);
-                    console.log(smsOpen, "click");
-                  }}
-                />
-              )}
-            </Flex>
-          )}
-        />
-
-        {/* <Table.Column dataIndex="consolidated_message" title="Смс" /> */}
-        <Table.Column dataIndex="id" title="ID" />
         <Table.Column
           dataIndex="codeClientAndPrefix"
           title="Код клиента"
@@ -363,61 +285,14 @@ export const CounterpartyList: React.FC = () => {
           }}
           width={120}
         />
-        <Table.Column dataIndex="name" title="Фио" />
+        <Table.Column dataIndex="name" title="Фио клиента" width={250} />
         <Table.Column
           dataIndex="address"
           title="Пвз"
           render={(value, record) =>
             `${record?.branch?.name}, ${record?.under_branch?.address || ""}`
           }
-        />
-        <Table.Column dataIndex="phoneNumber" title="Номер телефона" />
-        <Table.Column
-          dataIndex="branch"
-          title="Тариф клиента"
-          render={(value, record) => {
-            return (
-              <p style={{ maxWidth: 70 }}>
-                {(Number(value?.tarif) || 0) -
-                  (Number(record?.discount?.discount) || 0)}
-                $
-              </p>
-            );
-          }}
-          width={80}
-        />
-        {/* <Table.Column
-          dataIndex="email"
-          title="Почта"
-          render={(value) => {
-            return value ? value : "-";
-          }}
-        /> */}
-        <Table.Column
-          dataIndex="discount"
-          title="Скидка"
-          render={(value) => {
-            return value ? value?.discount + "$" : "0$";
-          }}
-        />
-
-        <Table.Column
-          dataIndex="goods"
-          title="Общий вес кг"
-          render={(value) => {
-            return `${value
-              .reduce((acc: number, curr: any) => acc + Number(curr.weight), 0)
-              .toFixed(2)} кг`;
-          }}
-        />
-        <Table.Column
-          dataIndex="goods"
-          title="Общая сумма USD"
-          render={(value) => {
-            return `${value
-              .reduce((acc: number, curr: any) => acc + Number(curr.amount), 0)
-              .toFixed(2)}$`;
-          }}
+          width={250}
         />
         <Table.Column
           dataIndex="comment"
