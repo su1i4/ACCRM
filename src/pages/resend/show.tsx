@@ -100,10 +100,12 @@ const ResendShow = () => {
         onOk={() => handlePrint()}
         okText="Распечатать"
         cancelText="Отменить"
-        style={{maxWidth: 'fit-content'}}
+        style={{ maxWidth: "fit-content" }}
       >
-        <div ref={contentRef} style={{ padding: 10, width: "75mm",
-          height: "150mm", }}>
+        <div
+          ref={contentRef}
+          style={{ padding: 10, width: "75mm", height: "150mm" }}
+        >
           <Flex vertical gap={5} style={{ width: "100%" }}>
             <Flex justify="center">
               <img
@@ -226,13 +228,7 @@ const ResendShow = () => {
       </Title>
       <Table
         {...tableProps}
-        pagination={{
-          ...tableProps.pagination,
-          showSizeChanger: true,
-          pageSizeOptions: ["10", "20", "50", "100", "200"],
-          defaultPageSize: 100,
-          pageSize: 100,
-        }}
+        pagination={{ ...tableProps.pagination, showSizeChanger: true }}
         rowKey="id"
         scroll={{ x: 1000 }}
       >

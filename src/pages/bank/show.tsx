@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useShow, useCustom } from "@refinedev/core";
+import { useShow, useCustom, useNavigation } from "@refinedev/core";
 import {
   Typography,
   Table,
@@ -239,13 +239,13 @@ export const BankShow = () => {
   };
 
   const { data: counterparty } = useCustom<any>({
-    url: `${API_URL}/branch`,
+    url: `${API_URL}/counterparty`,
     method: "get",
   });
 
-  const counterparties = counterparty?.data?.data || [];
+  const counterparties = counterparty?.data || [];
 
-  const oneCounterParty = counterparties
+  const {push} = useNavigation()
 
   return (
     <Show isLoading={showLoading} headerButtons={() => false}>
@@ -321,12 +321,23 @@ export const BankShow = () => {
         <Column
           title="Код клиента"
           dataIndex="counterparty_id"
-          render={(value) => value || "-"}
+          render={(value) => {
+            console.log(value);
+            return (
+              <p>{`${
+                counterparties.find((item: any) => item.id === value)
+                  ?.clientPrefix
+              }-${
+                counterparties.find((item: any) => item.id === value)
+                  ?.clientCode
+              }`}</p>
+            );
+          }}
         />
         <Column
           title="Трек-код"
-          dataIndex="goods_id"
-          render={(value) => value || "-"}
+          dataIndex="id"
+          render={(value) => <Button onClick={() => push(`/income/show/${value}?page=1&size=100`) } >Посмотреть</Button>}
         />
         <Column
           title="Валюта"
