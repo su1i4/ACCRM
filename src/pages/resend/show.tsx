@@ -232,7 +232,6 @@ const ResendShow = () => {
         rowKey="id"
         scroll={{ x: 1000 }}
       >
-        {/* <Table.Column dataIndex="id" title="id" /> */}
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
