@@ -92,7 +92,7 @@ export const CashDeskCreate: React.FC = () => {
   const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
   const [filters, setFilters] = useState<any>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(100);
 
   const { data: currency = { data: [] } } = useCustom<any>({
     url: `${API_URL}/currency`,

@@ -6,6 +6,7 @@ import {
   Col,
   DatePicker,
   Dropdown,
+  Image,
   Input,
   Row,
   Space,
@@ -19,6 +20,7 @@ import {
   ArrowDownOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
+  DownloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { CustomTooltip } from "../../shared";
@@ -57,9 +59,6 @@ export const IncomeShow: React.FC = () => {
         $and: [...searchFilters, { operation_id: { $eq: id } }],
       }),
       sort: `${sortField},${sortDirection}`,
-      limit: pageSize,
-      page: currentPage,
-      offset: currentPage * pageSize,
     };
   };
 
@@ -201,32 +200,41 @@ export const IncomeShow: React.FC = () => {
     </Card>
   );
 
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    searchparams.set("page", pagination.current);
-    searchparams.set("size", pagination.pageSize);
-    setSearchParams(searchparams);
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
 
-    if (sorter && sorter.field) {
-      setSortField(
-        sorter.field === "counterparty.name" ? "counterparty.name" : "id"
-      );
-      setSortDirection(sorter.order === "ascend" ? "ASC" : "DESC");
+  const handleDownloadPhoto = async () => {
+    if (record?.photo) {
+      try {
+        const photoUrl = `${API_URL}/${record.check_file}`;
+
+        // Fetch the image as a blob
+        const response = await fetch(photoUrl);
+        const blob = await response.blob();
+
+        // Create object URL from blob
+        const objectUrl = URL.createObjectURL(blob);
+
+        // Create a link element
+        const link = document.createElement("a");
+        link.href = objectUrl;
+
+        // Extract filename from path
+        const filename = record.photo.split("/").pop() || "photo.jpg";
+        link.download = filename;
+
+        // Append to the document, click and then remove
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectUrl);
+        }, 100);
+      } catch (error) {
+        console.error("Error downloading photo:", error);
+        // You could add notification here if desired
+      }
     }
-  };
-
-  const dataSource = data?.data?.data || [];
-
-  const tableProps = {
-    dataSource: dataSource,
-    loading: isLoading,
-    pagination: {
-      current: currentPage,
-      pageSize: pageSize,
-      total: data?.data?.total || 0,
-    },
-    onChange: handleTableChange,
   };
 
   return (
@@ -255,6 +263,40 @@ export const IncomeShow: React.FC = () => {
         <Col span={4}>
           <Title level={5}>Сумма оплаты</Title>
           <TextField value={`${record?.amount}-${record?.type_currency}`} />
+        </Col>
+        <Col xs={24} md={24}>
+          <Title level={5}>Фото</Title>
+          {record?.check_file ? (
+            <Space direction="vertical" size="middle">
+              {record.check_file.endsWith(".pdf") ? (
+                <a
+                  href={`${API_URL}/${record.check_file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  📄 Открыть PDF
+                </a>
+              ) : (
+                <>
+                  <Image
+                    style={{ objectFit: "cover" }}
+                    width={300}
+                    height={300}
+                    src={`${API_URL}/${record.check_file}`}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<DownloadOutlined />}
+                    onClick={handleDownloadPhoto}
+                  >
+                    Скачать фото
+                  </Button>
+                </>
+              )}
+            </Space>
+          ) : (
+            <TextField value="Нет фото" />
+          )}
         </Col>
       </Row>
       <Row
@@ -334,7 +376,13 @@ export const IncomeShow: React.FC = () => {
           </Dropdown>
         </Col>
       </Row>
-      <Table {...tableProps} rowKey="id" scroll={{ x: 1200 }}>
+      <Table dataSource={data?.data}  pagination={false} rowKey="id" scroll={{ x: 1200 }}>
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (1 - 1) * 10000 + index + 1;
+          }}
+        />
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />
         <Table.Column
@@ -394,7 +442,11 @@ export const IncomeShow: React.FC = () => {
             )}`;
           }}
         />
-        <Table.Column dataIndex="comments" title="Комментарий" />
+        <Table.Column
+          dataIndex="comments"
+          title="Комментарий"
+          render={(value) => value || ""}
+        />
       </Table>
     </Show>
   );

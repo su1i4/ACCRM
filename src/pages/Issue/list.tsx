@@ -557,6 +557,12 @@ export const IssueProcessingList = () => {
         }}
         scroll={{ x: 1200 }}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
         {catchDateTable("Дата приемки в Китае", "В Складе")}
         {catchDateTable("Дата получения", "Готов к выдаче")}
         <Table.Column dataIndex="trackCode" title="Трек-код" />

@@ -235,6 +235,12 @@ export const CashDeskOutcomeList: React.FC = () => {
 
       <Table {...tableProps} rowKey="id">
         <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
+        <Table.Column
           dataIndex="date"
           title="Дата расхода"
           render={(date) => dayjs(date).format("DD.MM.YYYY HH:mm")}

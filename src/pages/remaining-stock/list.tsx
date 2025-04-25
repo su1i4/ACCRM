@@ -476,10 +476,15 @@ export const RemainingStockProcessingList = () => {
           onChange={handleTableChange}
           rowSelection={{
             type: "checkbox",
-            onChange: (selectedRowKeys, selectedRows) => {
-            },
+            onChange: (selectedRowKeys, selectedRows) => {},
           }}
         >
+          <Table.Column
+            title="№"
+            render={(_: any, __: any, index: number) => {
+              return (data?.data?.page - 1) * pageSize + index + 1;
+            }}
+          />
           <Table.Column
             dataIndex="created_at"
             title="Дата"

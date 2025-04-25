@@ -130,6 +130,18 @@ export const ShipmentHistory = () => {
         rowKey="id"
         scroll={{ x: "max-content" }}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) *
+                tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
         {catchDateTable("Дата отправки")}
         <Table.Column dataIndex="id" title={"Номер рейса"} />
         <Table.Column dataIndex="boxCode" title={"Код коробки"} />

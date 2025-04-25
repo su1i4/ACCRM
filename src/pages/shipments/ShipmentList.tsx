@@ -199,6 +199,12 @@ const ShipmentList = () => {
         rowKey="id"
         scroll={{ x: 1500 }}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
         {catchDateTable("Дата отправки", "В пути")}
         <Table.Column
           dataIndex="id"

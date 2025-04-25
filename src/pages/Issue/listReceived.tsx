@@ -209,6 +209,18 @@ export const IssueProcessingListReceived = () => {
         </Col>
       </Row>
       <Table {...tableProps} scroll={{ x: 1300 }}>
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) *
+                tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
         {catchDateTable("Дата выдачи", "Выдали")}
         <Table.Column dataIndex="trackCode" title="Трек-код" />
         <Table.Column dataIndex="cargoType" title="Тип груза" />

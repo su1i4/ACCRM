@@ -147,7 +147,19 @@ export const ShipmentHistoryShow = () => {
         Товары в этом рейсе
       </Title>
       <Table {...tableProps} rowKey="id">
-        {/* <Table.Column dataIndex="id" title="id" /> */}
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) *
+                //@ts-ignore
+                tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
         <Table.Column
           dataIndex="created_at"
           title="Дата"

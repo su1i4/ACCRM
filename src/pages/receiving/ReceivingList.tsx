@@ -132,6 +132,12 @@ const ReceivingList = () => {
         scroll={{ x: "max-content" }}
       >
         <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
+        <Table.Column
           dataIndex="updated_at"
           title="Дата отправки"
           width={120}

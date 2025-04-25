@@ -74,6 +74,13 @@ export const ReportList = () => {
       icon: <CargoReceivedIcon3 />,
       link: "expense-finance",
     },
+    {
+      id: "expense-representative",
+      title: "Отчеты по долгам представительства",
+      description: "Отчет о представительствах и контрагентах с задолженностями",
+      icon: <CargoReceivedIcon3 />,
+      link: "expense-representative",
+    },
   ];
 
   const { push } = useNavigation();

@@ -245,7 +245,7 @@ export const BankShow = () => {
 
   const counterparties = counterparty?.data || [];
 
-  const {push} = useNavigation()
+  const { push } = useNavigation();
 
   return (
     <Show isLoading={showLoading} headerButtons={() => false}>
@@ -311,6 +311,12 @@ export const BankShow = () => {
         pagination={false}
         onChange={handleTableChange}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (1 - 1) * 1000 + index + 1;
+          }}
+        />
         <Column
           title="Дата оплаты"
           dataIndex="date"
@@ -337,7 +343,13 @@ export const BankShow = () => {
         <Column
           title="Трек-код"
           dataIndex="id"
-          render={(value) => <Button onClick={() => push(`/income/show/${value}?page=1&size=100`) } >Посмотреть</Button>}
+          render={(value) => (
+            <Button
+              onClick={() => push(`/income/show/${value}?page=1&size=100`)}
+            >
+              Посмотреть
+            </Button>
+          )}
         />
         <Column
           title="Валюта"

@@ -137,6 +137,18 @@ export const ReceivingHistory = () => {
         scroll={{ x: "max-content" }}
       >
         <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) *
+                tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
+        <Table.Column
           dataIndex="updated_at"
           title={"Дата получения"}
           width={120}

@@ -50,7 +50,7 @@ const ResendList = () => {
     url: `${API_URL}/shipments/statistics`,
     method: "get",
     config: {
-        query: { reshipment: true }
+      query: { reshipment: true },
     },
   });
 
@@ -177,7 +177,10 @@ const ResendList = () => {
           ) : (
             <>
               <Typography.Text style={{ fontSize: 14 }}>
-                Общий вес: <strong>{Number(statistic?.data?.totalWeight).toFixed(2)} кг</strong>
+                Общий вес:{" "}
+                <strong>
+                  {Number(statistic?.data?.totalWeight).toFixed(2)} кг
+                </strong>
               </Typography.Text>
               <Typography.Text style={{ fontSize: 14 }}>
                 {/* @ts-ignore */}
@@ -202,6 +205,12 @@ const ResendList = () => {
         rowKey="id"
         scroll={{ x: 1500 }}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
         {catchDateTable("Дата отправки", "В пути")}
         <Table.Column
           dataIndex="id"

@@ -283,6 +283,12 @@ export const CashDeskList: React.FC = () => {
         })}
       >
         <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
+          }}
+        />
+        <Table.Column
           dataIndex="date"
           title="Дата оплаты"
           render={(date) => dayjs(date).format("DD.MM.YYYY HH:mm")}
@@ -321,23 +327,37 @@ export const CashDeskList: React.FC = () => {
 
         <Table.Column dataIndex="type_currency" title="валюта" />
 
-        <Table.Column dataIndex="comment" title="Комментарий" />
+        <Table.Column
+          dataIndex="comment"
+          title="Комментарий"
+          render={(value) => value || "-"}
+        />
         <Table.Column
           dataIndex="check_file"
           title="Чек"
+          width={150}
           render={(check_file) => {
-            const downloadUrl = `http://192.168.5.158:5001/${check_file}`;
-            return (
+            const downloadUrl = `${API_URL}/${check_file}`;
+            console.log(downloadUrl, "downloadUrl");
+            return check_file ? (
               <Space direction="vertical" align="center">
-                <Image
-                  style={{ objectFit: "cover" }}
-                  width={50}
-                  height={50}
-                  src={downloadUrl}
-                  preview={{
-                    src: downloadUrl,
-                  }}
-                />
+                {downloadUrl.endsWith(".pdf") ? (
+                  <a
+                    href={downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    📄 Открыть PDF
+                  </a>
+                ) : (
+                  <Image
+                    style={{ objectFit: "cover" }}
+                    width={50}
+                    height={50}
+                    src={downloadUrl}
+                    preview={{ src: downloadUrl }}
+                  />
+                )}
                 {check_file && (
                   <Button
                     type="link"
@@ -349,6 +369,8 @@ export const CashDeskList: React.FC = () => {
                   </Button>
                 )}
               </Space>
+            ) : (
+              "Нет"
             );
           }}
         />

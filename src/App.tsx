@@ -131,6 +131,7 @@ import { TasksArchive } from "./pages/tasks/archive";
 import { IncomeShowReport } from "./pages/reports/income-report/show";
 import { CounterpartyGrooz } from "./pages/grooz/list";
 import { GroozShow } from "./pages/grooz/show";
+import { RepresentativeReport } from "./pages/reports/representative";
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
 function App() {
@@ -280,7 +281,7 @@ function App() {
                   </Route>
 
                   <Route path="/grooz">
-                    <Route index element={<CounterpartyGrooz/>} />
+                    <Route index element={<CounterpartyGrooz />} />
                     <Route path="show/:id" element={<GroozShow />} />
                   </Route>
 
@@ -416,6 +417,10 @@ function App() {
                     <Route
                       path="expense-finance"
                       element={<ExpenseFinanceReport />}
+                    />
+                    <Route
+                      path="expense-representative"
+                      element={<RepresentativeReport />}
                     />
                   </Route>
 

@@ -58,6 +58,25 @@ const ResendShow = () => {
     method: "get",
   });
 
+  const buildQueryParams = () => ({
+    s: JSON.stringify({
+      $and: [
+        { shipment_id: { $eq: Number(id) } },
+        { status: { $eq: "В пути" } },
+      ],
+    }),
+  });
+
+  const { data: goodsData } = useCustom<any>({
+    url: `${API_URL}/goods-processing`,
+    method: "get",
+    config: {
+      query: buildQueryParams(),
+    },
+  });
+
+  console.log(goodsData?.data?.length, "goods length");
+
   const branches = branchesData?.data || [];
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -74,7 +93,7 @@ const ResendShow = () => {
     setPrintOpen(false);
   };
 
-  const pvz = tableProps?.dataSource || [];
+  const pvz = goodsData?.data || [];
 
   return (
     <Show
@@ -104,9 +123,9 @@ const ResendShow = () => {
       >
         <div
           ref={contentRef}
-          style={{ padding: 10, width: "75mm", height: "150mm" }}
+          style={{ padding: 10, width: "75mm", height: "140mm" }}
         >
-          <Flex vertical gap={5} style={{ width: "100%" }}>
+          <Flex vertical gap={0} style={{ width: "100%", lineHeight: "15px" }}>
             <Flex justify="center">
               <img
                 style={{
@@ -128,10 +147,18 @@ const ResendShow = () => {
               {`${pvz[0]?.counterparty?.clientPrefix}-${pvz[0]?.counterparty?.clientCode}`}
             </p>
             <p>Фио клиента: {pvz[0]?.counterparty?.name}</p>
-            <p>Номер клиента: {pvz[0]?.counterparty?.phoneNumber}</p>
+            <p>Номер для связи: {pvz[0]?.counterparty?.phoneNumber}</p>
             <p>Вес: {record?.weight} кг</p>
             <p>Количество: {record?.goodsCount}</p>
-            <p>Сумма: {pvz[0]?.amount} $</p>
+            <p>
+              Сумма:{" "}
+              {pvz?.reduce(
+                (accumulator: any, currentValue: any) =>
+                  accumulator + Number(currentValue.amount || 0),
+                0
+              )}{" "}
+              $
+            </p>
             <Flex justify="center">
               <img
                 style={{
@@ -221,6 +248,16 @@ const ResendShow = () => {
           <Title level={5}>Номер фуры</Title>
           <TextField value={record?.truck_number || "-"} />
         </Col>
+        <Col xs={24} md={6}>
+          <Title level={5}>Общая сумма</Title>
+          <TextField
+            value={`${pvz?.reduce(
+              (accumulator: any, currentValue: any) =>
+                accumulator + Number(currentValue.amount || 0),
+              0
+            )} $`}
+          />
+        </Col>
       </Row>
 
       <Title level={4} style={{ marginTop: 24 }}>
@@ -232,6 +269,19 @@ const ResendShow = () => {
         rowKey="id"
         scroll={{ x: 1000 }}
       >
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) *
+              //@ts-ignore
+                tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"

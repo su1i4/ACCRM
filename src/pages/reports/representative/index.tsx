@@ -1,4 +1,4 @@
-import { List } from "@refinedev/antd";
+import { List, useSelect } from "@refinedev/antd";
 import {
   Space,
   Table,
@@ -12,44 +12,55 @@ import {
   Card,
   Modal,
   Checkbox,
+  Select,
+  message,
 } from "antd";
 import {
   SearchOutlined,
   CalendarOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  FileAddOutlined,
   SettingOutlined,
   EyeOutlined,
+  FileExcelOutlined,
+  FileOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useCustom, useNavigation, useUpdate } from "@refinedev/core";
 import dayjs from "dayjs";
-import { API_URL } from "../../App";
+import { API_URL } from "../../../App";
 import { useSearchParams } from "react-router";
-import { CustomTooltip, operationStatus } from "../../shared";
+import { operationStatus } from "../../../shared";
+import * as XLSX from "xlsx";
+
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { translateStatus } from "../../lib/utils";
+import { translateStatus } from "../../../lib/utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const GoogsProcessingList = () => {
+export const RepresentativeReport = () => {
   const [searchparams, setSearchParams] = useSearchParams();
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
-  const [sortField, setSortField] = useState<
-    "id" | "counterparty.name" | "operation_id"
-  >("id");
-  const [searchFilters, setSearchFilters] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<"id" | "counterparty.name">("id");
+  const [searchFilters, setSearchFilters] = useState<any[]>([
+    { trackCode: { $contL: "" } },
+  ]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(10000);
+  const [search, setSearch] = useState("");
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters }),
+      s: JSON.stringify({
+        $and: [
+          ...searchFilters,
+          { operation_id: { $eq: null } },
+          { status: { $in: ["Выдали", "Готов к выдаче"] } },
+        ],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -69,6 +80,7 @@ export const GoogsProcessingList = () => {
   const [settingVisible, setSettingVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // Fixed: Update filters function that properly formats filters
   const setFilters = (
     filters: any[],
     mode: "replace" | "append" = "append"
@@ -78,8 +90,11 @@ export const GoogsProcessingList = () => {
     } else {
       setSearchFilters((prevFilters) => [...prevFilters, ...filters]);
     }
+
+    // We'll refetch in useEffect after state updates
   };
 
+  // Fixed: Add effect to trigger refetch when filters or sorting changes
   useEffect(() => {
     if (!searchparams.get("page") && !searchparams.get("size")) {
       searchparams.set("page", String(currentPage));
@@ -93,25 +108,6 @@ export const GoogsProcessingList = () => {
     }
     refetch();
   }, [searchFilters, sortDirection, currentPage, pageSize]);
-
-  useEffect(() => {
-    const value = searchparams.get("value");
-    if (value) {
-      setFilters(
-        [
-          {
-            $or: [
-              { trackCode: { $contL: value } },
-              { "counterparty.clientCode": { $contL: value } },
-              { "counterparty.name": { $contL: value } },
-            ],
-          },
-        ],
-        "replace"
-      );
-    }
-    setSearch(value || "");
-  }, []);
 
   const datePickerContent = (
     <DatePicker.RangePicker
@@ -149,6 +145,7 @@ export const GoogsProcessingList = () => {
         >
           Сортировать по
         </div>
+        {/* Сортировка по дате создания */}
         <Button
           type="text"
           style={{
@@ -178,21 +175,6 @@ export const GoogsProcessingList = () => {
           {sortField === "counterparty.name" &&
             (sortDirection === "ASC" ? "↑" : "↓")}
         </Button>
-        <Button
-          type="text"
-          style={{
-            textAlign: "left",
-            fontWeight: sortField === "operation_id" ? "bold" : "normal",
-          }}
-          onClick={() => {
-            setSortField("operation_id");
-            setSortDirection(sortDirection === "ASC" ? "DESC" : "ASC");
-          }}
-        >
-          По статусу оплаты{" "}
-          {sortField === "operation_id" &&
-            (sortDirection === "ASC" ? "↑" : "↓")}
-        </Button>
       </div>
     </Card>
   );
@@ -207,7 +189,15 @@ export const GoogsProcessingList = () => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
+  // Получаем актуальные данные из хука useCustom
   const dataSource = data?.data?.data || [];
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (newSelectedKeys: React.Key[]) => {
+      setSelectedRowKeys(newSelectedKeys);
+    },
+  };
 
   const { mutateAsync: update } = useUpdate();
 
@@ -216,16 +206,19 @@ export const GoogsProcessingList = () => {
   const clickAll = () => {
     setMainChecked(!mainChecked);
     if (!mainChecked) {
+      // Выбираем только те строки, где visible: false
       const allFalseIds = dataSource
         .filter((item: any) => !item.visible)
         .map((item: any) => item.id);
       setSelectedRowKeys(allFalseIds);
     } else {
+      // Снимаем все выделения
       setSelectedRowKeys([]);
     }
   };
 
   const handleCheckboxChange = (record: any) => {
+    // Если запись уже visible: true, не позволяем её изменить
     if (record.visible) return;
 
     const newSelectedKeys = selectedRowKeys.includes(record.id)
@@ -233,6 +226,7 @@ export const GoogsProcessingList = () => {
       : [...selectedRowKeys, record.id];
     setSelectedRowKeys(newSelectedKeys);
 
+    // Обновляем mainChecked в зависимости от состояния всех чекбоксов
     const allFalseItems = dataSource.filter((item: any) => !item.visible);
     const allFalseSelected = allFalseItems.every((item: any) =>
       newSelectedKeys.includes(item.id)
@@ -246,6 +240,7 @@ export const GoogsProcessingList = () => {
     );
     const selectedItems = filteredItems.map((item: any) => ({
       id: item.id,
+      // Если запись уже visible: true, оставляем её true
       visible: item.visible ? true : selectedRowKeys.includes(item.id),
     }));
 
@@ -293,6 +288,25 @@ export const GoogsProcessingList = () => {
     }
   };
 
+  useEffect(() => {
+    const value = searchparams.get("value");
+    if (value) {
+      setFilters(
+        [
+          {
+            $or: [
+              { trackCode: { $contL: value } },
+              { "counterparty.clientCode": { $contL: value } },
+              { "counterparty.name": { $contL: value } },
+            ],
+          },
+        ],
+        "replace"
+      );
+    }
+    setSearch(value || "");
+  }, []);
+
   // Формируем пропсы для таблицы из данных useCustom
   const tableProps = {
     dataSource: dataSource,
@@ -305,8 +319,168 @@ export const GoogsProcessingList = () => {
     onChange: handleTableChange,
   };
 
+  const [selectedBranch, setSelectedBranch] = useState<any>(null);
+
+  const { selectProps: branchSelectProps } = useSelect({
+    resource: "branch",
+    optionLabel: "name",
+  });
+
+  // Функция для экспорта данных в Excel
+  const exportToExcel = () => {
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    // Преобразование данных для экспорта
+    const exportData = dataSource.map((item: any) => ({
+      "Дата приемки": item.created_at
+        ? dayjs(item.created_at).utc().format("DD.MM.YYYY HH:mm")
+        : "",
+      "Трек-код": item.trackCode,
+      "Тип груза": item.cargoType,
+      "Код получателя": item.counterparty
+        ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+        : "",
+      "ФИО получателя": item.counterparty ? item.counterparty.name : "",
+      "Пункт назначения, Пвз": item.counterparty
+        ? `${item.counterparty.branch?.name}, ${
+            item.counterparty.under_branch?.address || ""
+          }`
+        : "",
+      "Вес": item.weight ? item.weight.replace(".", ",") + " кг" : "",
+      "Тариф клиента": item.counterparty
+        ? `${(
+            Number(item.counterparty.branch?.tarif || 0) -
+            Number(item.counterparty?.discount?.discount || 0)
+          ).toFixed(2)}`
+        : "",
+      "Сумма": item.amount ? item.amount.replace(".", ",") + " $" : "",
+      "Скидка": `${(
+        Number(item.discount) + Number(item.discount_custom || 0)
+      ).toFixed(2)}`,
+      "Статус": translateStatus(item.status),
+      "Сотрудник": item.employee
+        ? `${item.employee.firstName}-${item.employee.lastName}`
+        : "",
+      "Комментарий": item.comments,
+    }));
+
+    // Создание Excel файла
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Отчет по представителям"
+    );
+
+    // Сохранение файла
+    XLSX.writeFile(workbook, "representative_report.xlsx");
+  };
+
+  // Функция для экспорта данных в Google Sheets (CSV)
+  const exportToGoogleSheets = () => {
+    if (!dataSource || dataSource.length === 0) {
+      message.error("Нет данных для экспорта");
+      return;
+    }
+
+    try {
+      // Преобразование данных для экспорта (такие же как для Excel)
+      const exportData = dataSource.map((item: any) => ({
+        "Дата приемки": item.created_at
+          ? dayjs(item.created_at).utc().format("DD.MM.YYYY HH:mm")
+          : "",
+        "Трек-код": item.trackCode,
+        "Тип груза": item.cargoType,
+        "Код получателя": item.counterparty
+          ? `${item.counterparty.clientPrefix}-${item.counterparty.clientCode}`
+          : "",
+        "ФИО получателя": item.counterparty ? item.counterparty.name : "",
+        "Пункт назначения, Пвз": item.counterparty
+          ? `${item.counterparty.branch?.name}, ${
+              item.counterparty.under_branch?.address || ""
+            }`
+          : "",
+        "Вес": item.weight ? item.weight.replace(".", ",") + " кг" : "",
+        "Тариф клиента": item.counterparty
+          ? `${(
+              Number(item.counterparty.branch?.tarif || 0) -
+              Number(item.counterparty?.discount?.discount || 0)
+            ).toFixed(2)}`
+          : "",
+        "Сумма": item.amount ? item.amount.replace(".", ",") + " $" : "",
+        "Скидка": `${(
+          Number(item.discount) + Number(item.discount_custom || 0)
+        ).toFixed(2)}`,
+        "Статус": translateStatus(item.status),
+        "Сотрудник": item.employee
+          ? `${item.employee.firstName}-${item.employee.lastName}`
+          : "",
+        "Комментарий": item.comments,
+      }));
+
+      // Создание CSV для Google Sheets
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+
+      // Создание Blob и ссылки для скачивания
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      // Создание элемента для скачивания
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "representative_report.csv");
+      document.body.appendChild(link);
+
+      // Имитация клика для скачивания
+      link.click();
+
+      // Очистка
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      message.success("Файл готов для импорта в Google Sheets");
+    } catch (error) {
+      console.error("Ошибка при экспорте в Google Sheets:", error);
+      message.error("Ошибка при экспорте данных");
+    }
+  };
+
   return (
-    <List headerButtons={() => false}>
+    <List headerButtons={() => (
+      <Space>
+        <Button
+          icon={<FileExcelOutlined />}
+          onClick={exportToExcel}
+          type="primary"
+          ghost
+          style={{
+            backgroundColor: "white",
+            borderColor: "#4285F4",
+            color: "#4285F4",
+          }}
+        >
+          XLSX
+        </Button>
+        <Button
+          icon={<FileOutlined />}
+          onClick={exportToGoogleSheets}
+          type="primary"
+          ghost
+          style={{
+            backgroundColor: "white",
+            borderColor: "#4285F4",
+            color: "#4285F4",
+          }}
+        >
+          CSV
+        </Button>
+      </Space>
+    )}>
       <Row
         gutter={[16, 16]}
         align="middle"
@@ -314,77 +488,58 @@ export const GoogsProcessingList = () => {
       >
         <Col>
           <Space size="middle">
-            <CustomTooltip title="Создать">
+            <Dropdown
+              overlay={sortContent}
+              trigger={["click"]}
+              placement="bottomLeft"
+              open={sorterVisible}
+              onOpenChange={(visible) => {
+                setSorterVisible(visible);
+              }}
+            >
               <Button
-                icon={<FileAddOutlined />}
-                style={{}}
-                onClick={() => push("/goods-processing/create")}
-              />
-            </CustomTooltip>
-            <CustomTooltip title="Сортировка">
-              <Dropdown
-                overlay={sortContent}
-                trigger={["click"]}
-                placement="bottomLeft"
-                open={sorterVisible}
-                onOpenChange={(visible) => {
-                  setSorterVisible(visible);
-                }}
-              >
-                <Button
-                  icon={
-                    sortDirection === "ASC" ? (
-                      <ArrowUpOutlined />
-                    ) : (
-                      <ArrowDownOutlined />
-                    )
-                  }
-                ></Button>
-              </Dropdown>
-            </CustomTooltip>
-            <CustomTooltip title="Показать клиентам">
-              <Dropdown
-                overlay={checkboxContent}
-                trigger={["click"]}
-                placement="bottomLeft"
-                open={settingVisible}
-                onOpenChange={(visible) => {
-                  setSettingVisible(visible);
-                }}
-              >
-                <Button icon={<SettingOutlined />} />
-              </Dropdown>
-            </CustomTooltip>
+                icon={
+                  sortDirection === "ASC" ? (
+                    <ArrowUpOutlined />
+                  ) : (
+                    <ArrowDownOutlined />
+                  )
+                }
+              ></Button>
+            </Dropdown>
           </Space>
         </Col>
-        <Col flex="auto">
-          <Input
-            placeholder="Поиск по трек-коду, фио получателя или по коду получателя"
-            prefix={<SearchOutlined />}
-            value={search}
+        <Col>
+          <Select
+            {...branchSelectProps}
+            placeholder="Выберите филиал"
+            style={{ width: 300 }}
+            value={selectedBranch || undefined} // Убедитесь, что пустое значение не передается как null
+            allowClear // Разрешает очистку
             onChange={(e) => {
-              const value = e.target.value;
-              if (!value) {
-                setFilters([{ trackCode: { $contL: "" } }], "replace");
-                setSearch("");
-                searchparams.set("value", "");
-                setSearchParams(searchparams);
+              setSelectedBranch(e || null); // Сбрасываем в null при очистке
+              if (!e) {
+                setFilters(
+                  [
+                    {
+                      status: {
+                        $in: ["В Складе", "Готов к выдаче"],
+                      },
+                    },
+                  ],
+                  "replace"
+                );
                 return;
               }
-
-              searchparams.set("page", "1");
-              searchparams.set("size", String(pageSize));
-              searchparams.set("value", value);
-              setSearchParams(searchparams);
-              setSearch(value);
               setFilters(
                 [
                   {
-                    $or: [
-                      { trackCode: { $contL: value } },
-                      { "counterparty.clientCode": { $contL: value } },
-                      { "counterparty.name": { $contL: value } },
-                    ],
+                    status: {
+                      $in: ["Готов к выдаче"],
+                    },
+                  },
+                  {
+                    "counterparty.branch_id": e,
                   },
                 ],
                 "replace"
@@ -424,20 +579,14 @@ export const GoogsProcessingList = () => {
       <Table
         {...tableProps}
         rowKey="id"
-        scroll={{ x: 1200 }}
+        scroll={{ x: "max-content" }}
         onRow={(record) => ({
-          onDoubleClick: () => {
-            show("goods-processing", record.id as number);
+          onClick: () => {
+            push("/not-paid-goods/show/" + record.id);
           },
         })}
       >
-        <Table.Column
-          title="№"
-          render={(_: any, __: any, index: number) => {
-            return (data?.data?.page - 1) * pageSize + index + 1;
-          }}
-        />
-        <Table.Column
+        {/* <Table.Column
           dataIndex="visible"
           title={<Checkbox checked={mainChecked} onChange={clickAll} />}
           render={(value, record) => {
@@ -445,12 +594,18 @@ export const GoogsProcessingList = () => {
               return <EyeOutlined />;
             } else {
               return (
-                <Checkbox
+                <Checkbox 
                   checked={selectedRowKeys.includes(record.id)}
                   onChange={() => handleCheckboxChange(record)}
                 />
               );
             }
+          }}
+        /> */}
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (data?.data?.page - 1) * pageSize + index + 1;
           }}
         />
         <Table.Column
@@ -492,7 +647,7 @@ export const GoogsProcessingList = () => {
         <Table.Column
           dataIndex="weight"
           title="Вес"
-          render={(value) => value + " кг"}
+          render={(value) => value.replace(".", ",") + " кг"}
         />
         <Table.Column
           dataIndex="counterparty"
@@ -501,14 +656,14 @@ export const GoogsProcessingList = () => {
             return `${(
               Number(value?.branch?.tarif || 0) -
               Number(record?.counterparty?.discount?.discount || 0)
-            ).toFixed(2)}$`;
+            ).toFixed(2)}`;
           }}
         />
 
         <Table.Column
           dataIndex="amount"
           title="Сумма"
-          render={(value) => value + " $"}
+          render={(value) => value.replace(".", ",") + " $"}
         />
         <Table.Column
           dataIndex="discount"

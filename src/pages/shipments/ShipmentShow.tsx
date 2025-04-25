@@ -43,10 +43,10 @@ const ShipmentShow = () => {
         },
       ],
     },
-    queryOptions: {
-      
-    }
+    queryOptions: {},
   });
+
+  console.log(tableProps, "this is tableProps");
 
   return (
     <Show
@@ -151,7 +151,17 @@ const ShipmentShow = () => {
         rowKey="id"
         scroll={{ x: 1000 }}
       >
-        {/* <Table.Column dataIndex="id" title="id" /> */}
+        <Table.Column
+          title="№"
+          render={(_: any, __: any, index: number) => {
+            return (
+              //@ts-ignore
+              (tableProps?.pagination?.current - 1) * tableProps?.pagination?.pageSize +
+              index +
+              1
+            );
+          }}
+        />
         <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
