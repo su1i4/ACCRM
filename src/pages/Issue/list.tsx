@@ -58,7 +58,7 @@ interface Filter {
 
 export const IssueProcessingList = () => {
   const [searchparams, setSearchParams] = useSearchParams();
-  const [printData, setPrintData] = useState([]);
+  const [printData, setPrintData] = useState<any[]>([]);
   const [printOpen, setPrintOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -77,15 +77,15 @@ export const IssueProcessingList = () => {
   const [sortField, setSortField] = useState<
     "id" | "counterparty.name" | "updated_at"
   >("updated_at");
-  const [searchFilters, setSearchFilters] = useState<any[]>([
-    { status: { $eq: "Готов к выдаче" } },
-  ]);
+  const [searchFilters, setSearchFilters] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(100);
 
   const buildQueryParams = () => {
     return {
-      s: JSON.stringify({ $and: searchFilters }),
+      s: JSON.stringify({
+        $and: [...searchFilters, { status: { $eq: "Готов к выдаче" } }],
+      }),
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
@@ -347,6 +347,11 @@ export const IssueProcessingList = () => {
 
   const columns = [
     {
+      title: "№",
+      key: "index",
+      render: (_: any, __: any, index: number) => index + 1,
+    },
+    {
       title: "Дата выдачи",
       dataIndex: "tracking_status",
       key: "tracking_status",
@@ -354,15 +359,6 @@ export const IssueProcessingList = () => {
         const new_value = value[3]?.createdAt;
         return dayjs(new_value).utc().format("DD.MM.YYYY HH:mm");
       },
-    },
-    {
-      title: "Код клиента",
-      dataIndex: "render",
-      key: "render",
-      render: (value: any, record: any) =>
-        `${record?.counterparty?.clientPrefix || ""}-${
-          record?.counterparty?.clientCode || ""
-        }`,
     },
     {
       title: "Трек-код",
@@ -380,23 +376,58 @@ export const IssueProcessingList = () => {
         onOk={() => handlePrint()}
         okText="Распечатать"
         cancelText="Отменить"
+        style={{ maxWidth: "fit-content" }}
       >
-        <div ref={contentRef} style={{ padding: 10 }}>
-          <Flex justify="center" style={{ width: "100%" }}>
-            <img
-              style={{
-                width: "70px",
-              }}
-              src="../../public/alfa-china.png"
+        <div
+          ref={contentRef}
+          style={{ padding: 10, width: "75mm", height: "140mm" }}
+        >
+          <Flex vertical gap={0} style={{ width: "100%", lineHeight: "15px" }}>
+            <Flex justify="center">
+              <img
+                style={{
+                  width: "70px",
+                }}
+                src="../../public/alfa-china.png"
+              />
+            </Flex>
+            <Typography.Title level={5}>Выдача посылки</Typography.Title>
+            <p style={{ color: "black" }}>
+              г. {printData[0]?.counterparty?.branch?.name || "Не указан"}
+            </p>
+            <p>
+              ПВЗ:{" "}
+              {printData[0]?.counterparty?.under_branch?.address || "Не указан"}
+            </p>
+            <p>
+              Персональный-код:{" "}
+              {`${printData[0]?.counterparty?.clientPrefix || ""}-${
+                printData[0]?.counterparty?.clientCode || ""
+              }`}
+            </p>
+            <p>
+              Фио клиента: {printData[0]?.counterparty?.name || "Не указан"}
+            </p>
+            <p>Колл центр: +996 778 777 887</p>
+            <p>Вес: {totalWeightPrint.toFixed(2)} кг</p>
+            <p>Количество: {printData.length} шт</p>
+            <p>Сумма: {totalAmountPrint.toFixed(2)} $</p>
+            <Flex justify="center">
+              <img
+                style={{
+                  width: "140px",
+                }}
+                src="../../public/qrcode.png"
+              />
+            </Flex>
+            <p>Дата выдачи: {dayjs().format("DD.MM.YYYY HH:mm")}</p>
+            <Table
+              columns={columns}
+              dataSource={printData || []}
+              pagination={false}
+              rowKey="id"
             />
           </Flex>
-          <Typography.Title level={5}>Выдачи</Typography.Title>{" "}
-          <Table
-            columns={columns}
-            dataSource={printData || []}
-            pagination={false}
-            rowKey="id"
-          />
           <div
             style={{
               border: "1px dashed gainsboro",
@@ -537,7 +568,7 @@ export const IssueProcessingList = () => {
           </Typography.Text>
           |
           <Typography.Text>
-            Общий вес: <strong>{totalWeight.toFixed(3)} кг</strong>
+            Общий вес: <strong>{totalWeight.toFixed(2)} кг</strong>
           </Typography.Text>
           |
           <Typography.Text>
@@ -548,7 +579,6 @@ export const IssueProcessingList = () => {
       <Table
         dataSource={dataSource}
         loading={isLoading}
-        pagination={false}
         rowKey="id"
         rowSelection={{
           type: "checkbox",
@@ -556,6 +586,20 @@ export const IssueProcessingList = () => {
           onChange: handleRowSelectionChange,
         }}
         scroll={{ x: 1200 }}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: data?.data?.total || 0,
+          showSizeChanger: true,
+          pageSizeOptions: ["100", "200", "500", "1000", "2000"],
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+            searchparams.set("page", String(page));
+            searchparams.set("size", String(size));
+            setSearchParams(searchparams);
+          },
+        }}
       >
         <Table.Column
           title="№"

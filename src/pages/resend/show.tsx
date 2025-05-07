@@ -148,28 +148,24 @@ const ResendShow = () => {
             </p>
             <p>Фио клиента: {pvz[0]?.counterparty?.name}</p>
             <p>Номер для связи: {pvz[0]?.counterparty?.phoneNumber}</p>
-            <Flex justify="space-between">
-              <Flex vertical gap={5}>
-                <p>Вес: {Number(record?.weight).toFixed(2)} кг</p>
-                <p>Количество: {record?.goodsCount}</p>
-                <p>
-                  Сумма:{" "}
-                  {pvz?.reduce(
-                    (accumulator: any, currentValue: any) =>
-                      accumulator + Number(currentValue.amount || 0),
-                    0
-                  )}{" "}
-                  $
-                </p>
-              </Flex>
-              <Flex style={{ width: "50%" }} justify="center">
-                <img
-                  style={{
-                    width: "100px",
-                  }}
-                  src="../../public/qrcode.png"
-                />
-              </Flex>
+            <p>Вес: {record?.weight} кг</p>
+            <p>Количество: {record?.goodsCount}</p>
+            <p>
+              Сумма:{" "}
+              {pvz?.reduce(
+                (accumulator: any, currentValue: any) =>
+                  accumulator + Number(currentValue.amount || 0),
+                0
+              ).toFixed(2)}{" "}
+              $
+            </p>
+            <Flex justify="center">
+              <img
+                style={{
+                  width: "140px",
+                }}
+                src="../../public/qrcode.png"
+              />
             </Flex>
           </Flex>
         </div>
@@ -259,7 +255,7 @@ const ResendShow = () => {
               (accumulator: any, currentValue: any) =>
                 accumulator + Number(currentValue.amount || 0),
               0
-            )} $`}
+            ).toFixed(2)} $`}
           />
         </Col>
       </Row>

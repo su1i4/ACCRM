@@ -1,4 +1,4 @@
-import { List, useTable } from "@refinedev/antd";
+import { List } from "@refinedev/antd";
 import {
   Table,
   Image,
@@ -10,15 +10,17 @@ import {
   Form,
   Dropdown,
   Input,
+  Flex,
+  Typography,
 } from "antd";
-import dayjs from "dayjs";
 import { API_URL } from "../../App";
 import { catchDateTable, translateStatus } from "../../lib/utils";
 import { useState } from "react";
 import { useCustom } from "@refinedev/core";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   ArrowDownOutlined,
+  ArrowLeftOutlined,
   ArrowUpOutlined,
   CalendarOutlined,
   SearchOutlined,
@@ -149,8 +151,20 @@ export const IssueProcessingListReceived = () => {
     onChange: handleTableChange,
   };
 
+  const navigate = useNavigate();
+
   return (
-    <List>
+    <List
+      title={
+        <Flex gap={10} align="center" justify="space-between">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/issue")}
+          />
+          <Typography.Title style={{ marginTop: 10 }} level={4}>Выданные посылки</Typography.Title>
+        </Flex>
+      }
+    >
       <Row style={{ marginBottom: 15 }}>
         <Col span={24}>
           <Form layout="inline">
