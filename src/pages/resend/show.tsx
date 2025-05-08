@@ -123,13 +123,13 @@ const ResendShow = () => {
       >
         <div
           ref={contentRef}
-          style={{ padding: 10, width: "75mm", height: "140mm" }}
+          style={{ padding: 0, width: "75mm", height: "120mm" }}
         >
-          <Flex vertical gap={0} style={{ width: "100%", lineHeight: "15px" }}>
+          <Flex vertical gap={-10} style={{ width: "100%", lineHeight: "13px" }}>
             <Flex justify="center">
               <img
                 style={{
-                  width: "70px",
+                  width: "100px",
                 }}
                 src="../../public/alfa-china.png"
               />
@@ -162,7 +162,7 @@ const ResendShow = () => {
             <Flex justify="center">
               <img
                 style={{
-                  width: "140px",
+                  width: "110px",
                 }}
                 src="../../public/qrcode.png"
               />

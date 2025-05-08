@@ -89,7 +89,7 @@ export const IssueProcessingList = () => {
       sort: `${sortField},${sortDirection}`,
       limit: pageSize,
       page: currentPage,
-      offset: (currentPage - 1) * pageSize,
+      offset: 10000,
     };
   };
 
@@ -356,8 +356,7 @@ export const IssueProcessingList = () => {
       dataIndex: "tracking_status",
       key: "tracking_status",
       render: (value: any) => {
-        const new_value = value[3]?.createdAt;
-        return dayjs(new_value).utc().format("DD.MM.YYYY HH:mm");
+        return dayjs().utc().format("DD.MM.YYYY HH:mm");
       },
     },
     {
