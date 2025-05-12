@@ -283,7 +283,6 @@ function App() {
                 useNewQueryKeys: true,
                 liveMode: "auto",
               }}
-              onLiveEvent={(event) => {}}
             >
               <Suspense fallback={<LoadingComponent />}>
                 <Routes>

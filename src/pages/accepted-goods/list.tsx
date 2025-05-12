@@ -76,6 +76,9 @@ export const AcceptedGoodsList = () => {
 
   const getSumData = async () => {
     const token = localStorage.getItem("access_token");
+    const dates = searchFilters.find((item) => item.created_at);
+    const startDate = dates?.created_at?.$gte;
+    const endDate = dates?.created_at?.$lte;
 
     const response = await fetch(
       `${API_URL}/goods-processing/amount-in-weight/В складе`,
@@ -85,7 +88,10 @@ export const AcceptedGoodsList = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(selectedRowKeys),
+        body: JSON.stringify({
+          startDate: startDate,
+          endDate: endDate,
+        }),
       }
     );
 
@@ -93,9 +99,11 @@ export const AcceptedGoodsList = () => {
     setSumData(result);
   };
 
+  console.log(searchFilters);
+
   useEffect(() => {
     getSumData();
-  }, []);
+  }, [searchFilters]);
 
   const [sorterVisible, setSorterVisible] = useState(false);
   const [settingVisible, setSettingVisible] = useState(false);
@@ -129,6 +137,8 @@ export const AcceptedGoodsList = () => {
   const datePickerContent = (
     <DatePicker.RangePicker
       style={{ width: "280px" }}
+      showTime
+      format="YYYY-MM-DD HH:mm"
       placeholder={["Начальная дата", "Конечная дата"]}
       onChange={(dates, dateStrings) => {
         if (dates && dateStrings[0] && dateStrings[1]) {
@@ -136,13 +146,15 @@ export const AcceptedGoodsList = () => {
             [
               {
                 created_at: {
-                  $gte: dateStrings[0],
-                  $lte: dateStrings[1],
+                  $gte: dates[0]?.toDate().toISOString(),
+                  $lte: dates[1]?.toDate().toISOString(),
                 },
               },
             ],
             "replace"
           );
+        } else {
+          setFilters([], "replace");
         }
       }}
     />

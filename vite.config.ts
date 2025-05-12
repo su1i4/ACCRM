@@ -7,4 +7,11 @@ export default defineConfig({
   define: {
     "process.env": {},
   },
+  server: {
+    hmr: false,
+    watch: {
+      ignored: ['**/.git/**', '**/node_modules/**'],
+      usePolling: false,
+    },
+  },
 });
