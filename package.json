@@ -47,7 +47,6 @@
   },
   "scripts": {
     "dev": "refine dev",
-    "dev:no-reload": "refine dev --vite-config refine.dev.ts",
     "build": "tsc && refine build",
     "start": "refine start",
     "refine": "refine"

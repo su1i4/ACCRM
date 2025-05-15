@@ -5,10 +5,10 @@ import svgr from "vite-plugin-svgr";
 
 export default defineConfig({
   plugins: [react(), svgr()],
-  server: {
-    hmr: false,
-    watch: {
-      ignored: ['**'],
-    },
-  },
+  // server: {
+  //   hmr: false,
+  //   watch: {
+  //     ignored: ['**'],
+  //   },
+  // },
 });
