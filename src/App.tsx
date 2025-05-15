@@ -27,7 +27,6 @@ import { CustomSider } from "./components/sider";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 import React, { Suspense } from "react";
 
-// Компоненты goods-processing импортируются напрямую, без lazy loading
 import {
   GoodsCreate,
   GoodsShow,
@@ -35,7 +34,6 @@ import {
   GoodsEdit,
 } from "./pages/goods-processing";
 
-// Все остальные компоненты используют lazy loading
 const AcceptedGoodsList = React.lazy(() => import("./pages/accepted-goods").then(module => ({ default: module.AcceptedGoodsList })));
 const AcceptedGoodsShow = React.lazy(() => import("./pages/accepted-goods").then(module => ({ default: module.AcceptedGoodsShow })));
 const AcceptedGoodsEdit = React.lazy(() => import("./pages/accepted-goods/edit").then(module => ({ default: module.AcceptedGoodsEdit })));
@@ -165,7 +163,6 @@ import "./styles/global.css";
 
 export const API_URL = import.meta.env.VITE_DEV_URL;
 
-// Компонент загрузки для Suspense
 const LoadingComponent = () => (
   <div style={{ 
     display: 'flex', 
@@ -190,7 +187,6 @@ function App() {
     (error) => Promise.reject(error)
   );
 
-  // Функция обновления токена
   const refreshToken = async () => {
     try {
       const refresh_token = localStorage.getItem("refresh_token");
@@ -225,7 +221,6 @@ function App() {
     }
   };
 
-  // Перехватываем 401 и обновляем токен
   axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -251,7 +246,6 @@ function App() {
 
   const dataProvider = nestjsxCrudDataProvider(API_URL, axiosInstance);
 
-  // @ts-ignore
   return (
     <BrowserRouter>
       <ScrollRestoration />
@@ -281,7 +275,7 @@ function App() {
                 syncWithLocation: true,
                 warnWhenUnsavedChanges: true,
                 useNewQueryKeys: true,
-                liveMode: "auto",
+                liveMode: "off",
               }}
             >
               <Suspense fallback={<LoadingComponent />}>

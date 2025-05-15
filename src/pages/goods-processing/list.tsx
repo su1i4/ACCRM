@@ -438,22 +438,6 @@ export const GoogsProcessingList = () => {
           }}
         />
         <Table.Column
-          dataIndex="visible"
-          title={<Checkbox checked={mainChecked} onChange={clickAll} />}
-          render={(value, record) => {
-            if (value) {
-              return <EyeOutlined />;
-            } else {
-              return (
-                <Checkbox
-                  checked={selectedRowKeys.includes(record.id)}
-                  onChange={() => handleCheckboxChange(record)}
-                />
-              );
-            }
-          }}
-        />
-        <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) =>

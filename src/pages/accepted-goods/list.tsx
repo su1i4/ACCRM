@@ -486,26 +486,6 @@ export const AcceptedGoodsList = () => {
           }}
         />
         <Table.Column
-          dataIndex="visible"
-          title={<Checkbox checked={mainChecked} onChange={clickAll} />}
-          render={(value, record) => {
-            if (value) {
-              return (
-                <CustomTooltip title="Уже видно клиенту">
-                  <EyeOutlined />
-                </CustomTooltip>
-              );
-            } else {
-              return (
-                <Checkbox
-                  checked={selectedRowKeys.includes(record.id)}
-                  onChange={() => handleCheckboxChange(record)}
-                />
-              );
-            }
-          }}
-        />
-        <Table.Column
           dataIndex="created_at"
           title="Дата приемки"
           render={(value) =>
