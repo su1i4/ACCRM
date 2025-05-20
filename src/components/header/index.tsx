@@ -71,13 +71,13 @@ const CountryTime: React.FC = () => {
     <Flex gap="large" style={{ marginRight: "24px" }}>
       <Flex vertical style={{ textAlign: "center", minWidth: 100 }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>
-          Бишкек city
+          Бишкек 
         </Text>
         <Text>{time.bishkek}</Text>
       </Flex>
       <Flex vertical style={{ textAlign: "center", minWidth: 100 }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>
-          Гуанчжоу city
+          Гуанчжоу
         </Text>
         <Text>{time.guangzhou}</Text>
       </Flex>
