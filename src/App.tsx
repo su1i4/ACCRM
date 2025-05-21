@@ -215,7 +215,7 @@ function App() {
         <ColorModeContextProvider>
           <AntdApp>
             <Refine
-              liveProvider={liveProvider}
+              // liveProvider={liveProvider}
               dataProvider={dataProvider}
               notificationProvider={useNotificationProvider}
               routerProvider={routerBindings}
@@ -347,13 +347,13 @@ function App() {
                     <Route path="edit/:id" element={<CounterpartyEdit />} />
                   </Route>
 
-                  <Route path="/tasks">
+                  {/* <Route path="/tasks">
                     <Route index element={<TasksList />} />
                     <Route path="create" element={<TasksCreate />} />
                     <Route path="show/:id" element={<TasksyShow />} />
                     <Route path="edit/:id" element={<TasksEdit />} />
                     <Route path="archive" element={<TasksArchive />} />
-                  </Route>
+                  </Route> */}
 
                   <Route path="/receiving">
                     <Route index element={<ReceivingList />} />
