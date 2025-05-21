@@ -215,7 +215,7 @@ function App() {
         <ColorModeContextProvider>
           <AntdApp>
             <Refine
-              // liveProvider={liveProvider}
+              liveProvider={liveProvider}
               dataProvider={dataProvider}
               notificationProvider={useNotificationProvider}
               routerProvider={routerBindings}
@@ -347,13 +347,13 @@ function App() {
                     <Route path="edit/:id" element={<CounterpartyEdit />} />
                   </Route>
 
-                  {/* <Route path="/tasks">
+                  <Route path="/tasks">
                     <Route index element={<TasksList />} />
                     <Route path="create" element={<TasksCreate />} />
                     <Route path="show/:id" element={<TasksyShow />} />
                     <Route path="edit/:id" element={<TasksEdit />} />
                     <Route path="archive" element={<TasksArchive />} />
-                  </Route> */}
+                  </Route>
 
                   <Route path="/receiving">
                     <Route index element={<ReceivingList />} />
@@ -454,14 +454,14 @@ function App() {
                     <Route index element={<CashDeskList />} />
                     <Route path="create" element={<CashDeskCreate />} />
                     <Route path="show/:id" element={<IncomeShow />} />
-                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 
                   <Route path="/outcome">
                     <Route index element={<CashDeskOutcomeList />} />
                     <Route path="create" element={<CashDeskCreate />} />
-                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
-                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                    <Route path="show/:id" element={<ReceivingShow />} />
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 
                   <Route path="/currency">
@@ -473,9 +473,9 @@ function App() {
 
                   <Route path="/remaining-stock">
                     <Route index element={<RemainingStockProcessingList />} />
-                    {/*<Route path="create" element={<BankCreate />} />*/}
-                    {/*<Route path="show/:id" element={<ReceivingShow />} />*/}
-                    {/*<Route path="edit/:id" element={<ReceivingEdit />} />*/}
+                    <Route path="create" element={<BankCreate />} />
+                    <Route path="show/:id" element={<ReceivingShow />} />
+                    <Route path="edit/:id" element={<ReceivingEdit />} />
                   </Route>
 
                   <Route path="/exception-code">
